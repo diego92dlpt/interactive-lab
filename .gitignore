@@ -5,7 +5,7 @@ node_modules/
 dist/
 
 # Temporary / local only
-src/screenshots (temporary)/
+screenshots (temporary)/
 
 # Local env files
 .env
