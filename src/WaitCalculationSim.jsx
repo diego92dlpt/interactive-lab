@@ -13,7 +13,7 @@ const THEMES = {
   emerald: { primary: '#00FF41', secondary: '#008F11', muted: '#005500', glow: 'rgba(0, 255, 65, 0.2)' },
   amber:   { primary: '#FFB100', secondary: '#B37D00', muted: '#664700', glow: 'rgba(255, 177, 0, 0.2)' },
   cyan:    { primary: '#00E5FF', secondary: '#00A1B3', muted: '#005C66', glow: 'rgba(0, 229, 255, 0.2)' },
-  frost:   { primary: '#FFFFFF', secondary: '#AAAAAA', muted: '#444444', glow: 'rgba(255, 255, 255, 0.1)' },
+  violet:  { primary: '#C084FC', secondary: '#8B5CF6', muted: '#3B1F5E', glow: 'rgba(192, 132, 252, 0.15)' },
 };
 
 const CRAFT_NAMES = ["Alpha","Bravo","Charlie","Delta","Echo","Foxtrot","Golf","Hotel","India","Juliet"];
@@ -36,6 +36,11 @@ const PRESET_CURVES = {
   'S-Curve':    (i, n) => { const x = (i / (n - 1)) * 10 - 5; return 1 / (1 + Math.exp(-x)); },
   'Diminishing':(i, n) => Math.sqrt(i / (n - 1)),
 };
+
+// Number formatting: comma-separated with fixed decimal places (for year/time values)
+const fmtN = (n, d = 1) => n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+// Distance formatting: comma-separated, natural precision (strips trailing zeros)
+const fmtDist = (n) => n.toLocaleString('en-US');
 
 // ─── RELATIVISTIC PHYSICS: compute one ship's state at a given earthTime ─────
 //
@@ -164,7 +169,7 @@ function drawSimCanvas(ctx, w, h, earthTime, flightProfiles, theme, totalDistLY,
     ctx.restore();
 
     // Label with a backing rect so it pops against the dark canvas
-    const label = `${d} LY`;
+    const label = `${fmtDist(d)} LY`;
     ctx.font = `bold 9px ${MONO}`;
     const tw = ctx.measureText(label).width;
     ctx.fillStyle = 'rgba(0,0,0,0.70)';
@@ -178,7 +183,7 @@ function drawSimCanvas(ctx, w, h, earthTime, flightProfiles, theme, totalDistLY,
   for (let i = 0; i < n; i++) {
     const y = shipY(i);
     ctx.save();
-    ctx.strokeStyle = theme.primary + '18';
+    ctx.strokeStyle = theme.primary + '30';
     ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(finishX, y); ctx.stroke();
     ctx.restore();
@@ -197,7 +202,7 @@ function drawSimCanvas(ctx, w, h, earthTime, flightProfiles, theme, totalDistLY,
   ctx.fillText(destinationName.toUpperCase(), finishX + 10, 20);
   ctx.fillStyle = theme.secondary;
   ctx.font      = `9px ${MONO}`;
-  ctx.fillText(`${totalDistLY} LY`, finishX + 10, 34);
+  ctx.fillText(`${fmtDist(totalDistLY)} LY`, finishX + 10, 34);
 
   // 4. Per-ship: trails → rocket → label
   // Pre-compute arrival rank (1 = first to arrive) sorted by arrivalT
@@ -278,7 +283,7 @@ function drawSimCanvas(ctx, w, h, earthTime, flightProfiles, theme, totalDistLY,
       ctx.fillStyle = theme.secondary; ctx.font = `8px ${MONO}`;
       ctx.fillText(`CAP: ${(profile.configuredSol * 100).toFixed(1)}% SOL`, lx + 4, ly + 26);
       ctx.fillStyle = '#FFFFFF';
-      ctx.fillText(`\u03C4 = ${profile.finalShipTime.toFixed(2)}y`, lx + 4, ly + 39);
+      ctx.fillText(`\u03C4 = ${fmtN(profile.finalShipTime, 2)}y`, lx + 4, ly + 39);
       // Rank badge — overlapping top-right corner of box
       const bx = lx + 82 - 1, by = ly + 1;  // top-right corner
       const br = 9;
@@ -305,7 +310,7 @@ function drawSimCanvas(ctx, w, h, earthTime, flightProfiles, theme, totalDistLY,
       ctx.fillStyle = theme.primary; ctx.font = `8px ${MONO}`;
       ctx.fillText(`${(ship.v / C * 100).toFixed(1)}% SOL`, lx + 4, ly + 25);
       ctx.fillStyle = theme.secondary;
-      ctx.fillText(`SHIP T: ${ship.shipTime.toFixed(1)}y`, lx + 4, ly + 36);
+      ctx.fillText(`SHIP T: ${fmtN(ship.shipTime, 1)}y`, lx + 4, ly + 36);
       ctx.restore();
     }
   }
@@ -647,7 +652,7 @@ const CurveEditor = ({ craftCount, speeds, setSpeeds, minSol, setMinSol, maxSol,
     if (!isNaN(pct)) {
       const newVal = Math.max(0, Math.min(100, pct)) / 100;
       if (editingLimit === 'max') setMaxSol(Math.max(newVal, minSol + 0.01));
-      else                        setMinSol(Math.min(newVal, maxSol - 0.01));
+      else                        setMinSol(Math.max(0.001, Math.min(newVal, maxSol - 0.01)));
     }
     setEditingLimit(null);
   };
@@ -660,7 +665,7 @@ const CurveEditor = ({ craftCount, speeds, setSpeeds, minSol, setMinSol, maxSol,
     let val = 1 - ((y - padding) / (h - padding * 2));
     val = Math.max(0, Math.min(1, val));
     if (draggingLimit === 'min') {
-      setMinSol(Math.min(val, maxSol - 0.01));
+      setMinSol(Math.max(0.001, Math.min(val, maxSol - 0.01)));
     } else if (draggingLimit === 'max') {
       setMaxSol(Math.max(val, minSol + 0.01));
     } else if (draggingIdx !== null) {
@@ -834,6 +839,7 @@ export default function App() {
   const [earthTimeDisplay,  setEarthTimeDisplay]  = useState(0);
   const [timeScale,         setTimeScale]         = useState(10);
   const [notifications,     setNotifications]     = useState([]);
+  const [fadedNotifs,       setFadedNotifs]       = useState(new Set());
 
   // Sim refs
   const canvasRef            = useRef(null);
@@ -846,6 +852,7 @@ export default function App() {
   const loopBodyRef          = useRef(null);
   const skipRef              = useRef(null);   // { startRealTime, startEarthTime, targetEarthTime }
   const allArrivedPausedRef  = useRef(false);  // fire auto-pause only once
+  const fadeTimersRef        = useRef({});     // notif id → setTimeout handle
 
   const getDistance = () => destination.name === 'Custom' ? customDistance : destination.dist;
 
@@ -911,6 +918,9 @@ export default function App() {
     allArrivedPausedRef.current  = false;
     setEarthTimeDisplay(0);
     setNotifications([]);
+    setFadedNotifs(new Set());
+    Object.values(fadeTimersRef.current).forEach(clearTimeout);
+    fadeTimersRef.current = {};
     setIsSimPaused(true);
     setIsSkipping(false);
   };
@@ -920,6 +930,18 @@ export default function App() {
     setShowSim(true);
     setTimeout(() => setIsSimPaused(false), 100);
   };
+
+  // Fade arrival cards to compact badges after 4 seconds
+  useEffect(() => {
+    notifications.forEach(n => {
+      if (!fadeTimersRef.current[n.id]) {
+        fadeTimersRef.current[n.id] = setTimeout(() => {
+          setFadedNotifs(prev => new Set([...prev, n.id]));
+          delete fadeTimersRef.current[n.id];
+        }, 4000);
+      }
+    });
+  }, [notifications]);
 
   // Loop body ref — always has fresh closure over current state/props
   const totalDistLY    = getDistance();
@@ -1091,14 +1113,14 @@ export default function App() {
                     }}
                     className="bg-black border p-2 focus:outline-none"
                     style={{ borderColor: theme.muted, color: theme.primary }}>
-                    {DESTINATIONS.map(d => <option key={d.name} value={d.name}>{d.name} ({d.dist} LY)</option>)}
+                    {DESTINATIONS.map(d => <option key={d.name} value={d.name}>{d.name} ({fmtDist(d.dist)} LY)</option>)}
                     <option value="Custom">Custom Target...</option>
                   </select>
                 </div>
                 {destination.name === 'Custom' && (
                   <div className="flex flex-col gap-1">
                     <label className="font-bold flex justify-between" style={{ color: theme.secondary }}>
-                      <span>CUSTOM DISTANCE</span><span style={{ color: theme.primary }}>{customDistance} LY</span>
+                      <span>CUSTOM DISTANCE</span><span style={{ color: theme.primary }}>{fmtDist(customDistance)} LY</span>
                     </label>
                     <input type="number" min="0.1" step="0.1" value={customDistance}
                       onChange={e => {
@@ -1114,7 +1136,7 @@ export default function App() {
                   <label className="font-bold flex justify-between" style={{ color: theme.secondary }}>
                     <span>LAUNCH STAGGER</span><span style={{ color: theme.primary }}>{stagger} YRS</span>
                   </label>
-                  <input type="range" min="1" max="100" value={stagger}
+                  <input type="range" min="1" max="200" value={stagger}
                     onChange={e => setStagger(Number(e.target.value))}
                     className="w-full h-1 bg-gray-900 rounded-lg appearance-none cursor-pointer"
                     style={{ accentColor: theme.primary }} />
@@ -1158,10 +1180,10 @@ export default function App() {
                 ? flightProfiles.reduce((a, b) => a.arrivalT < b.arrivalT ? a : b)
                 : null;
               const rows = [
-                ["FLEET SPAN",    `${(craftCount - 1) * stagger} YEARS`],
+                ["FLEET SPAN",    `${fmtN((craftCount - 1) * stagger, 0)} YEARS`],
                 ["FASTEST CRAFT", `${((speeds[speeds.length - 1] || 0) * 100).toFixed(1)}% SOL`],
-                ["DESTINATION",   `${getDistance()} LY`],
-                ["PREDICTED 1ST", winner ? `${winner.name} · ${winner.arrivalT.toFixed(1)} YRS` : '—'],
+                ["DESTINATION",   `${fmtDist(getDistance())} LY`],
+                ["PREDICTED 1ST", winner ? `${winner.name} · ${fmtN(winner.arrivalT, 1)} YRS` : '—'],
               ];
               return (
             <div className="space-y-3">
@@ -1234,26 +1256,39 @@ export default function App() {
           <div className="flex-1 relative overflow-hidden" style={{ border: `1px solid ${theme.muted}50` }}>
             <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block' }} />
             {notifications.map(n => {
-              const idx  = flightProfiles.findIndex(p => p.id === n.id);
-              const yPct = flightProfiles.length <= 1 ? 50 : 15 + (idx / (flightProfiles.length - 1)) * 70;
+              const idx   = flightProfiles.findIndex(p => p.id === n.id);
+              const yPct  = flightProfiles.length <= 1 ? 50 : 15 + (idx / (flightProfiles.length - 1)) * 70;
+              const faded = fadedNotifs.has(n.id);
               return (
                 <div key={n.name}
-                  className="absolute right-4 z-20 animate-in slide-in-from-right duration-500"
+                  className="absolute right-4 z-20 transition-all duration-700"
                   style={{ top: `${yPct}%`, transform: 'translateY(-50%)' }}>
-                  <div className="bg-black border p-2 text-[10px] font-black"
-                    style={{ borderColor: theme.primary, boxShadow: `0 0 10px ${theme.glow}` }}>
-                    <div className="flex justify-between gap-4 items-center">
-                      <span style={{ color: theme.primary }}>
-                        {n.name} {n.delay === 0 ? 'ARRIVED FIRST!' : 'ARRIVED'}
+                  {faded ? (
+                    // Compact persistent badge — shows key data without clutter
+                    <div className="bg-black border px-2 py-1 text-[9px] font-black flex items-center gap-2"
+                      style={{ borderColor: theme.muted }}>
+                      <span style={{ color: theme.primary }}>{n.name}</span>
+                      <span className="text-white">
+                        {n.delay === 0 ? `T+${fmtN(n.time, 1)}y` : `+${fmtN(n.delay, 1)}y`}
                       </span>
-                      <span className="text-white">EARTH T: {n.time.toFixed(1)}y</span>
                     </div>
-                    {n.delay > 0 && (
-                      <div className="text-[9px] mt-0.5" style={{ color: theme.secondary }}>
-                        DELAY RELATIVE TO LEADER: +{n.delay.toFixed(1)} YEARS
+                  ) : (
+                    // Full arrival card — shown for first 4 seconds
+                    <div className="bg-black border p-2 text-[10px] font-black animate-in slide-in-from-right duration-500"
+                      style={{ borderColor: theme.primary, boxShadow: `0 0 10px ${theme.glow}` }}>
+                      <div className="flex justify-between gap-4 items-center">
+                        <span style={{ color: theme.primary }}>
+                          {n.name} {n.delay === 0 ? 'ARRIVED FIRST!' : 'ARRIVED'}
+                        </span>
+                        <span className="text-white">EARTH T: {fmtN(n.time, 1)}y</span>
                       </div>
-                    )}
-                  </div>
+                      {n.delay > 0 && (
+                        <div className="text-[9px] mt-0.5" style={{ color: theme.secondary }}>
+                          DELAY RELATIVE TO LEADER: +{fmtN(n.delay, 1)} YEARS
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -1263,7 +1298,7 @@ export default function App() {
           <div className="mt-4 flex flex-wrap gap-4 text-[10px] font-bold uppercase">
             <div className="border p-2 flex gap-4" style={{ borderColor: theme.muted }}>
               <span className="text-white">MASTER EARTH CLOCK:</span>
-              <span style={{ color: theme.primary }}>T + {earthTimeDisplay.toFixed(2)} YRS</span>
+              <span style={{ color: theme.primary }}>T + {fmtN(earthTimeDisplay, 2)} YRS</span>
             </div>
             <div className="border p-2 flex gap-4" style={{ borderColor: theme.muted }}>
               <span className="text-white">TIME SCALE:</span>
