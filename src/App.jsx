@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
-import WaitCalculator from "./WaitCalculationSim";
+import WaitCalculator from "./experiments/wait-calculator";
 
 export default function App() {
   return (
