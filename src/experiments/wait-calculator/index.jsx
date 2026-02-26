@@ -549,8 +549,12 @@ export default function WaitCalculationSim() {
       <style dangerouslySetInnerHTML={{ __html: `
         input[type='range']::-webkit-slider-thumb {
           -webkit-appearance: none; appearance: none;
-          width: 12px; height: 12px; background: currentColor;
+          width: 12px; height: 12px; background: ${theme.primary};
           cursor: pointer; border-radius: 1px;
+        }
+        input[type='range']::-moz-range-thumb {
+          width: 12px; height: 12px; background: ${theme.primary};
+          cursor: pointer; border-radius: 1px; border: none;
         }
       `}} />
     </div>
