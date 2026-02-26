@@ -1,0 +1,21 @@
+# Dependencies - reinstallable via: npm install
+node_modules/
+
+# Build output
+dist/
+
+# Temporary / local only
+src/screenshots (temporary)/
+
+# Local env files
+.env
+.env.local
+*.local
+
+# Editor
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
