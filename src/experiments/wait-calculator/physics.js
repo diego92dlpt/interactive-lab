@@ -22,7 +22,9 @@ export const DESTINATIONS = [
   { name: "Sirius",             dist: 8.6   },
   { name: "Epsilon Eridani",    dist: 10.5  },
   { name: "Tau Ceti",           dist: 11.9  },
+  { name: "Gliese 667C",        dist: 23.6  },
   { name: "TRAPPIST-1",         dist: 39.5  },
+  { name: "HR 8799",            dist: 129   },
   { name: "Kepler-186f",        dist: 582   },
   { name: "Galactic Center",    dist: 26000 },
 ];
@@ -101,4 +103,67 @@ export function computeShipState(earthTime, p) {
   pos = Math.min(pos, p.totalDist);
   const arrivedAt = earthTime >= p.arrivalT ? p.arrivalT : null;
   return { pos, v, shipTime: tau / YEAR_IN_SECONDS, hasLaunched: true, arrivedAt };
+}
+
+// ─── NEWTONIAN PHYSICS (classical comparison) ─────────────────────────────────
+//
+// Same profile shape and vMax as the real ship, but using F=ma without
+// relativistic corrections: v(t) = a·t, x(t) = ½·a·t²
+// For cruise profiles: Newtonian t_accel = vMax/a  (vs relativistic βγc/a)
+//                      Newtonian d_accel = vMax²/2a (vs relativistic c²/a·(γ-1))
+// The Newtonian ship always arrives sooner; the gap widens at high velocities.
+//
+export function computeNewtonianState(earthTime, p) {
+  const elapsed = earthTime - p.launchTime;
+  if (elapsed <= 0) return { pos: 0, hasLaunched: false };
+
+  const t = elapsed * YEAR_IN_SECONDS;
+  let pos;
+
+  if (p.type === 'peak') {
+    // Peak profile: Newtonian flip at midpoint using ½at²
+    const tPeak = Math.sqrt(p.totalDist / p.acc);
+    if (t < tPeak) {
+      pos = 0.5 * p.acc * t * t;
+    } else if (t < 2 * tPeak) {
+      const tD    = t - tPeak;
+      const vPeak = p.acc * tPeak;
+      pos = p.totalDist / 2 + vPeak * tD - 0.5 * p.acc * tD * tD;
+    } else {
+      pos = p.totalDist;
+    }
+  } else {
+    // Cruise profile: classical acceleration to the same vMax
+    const vMax    = p.vMax;
+    const tAccelN = vMax / p.acc;               // classical time to reach vMax
+    const dAccelN = 0.5 * vMax * vMax / p.acc;  // = vMax² / (2a)
+
+    if (dAccelN * 2 >= p.totalDist) {
+      // Distance too short to cruise even in Newtonian — treat as peak
+      const tPeak = Math.sqrt(p.totalDist / p.acc);
+      if (t < tPeak) {
+        pos = 0.5 * p.acc * t * t;
+      } else if (t < 2 * tPeak) {
+        const tD    = t - tPeak;
+        const vPeak = p.acc * tPeak;
+        pos = p.totalDist / 2 + vPeak * tD - 0.5 * p.acc * tD * tD;
+      } else {
+        pos = p.totalDist;
+      }
+    } else {
+      const tCruiseN = (p.totalDist - 2 * dAccelN) / vMax;
+      if (t < tAccelN) {
+        pos = 0.5 * p.acc * t * t;
+      } else if (t < tAccelN + tCruiseN) {
+        pos = dAccelN + vMax * (t - tAccelN);
+      } else if (t < 2 * tAccelN + tCruiseN) {
+        const tD = t - tAccelN - tCruiseN;
+        pos = (p.totalDist - dAccelN) + vMax * tD - 0.5 * p.acc * tD * tD;
+      } else {
+        pos = p.totalDist;
+      }
+    }
+  }
+
+  return { pos: Math.min(Math.max(pos, 0), p.totalDist), hasLaunched: true };
 }

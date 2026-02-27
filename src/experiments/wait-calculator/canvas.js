@@ -1,12 +1,11 @@
-import { C, fmtN, fmtDist, computeShipState } from './physics';
+import { C, fmtN, fmtDist, computeShipState, computeNewtonianState } from './physics';
 
 const MONO = 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
 
 // ─── Retro rocket shape (pointing right, centered at cx, cy) ─────────────────
-function drawRocket(ctx, cx, cy, color) {
+function drawRocket(ctx, cx, cy, color, outline = false) {
   ctx.save();
   ctx.translate(cx, cy);
-  ctx.fillStyle = color;
   ctx.beginPath();
   ctx.moveTo(-12, -4);
   ctx.lineTo(-12, -8);
@@ -18,14 +17,21 @@ function drawRocket(ctx, cx, cy, color) {
   ctx.lineTo(-12,  8);
   ctx.lineTo(-12,  4);
   ctx.closePath();
-  ctx.fill();
-  const glow = ctx.createRadialGradient(-12, 0, 0, -12, 0, 8);
-  glow.addColorStop(0, color + 'AA');
-  glow.addColorStop(1, color + '00');
-  ctx.fillStyle = glow;
-  ctx.beginPath();
-  ctx.arc(-12, 0, 8, 0, Math.PI * 2);
-  ctx.fill();
+  if (outline) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth   = 1;
+    ctx.stroke();
+  } else {
+    ctx.fillStyle = color;
+    ctx.fill();
+    const glow = ctx.createRadialGradient(-12, 0, 0, -12, 0, 8);
+    glow.addColorStop(0, color + 'AA');
+    glow.addColorStop(1, color + '00');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(-12, 0, 8, 0, Math.PI * 2);
+    ctx.fill();
+  }
   ctx.restore();
 }
 
@@ -40,7 +46,7 @@ function getGridStep(totalLY) {
 }
 
 // ─── Main canvas draw function ────────────────────────────────────────────────
-export function drawSimCanvas(ctx, w, h, earthTime, flightProfiles, theme, totalDistLY, destinationName) {
+export function drawSimCanvas(ctx, w, h, earthTime, flightProfiles, theme, totalDistLY, destinationName, showNewtonian = false) {
   const n       = flightProfiles.length;
   const finishX = w * 0.80;
   const shipY   = (i) => n <= 1 ? h * 0.5 : h * (0.15 + (i / (n - 1)) * 0.70);
@@ -77,13 +83,17 @@ export function drawSimCanvas(ctx, w, h, earthTime, flightProfiles, theme, total
     ctx.fillText(label, x, 18);
   }
 
-  // 2. Lane tracks
+  // 2. Lane tracks + stagger labels
   for (let i = 0; i < n; i++) {
     const y = shipY(i);
     ctx.save();
     ctx.strokeStyle = theme.primary + '30';
     ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(finishX, y); ctx.stroke();
+    ctx.fillStyle = theme.primary + 'CC';
+    ctx.font      = `8px ${MONO}`;
+    ctx.textAlign = 'left';
+    ctx.fillText(`+${Math.round(flightProfiles[i].launchTime)}y`, 4, y + 14);
     ctx.restore();
   }
 
@@ -101,6 +111,22 @@ export function drawSimCanvas(ctx, w, h, earthTime, flightProfiles, theme, total
   ctx.fillStyle = theme.secondary;
   ctx.font      = `9px ${MONO}`;
   ctx.fillText(`${fmtDist(totalDistLY)} LY`, finishX + 10, 34);
+
+  // 4a. Newtonian ghost pass — drawn first so real ships paint over them
+  if (showNewtonian) {
+    for (let i = 0; i < n; i++) {
+      const profile = flightProfiles[i];
+      const ghost   = computeNewtonianState(earthTime, profile);
+      if (!ghost.hasLaunched) continue;
+      const gy = shipY(i) + 8;                                  // 8 px below real lane centre
+      const gx = (ghost.pos / profile.totalDist) * finishX;
+      ctx.save();
+      ctx.globalAlpha = 0.55;
+      drawRocket(ctx, gx, gy, theme.secondary, true);
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+  }
 
   // 4. Per-ship: trails → rocket → label
   // Pre-compute arrival rank (1 = first to arrive) sorted by arrivalT

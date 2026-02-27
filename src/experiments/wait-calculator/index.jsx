@@ -51,6 +51,7 @@ export default function WaitCalculationSim() {
   const [timeScale,         setTimeScale]         = useState(10);
   const [notifications,     setNotifications]     = useState([]);
   const [fadedNotifs,       setFadedNotifs]       = useState(new Set());
+  const [showNewtonian,     setShowNewtonian]     = useState(false);
 
   // Sim refs
   const canvasRef            = useRef(null);
@@ -200,7 +201,7 @@ export default function WaitCalculationSim() {
     }
 
     if (cssW > 0 && cssH > 0) {
-      drawSimCanvas(ctx, cssW, cssH, earthTimeRef.current, flightProfiles, theme, totalDistLY, destinationName);
+      drawSimCanvas(ctx, cssW, cssH, earthTimeRef.current, flightProfiles, theme, totalDistLY, destinationName, showNewtonian);
     }
 
     if (timestamp - lastDisplayUpdateRef.current > 100) {
@@ -521,6 +522,13 @@ export default function WaitCalculationSim() {
                 ))}
               </div>
             </div>
+            <label className="border p-2 flex items-center gap-2 cursor-pointer select-none"
+              style={{ borderColor: theme.muted }}>
+              <input type="checkbox" checked={showNewtonian}
+                onChange={e => setShowNewtonian(e.target.checked)}
+                style={{ accentColor: theme.primary }} />
+              <span style={{ color: showNewtonian ? theme.primary : theme.muted }}>NEWTONIAN GHOSTS</span>
+            </label>
             <div className="flex-1" />
             <div className="border p-2 flex gap-4" style={{ borderColor: theme.muted }}>
               <span className="text-white">MISSION STATUS:</span>
