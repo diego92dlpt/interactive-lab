@@ -17,6 +17,34 @@ const PH = VB_H - MT - MB;   // 415
 
 const DASH_PATTERNS = ['', '14,5', '5,5', '2,4', '14,5,2,5', '14,5,2,5,2,5'];
 
+// ─── Non-overlapping label placement (1-D) ────────────────────────────────────
+// Returns positions as close as possible to `ideals` with minimum separation
+// `sep` between centres and clamped to [lo, hi].
+function placeCards(ideals, sep, lo, hi) {
+  const n = ideals.length;
+  if (n === 0) return [];
+  // Clamp each ideal to the slot it can legally occupy given its neighbours
+  const pos = ideals.map((x, i) =>
+    Math.max(lo + i * sep, Math.min(hi - (n - 1 - i) * sep, x))
+  );
+  for (let pass = 0; pass < 20; pass++) {
+    // Pull each card toward its ideal (soft gravity)
+    for (let i = 0; i < n; i++) {
+      pos[i] = pos[i] + (ideals[i] - pos[i]) * 0.3;
+      pos[i] = Math.max(lo + i * sep, Math.min(hi - (n - 1 - i) * sep, pos[i]));
+    }
+    // Forward sweep: push right on overlap
+    for (let i = 1; i < n; i++) {
+      if (pos[i] < pos[i - 1] + sep) pos[i] = pos[i - 1] + sep;
+    }
+    // Backward sweep: push left on overlap
+    for (let i = n - 2; i >= 0; i--) {
+      if (pos[i] > pos[i + 1] - sep) pos[i] = pos[i + 1] - sep;
+    }
+  }
+  return pos;
+}
+
 function getGridStep(val) {
   if (val <=    10) return 1;
   if (val <=    50) return 5;
@@ -329,13 +357,21 @@ export default function SensitivityAnalysis({
                 r="2.5" fill={theme.primary + 'CC'} />
             ))}
 
-            {/* Launch callout mini-cards — evenly spread, leader lines to launch ticks */}
-            {profiles.map((profile, i) => {
-              const cx   = ML + (fleetSize > 1 ? i / (fleetSize - 1) : 0) * PW;
+            {/* Launch callout mini-cards — follow markers, collision-avoided */}
+            {(() => {
+              const cw = 66, CARD_SEP = cw + 2;
+              const cardCX = placeCards(
+                profiles.map(p => toSvgX(p.launchTime)),
+                CARD_SEP,
+                ML + cw / 2,
+                ML + PW - cw / 2,
+              );
+              return profiles.map((profile, i) => {
+              const cx   = cardCX[i];
               const cy   = MT + PH + 26;   // top of card
               const lx   = toSvgX(profile.launchTime);
               const peak = (profile.configuredSol * 100).toFixed(0);
-              const cw = 66, ch = 28;
+              const ch = 28;
               return (
                 <g key={`lc${profile.id}`}>
                   <line x1={cx} y1={cy} x2={lx} y2={MT + PH}
@@ -354,7 +390,8 @@ export default function SensitivityAnalysis({
                   </text>
                 </g>
               );
-            })}
+            });
+            })()}
 
             {/* Arrival dots on finish line */}
             {profiles.map(profile => (
