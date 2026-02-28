@@ -228,12 +228,12 @@ export default function SensitivityAnalysis({
               <span style={{ color: theme.secondary }}>Distance to Destination</span>
               <span style={{ color: theme.primary }}>{fmtN(distance, 1)} LY</span>
             </label>
-            <input type="range" min="5" max="500" step="0.5" value={distance}
+            <input type="range" min="4" max="600" step="0.5" value={distance}
               onChange={e => setDistance(Number(e.target.value))}
               className="w-full h-1 bg-gray-900 rounded-lg appearance-none cursor-pointer"
               style={{ accentColor: theme.primary }} />
             <div className="flex justify-between text-[8px] mt-0.5" style={{ color: theme.muted }}>
-              <span>5 LY</span><span>500 LY</span>
+              <span>4 LY</span><span>600 LY</span>
             </div>
           </div>
 
