@@ -10,8 +10,8 @@ import {
 import CurveEditor from './CurveEditor';
 
 // ─── SVG layout constants ─────────────────────────────────────────────────────
-const VB_W = 900, VB_H = 520;
-const ML = 70, MT = 40, MR = 210, MB = 65;
+const VB_W = 900, VB_H = 548;
+const ML = 70, MT = 40, MR = 210, MB = 93;
 const PW = VB_W - ML - MR;   // 620
 const PH = VB_H - MT - MB;   // 415
 
@@ -124,17 +124,6 @@ export default function SensitivityAnalysis({
       }
     }
     return pts.join(' ');
-  });
-
-  // Peak velocity label — positioned at the inflection point (end of accel phase)
-  const peakVelLabels = profiles.map(profile => {
-    const inflT = profile.launchTime + profile.tAccel / YEAR_IN_SECONDS;
-    const state = computeShipState(inflT, profile);
-    return {
-      x:    toSvgX(inflT),
-      y:    Math.max(MT + 10, toSvgY(state.pos / LY_IN_METERS) - 9),
-      text: `${(state.v / C * 100).toFixed(0)}% SOL`,
-    };
   });
 
   // Callout column — sorted by arrival time, first ship on top
@@ -333,23 +322,39 @@ export default function SensitivityAnalysis({
               />
             ))}
 
-            {/* Peak velocity labels */}
-            {peakVelLabels.map((lbl, i) => (
-              <text key={`pv${i}`} x={lbl.x} y={lbl.y}
-                textAnchor="middle" fontSize="7" fill={theme.secondary}>
-                {lbl.text}
-              </text>
+            {/* Launch tick marks on x-axis */}
+            {profiles.map(profile => (
+              <circle key={`lt${profile.id}`}
+                cx={toSvgX(profile.launchTime)} cy={MT + PH}
+                r="2.5" fill={theme.primary + 'CC'} />
             ))}
 
-            {/* Ship name labels below x-axis at their launch x */}
-            {profiles.map(profile => (
-              <text key={`sn${profile.id}`}
-                x={toSvgX(profile.launchTime)} y={MT + PH + 30}
-                textAnchor="middle" fontSize="8" fontWeight="bold"
-                fill={theme.primary + 'CC'}>
-                {profile.name}
-              </text>
-            ))}
+            {/* Launch callout mini-cards — evenly spread, leader lines to launch ticks */}
+            {profiles.map((profile, i) => {
+              const cx   = ML + (fleetSize > 1 ? i / (fleetSize - 1) : 0) * PW;
+              const cy   = MT + PH + 26;   // top of card
+              const lx   = toSvgX(profile.launchTime);
+              const peak = (profile.configuredSol * 100).toFixed(0);
+              const cw = 66, ch = 28;
+              return (
+                <g key={`lc${profile.id}`}>
+                  <line x1={cx} y1={cy} x2={lx} y2={MT + PH}
+                    stroke={theme.muted + '90'} strokeWidth="0.8"
+                    strokeDasharray="3,4" />
+                  <rect x={cx - cw / 2} y={cy} width={cw} height={ch}
+                    fill="rgba(0,0,0,0.88)" stroke={theme.muted + '60'}
+                    strokeWidth="0.8" rx="1" />
+                  <text x={cx} y={cy + 11}
+                    textAnchor="middle" fontSize="8" fontWeight="bold" fill={theme.primary}>
+                    {profile.name}
+                  </text>
+                  <text x={cx} y={cy + 22}
+                    textAnchor="middle" fontSize="7" fill={theme.secondary}>
+                    {`PEAK ${peak}% SOL`}
+                  </text>
+                </g>
+              );
+            })}
 
             {/* Arrival dots on finish line */}
             {profiles.map(profile => (
