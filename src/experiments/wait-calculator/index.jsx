@@ -7,9 +7,10 @@ import {
   fmtN, fmtDist,
 } from './physics';
 import { drawSimCanvas } from './canvas';
-import CurveEditor      from './components/CurveEditor';
-import ConfigHelpModal  from './components/ConfigHelpModal';
-import MethodologyModal from './components/MethodologyModal';
+import CurveEditor          from './components/CurveEditor';
+import ConfigHelpModal      from './components/ConfigHelpModal';
+import MethodologyModal     from './components/MethodologyModal';
+import SensitivityAnalysis  from './components/SensitivityAnalysis';
 
 // ─── RetroPanel — small shared layout wrapper used only in this file ──────────
 const RetroPanel = ({ title, theme, children, className = "" }) => (
@@ -52,6 +53,7 @@ export default function WaitCalculationSim() {
   const [notifications,     setNotifications]     = useState([]);
   const [fadedNotifs,       setFadedNotifs]       = useState(new Set());
   const [showNewtonian,     setShowNewtonian]     = useState(false);
+  const [showSensitivity,   setShowSensitivity]   = useState(false);
 
   // Sim refs
   const canvasRef            = useRef(null);
@@ -295,24 +297,6 @@ export default function WaitCalculationSim() {
       {/* Config grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-8 space-y-6">
-          <RetroPanel title="Propulsion Capability Curve" theme={theme}>
-            <div className="mb-4 flex flex-wrap gap-4 items-center justify-between text-[10px]">
-              <div className="flex gap-2 items-center">
-                <span style={{ color: theme.secondary }}>PRESETS:</span>
-                {Object.keys(PRESET_CURVES).map(name => (
-                  <button key={name} onClick={() => setActivePreset(name)}
-                    className={`border px-2 py-1 uppercase font-bold transition-all ${activePreset === name ? 'bg-white/10' : 'opacity-60'}`}
-                    style={{ borderColor: theme.muted, color: activePreset === name ? theme.primary : theme.secondary }}>
-                    {name}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <CurveEditor craftCount={craftCount} speeds={speeds} setSpeeds={setSpeeds}
-              minSol={minSol} setMinSol={setMinSol} maxSol={maxSol} setMaxSol={setMaxSol}
-              theme={theme} activePreset={activePreset} />
-          </RetroPanel>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <RetroPanel title="Mission Parameters" theme={theme}>
               <div className="space-y-4 text-xs">
@@ -383,6 +367,24 @@ export default function WaitCalculationSim() {
               </div>
             </RetroPanel>
           </div>
+
+          <RetroPanel title="Propulsion Capability Curve" theme={theme}>
+            <div className="mb-4 flex flex-wrap gap-4 items-center justify-between text-[10px]">
+              <div className="flex gap-2 items-center">
+                <span style={{ color: theme.secondary }}>PRESETS:</span>
+                {Object.keys(PRESET_CURVES).map(name => (
+                  <button key={name} onClick={() => setActivePreset(name)}
+                    className={`border px-2 py-1 uppercase font-bold transition-all ${activePreset === name ? 'bg-white/10' : 'opacity-60'}`}
+                    style={{ borderColor: theme.muted, color: activePreset === name ? theme.primary : theme.secondary }}>
+                    {name}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <CurveEditor craftCount={craftCount} speeds={speeds} setSpeeds={setSpeeds}
+              minSol={minSol} setMinSol={setMinSol} maxSol={maxSol} setMaxSol={setMaxSol}
+              theme={theme} activePreset={activePreset} />
+          </RetroPanel>
         </div>
 
         <div className="lg:col-span-4 space-y-6">
@@ -413,6 +415,17 @@ export default function WaitCalculationSim() {
               className="group w-full py-4 mt-6 font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95"
               style={{ backgroundColor: theme.primary, color: 'black' }}>
               Launch Simulation <Play className="h-4 w-4 fill-black" />
+            </button>
+          </RetroPanel>
+
+          <RetroPanel title="Sensitivity Analysis" theme={theme}>
+            <p className="text-[10px] mb-4 leading-relaxed" style={{ color: theme.secondary }}>
+              Explore how distance, stagger, and speed affect trajectories — no waiting required.
+            </p>
+            <button onClick={() => setShowSensitivity(true)}
+              className="w-full py-3 border font-black uppercase tracking-widest text-xs transition-all hover:bg-white/5"
+              style={{ borderColor: theme.primary, color: theme.primary }}>
+              Open Explorer →
             </button>
           </RetroPanel>
         </div>
@@ -539,6 +552,21 @@ export default function WaitCalculationSim() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Sensitivity Analysis overlay */}
+      {showSensitivity && (
+        <SensitivityAnalysis
+          theme={theme}
+          onClose={() => setShowSensitivity(false)}
+          initFleetSize={craftCount >= 6 ? 6 : craftCount >= 4 ? 4 : 2}
+          initDistance={getDistance()}
+          initStagger={stagger}
+          initSpeeds={speeds}
+          initMinSol={minSol}
+          initMaxSol={maxSol}
+          initActivePreset={activePreset}
+        />
       )}
 
       {/* Config help modal */}
