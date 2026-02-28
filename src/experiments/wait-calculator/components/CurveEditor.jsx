@@ -1,8 +1,15 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { PRESET_CURVES, CRAFT_NAMES } from '../physics';
 
 export default function CurveEditor({ craftCount, speeds, setSpeeds, minSol, setMinSol, maxSol, setMaxSol, theme, activePreset }) {
   const containerRef  = useRef(null);
+  const [, forceUpdate] = useState(0);
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const ro = new ResizeObserver(() => forceUpdate(n => n + 1));
+    ro.observe(containerRef.current);
+    return () => ro.disconnect();
+  }, []);
   const [draggingIdx,     setDraggingIdx]     = useState(null);
   const [draggingLimit,   setDraggingLimit]   = useState(null);
   const [editingIdx,      setEditingIdx]      = useState(null);
