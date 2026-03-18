@@ -1,0 +1,215 @@
+
+<style>
+:root{
+  --a50:#FAEEDA;--a100:#FAC775;--a600:#854F0B;--a800:#633806;--a900:#412402;
+  --b50:#E6F1FB;--b100:#B5D4F4;--b600:#185FA5;--b800:#0C447C;
+  --p50:#EEEDFE;--p100:#CECBF6;--p600:#534AB7;--p800:#3C3489;
+  --t50:#E1F5EE;--t100:#9FE1CB;--t600:#0F6E56;--t800:#085041;
+  --g50:#EAF3DE;--g100:#C0DD97;--g600:#3B6D11;--g800:#27500A;
+  --c50:#FAECE7;--c100:#F5C4B3;--c600:#993C1D;--c800:#712B13;
+  --pk50:#FBEAF0;--pk100:#F4C0D1;--pk600:#993556;--pk800:#72243E;
+}
+@media(prefers-color-scheme:dark){:root{
+  --a50:#412402;--a100:#633806;--a600:#EF9F27;--a800:#FAC775;--a900:#FAEEDA;
+  --b50:#042C53;--b100:#0C447C;--b600:#85B7EB;--b800:#B5D4F4;
+  --p50:#26215C;--p100:#3C3489;--p600:#AFA9EC;--p800:#CECBF6;
+  --t50:#04342C;--t100:#085041;--t600:#5DCAA5;--t800:#9FE1CB;
+  --g50:#173404;--g100:#27500A;--g600:#97C459;--g800:#C0DD97;
+  --c50:#4A1B0C;--c100:#712B13;--c600:#F0997B;--c800:#F5C4B3;
+  --pk50:#4B1528;--pk100:#72243E;--pk600:#ED93B1;--pk800:#F4C0D1;
+}}
+*{box-sizing:border-box;margin:0;padding:0;}
+.wrap{font-family:var(--font-sans,sans-serif);padding:22px 20px 28px;max-width:600px;margin:0 auto;}
+.hdr{text-align:center;margin-bottom:22px;}
+.hdr-title{font-size:18px;font-weight:500;color:var(--color-text-primary);}
+.hdr-sub{font-size:12px;color:var(--color-text-tertiary);margin-top:5px;letter-spacing:0.02em;}
+.card{border-radius:10px;padding:13px 15px 11px;border-width:0.5px;border-style:solid;}
+.card-top{display:flex;align-items:flex-start;gap:12px;}
+.badge{font-size:10px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;padding:3px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0;margin-top:3px;}
+.main{flex:1;min-width:0;}
+.namerow{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-bottom:3px;}
+.name{font-size:22px;font-weight:500;line-height:1.2;}
+.native{font-size:13px;opacity:0.7;font-style:italic;}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:3px 16px;margin-top:7px;}
+.meta-item{font-size:11px;line-height:1.4;display:flex;gap:4px;align-items:baseline;}
+.meta-lbl{font-weight:500;opacity:0.55;white-space:nowrap;flex-shrink:0;}
+.meta-val{opacity:0.85;}
+.divider{height:0.5px;background:currentColor;opacity:0.12;margin:7px 0 5px;}
+.notes{font-size:11px;opacity:0.65;line-height:1.5;}
+.conn{display:flex;flex-direction:column;align-items:center;padding:1px 0;gap:0;}
+.conn-line{width:1.5px;height:9px;background:var(--color-border-secondary);}
+.conn-lbl{font-size:11px;color:var(--color-text-tertiary);padding:3px 12px;text-align:center;line-height:1.35;max-width:400px;}
+.conn-arr{color:var(--color-text-tertiary);font-size:13px;line-height:1;}
+.footer{margin-top:18px;padding-top:13px;border-top:0.5px solid var(--color-border-tertiary);font-size:11px;color:var(--color-text-tertiary);text-align:center;line-height:1.6;}
+.footnote{margin-top:10px;padding-top:10px;border-top:0.5px solid var(--color-border-tertiary);font-size:11px;color:var(--color-text-tertiary);line-height:1.6;text-align:left;}
+.footnote strong{font-weight:500;color:var(--color-text-secondary);}
+.name-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;}
+.chip{font-size:11px;padding:2px 9px;border-radius:20px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);color:var(--color-text-secondary);}
+</style>
+<div class="wrap">
+  <div class="hdr">
+    <div class="hdr-title">The etymology of <em>Shawn</em></div>
+    <div class="hdr-sub">Seven forms across five languages — newest at top, oldest at bottom</div>
+  </div>
+
+  <div class="card" style="background:var(--c50);border-color:var(--c100);color:var(--c800);">
+    <div class="card-top">
+      <div class="badge" style="background:var(--c100);color:var(--c800);">English</div>
+      <div class="main">
+        <div class="namerow"><span class="name">Shawn</span><span class="native">alt: Shaun, Shon</span></div>
+        <div class="meta">
+          <div class="meta-item"><span class="meta-lbl">Pron.</span><span class="meta-val">"SHAWN" (rhymes with dawn)</span></div>
+          <div class="meta-item"><span class="meta-lbl">Era</span><span class="meta-val">mid-20th c. CE</span></div>
+          <div class="meta-item"><span class="meta-lbl">Meaning</span><span class="meta-val">God is gracious</span></div>
+          <div class="meta-item"><span class="meta-lbl">Region</span><span class="meta-val">US &amp; UK</span></div>
+        </div>
+        <div class="divider"></div>
+        <div class="notes">Purely phonetic respelling of Irish Seán for English readers who found the native spelling counterintuitive. Peaked in US popularity 1965–1985.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="conn"><div class="conn-arr">↑</div><div class="conn-line"></div><div class="conn-lbl">Phonetic anglicization of Irish Seán, 20th c.</div><div class="conn-line"></div></div>
+
+  <div class="card" style="background:var(--g50);border-color:var(--g100);color:var(--g800);">
+    <div class="card-top">
+      <div class="badge" style="background:var(--g100);color:var(--g800);">Irish</div>
+      <div class="main">
+        <div class="namerow"><span class="name">Seán</span><span class="native">alt: Sean (without fada)</span></div>
+        <div class="meta">
+          <div class="meta-item"><span class="meta-lbl">Pron.</span><span class="meta-val">"SHAWN" (the fada lengthens the vowel)</span></div>
+          <div class="meta-item"><span class="meta-lbl">Era</span><span class="meta-val">~13th c. CE onward</span></div>
+          <div class="meta-item"><span class="meta-lbl">Meaning</span><span class="meta-val">God is gracious</span></div>
+          <div class="meta-item"><span class="meta-lbl">Region</span><span class="meta-val">Ireland</span></div>
+        </div>
+        <div class="divider"></div>
+        <div class="notes">Irish phonology transformed Anglo-Norman "Jehan" — the initial J shifted to Sh, and the vowel lengthened. The fada (á) marks the long vowel. One of the most common male names in Ireland.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="conn"><div class="conn-arr">↑</div><div class="conn-line"></div><div class="conn-lbl">Anglo-Norman settlers brought "Jehan" to Ireland (Norman invasion, 1169 CE); Irish phonology reshaped it</div><div class="conn-line"></div></div>
+
+  <div class="card" style="background:var(--t50);border-color:var(--t100);color:var(--t800);">
+    <div class="card-top">
+      <div class="badge" style="background:var(--t100);color:var(--t800);">French</div>
+      <div class="main">
+        <div class="namerow"><span class="name">Jean</span><span class="native">modern standard French</span></div>
+        <div class="meta">
+          <div class="meta-item"><span class="meta-lbl">Pron.</span><span class="meta-val">"ZHAHN" (soft J, nasal vowel)</span></div>
+          <div class="meta-item"><span class="meta-lbl">Era</span><span class="meta-val">~13th–14th c. CE</span></div>
+          <div class="meta-item"><span class="meta-lbl">Meaning</span><span class="meta-val">God is gracious</span></div>
+          <div class="meta-item"><span class="meta-lbl">Region</span><span class="meta-val">France</span></div>
+        </div>
+        <div class="divider"></div>
+        <div class="notes">The contracted modern form, after the unstressed middle syllable of Jehan dropped away. The French nasal vowel (an) has no equivalent in English — the closest approximation is "ZHAHN."</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="conn"><div class="conn-arr">↑</div><div class="conn-line"></div><div class="conn-lbl">Middle vowel of Jehan eroded in spoken Old/Middle French, ~12th–13th c.</div><div class="conn-line"></div></div>
+
+  <div class="card" style="background:var(--pk50);border-color:var(--pk100);color:var(--pk800);">
+    <div class="card-top">
+      <div class="badge" style="background:var(--pk100);color:var(--pk800);">Old French</div>
+      <div class="main">
+        <div class="namerow"><span class="name">Jehan</span><span class="native">alt: Johan</span></div>
+        <div class="meta">
+          <div class="meta-item"><span class="meta-lbl">Pron.</span><span class="meta-val">"zhuh-HAHN" (two syllables)</span></div>
+          <div class="meta-item"><span class="meta-lbl">Era</span><span class="meta-val">~11th–13th c. CE</span></div>
+          <div class="meta-item"><span class="meta-lbl">Meaning</span><span class="meta-val">God is gracious</span></div>
+          <div class="meta-item"><span class="meta-lbl">Region</span><span class="meta-val">Northern France / Normandy</span></div>
+        </div>
+        <div class="divider"></div>
+        <div class="notes">The Norman French form carried to Ireland in 1169. Direct ancestor of Irish Seán, not the later contracted "Jean." The initial J already had a soft-Zh quality in Norman dialect.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="conn"><div class="conn-arr">↑</div><div class="conn-line"></div><div class="conn-lbl">Old French adapted Latin Johannes, shedding inflectional ending, ~10th–11th c.</div><div class="conn-line"></div></div>
+
+  <div class="card" style="background:var(--p50);border-color:var(--p100);color:var(--p800);">
+    <div class="card-top">
+      <div class="badge" style="background:var(--p100);color:var(--p800);">Medieval Latin</div>
+      <div class="main">
+        <div class="namerow"><span class="name">Johannes</span><span class="native">alt: Iohannes (classical)</span></div>
+        <div class="meta">
+          <div class="meta-item"><span class="meta-lbl">Pron.</span><span class="meta-val">"yo-HAH-nes" (J as English Y)</span></div>
+          <div class="meta-item"><span class="meta-lbl">Era</span><span class="meta-val">4th c. CE onward</span></div>
+          <div class="meta-item"><span class="meta-lbl">Meaning</span><span class="meta-val">God is gracious</span></div>
+          <div class="meta-item"><span class="meta-lbl">Region</span><span class="meta-val">Church Latin / Western Europe</span></div>
+        </div>
+        <div class="divider"></div>
+        <div class="notes">The standard Latin form used in Jerome's Vulgate Bible (~405 CE), from which virtually all Western European variants derive — John, Juan, Giovanni, Johann, Jan, and Jean among them.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="conn"><div class="conn-arr">↑</div><div class="conn-line"></div><div class="conn-lbl">Jerome's Latin Vulgate transliterated Greek into Latin, ~4th c. CE</div><div class="conn-line"></div></div>
+
+  <div class="card" style="background:var(--b50);border-color:var(--b100);color:var(--b800);">
+    <div class="card-top">
+      <div class="badge" style="background:var(--b100);color:var(--b800);">Koine Greek</div>
+      <div class="main">
+        <div class="namerow"><span class="name">Ioannes</span><span class="native">Ἰωάννης</span></div>
+        <div class="meta">
+          <div class="meta-item"><span class="meta-lbl">Pron.</span><span class="meta-val">"ee-oh-AH-nes"</span></div>
+          <div class="meta-item"><span class="meta-lbl">Era</span><span class="meta-val">~3rd c. BCE onward</span></div>
+          <div class="meta-item"><span class="meta-lbl">Meaning</span><span class="meta-val">God is gracious</span></div>
+          <div class="meta-item"><span class="meta-lbl">Region</span><span class="meta-val">Eastern Mediterranean</span></div>
+        </div>
+        <div class="divider"></div>
+        <div class="notes">Phonetic rendering of Hebrew Yohanan in the Septuagint (~3rd–2nd c. BCE) and later the New Testament. Koine was the common Greek dialect of the Hellenistic world — distinct from Classical Attic Greek.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="conn"><div class="conn-arr">↑</div><div class="conn-line"></div><div class="conn-lbl">Septuagint scribes transliterated Hebrew into Koine Greek, ~3rd–2nd c. BCE</div><div class="conn-line"></div></div>
+
+  <div class="card" style="background:var(--a50);border-color:var(--a100);color:var(--a900);">
+    <div class="card-top">
+      <div class="badge" style="background:var(--a100);color:var(--a800);">Biblical Hebrew</div>
+      <div class="main">
+        <div class="namerow"><span class="name">Yohanan</span><span class="native" style="font-size:16px;letter-spacing:0.05em;">יוֹחָנָן</span></div>
+        <div class="meta">
+          <div class="meta-item"><span class="meta-lbl">Pron.</span><span class="meta-val">"yo-HAH-nan" (stress on 2nd syllable)</span></div>
+          <div class="meta-item"><span class="meta-lbl">Era</span><span class="meta-val">~6th c. BCE or earlier</span></div>
+          <div class="meta-item"><span class="meta-lbl">Meaning</span><span class="meta-val">God is gracious</span></div>
+          <div class="meta-item"><span class="meta-lbl">Region</span><span class="meta-val">Ancient Judah / Israel</span></div>
+        </div>
+        <div class="divider"></div>
+        <div class="notes">Compound of <em>Yah</em> (short form of YHWH) + <em>ḥānan</em> (to show grace or favor). Appears in the Hebrew Bible; common in Second Temple Judaism. Reads right-to-left: yod–waw–ḥet–nun–nun.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Semitic → Koine Greek → Latin → Old French → French → Irish → English<br>
+    All seven forms carry a single meaning across 2,600+ years: <em>"God is gracious"</em>
+  </div>
+
+  <div class="footnote">
+    <strong>Note:</strong> This diagram traces just one branch of a much larger family tree. A complete map of every name descending from Yohanan would fill a book — the name spread across nearly every language in the Christian and Jewish worlds. A small sample of siblings and cousins to Shawn:
+    <div class="name-chips">
+      <span class="chip">John (English)</span>
+      <span class="chip">Juan (Spanish)</span>
+      <span class="chip">Giovanni (Italian)</span>
+      <span class="chip">Johann (German)</span>
+      <span class="chip">Hans (German, diminutive)</span>
+      <span class="chip">Jan (Dutch / Slavic)</span>
+      <span class="chip">Ian (Scottish)</span>
+      <span class="chip">Ivan (Russian)</span>
+      <span class="chip">Evan (Welsh)</span>
+      <span class="chip">Eoin (Irish / Scottish)</span>
+      <span class="chip">Jovan (Serbian)</span>
+      <span class="chip">Ioan (Romanian / Welsh)</span>
+      <span class="chip">Joanna (English, feminine)</span>
+      <span class="chip">Jane (English, feminine)</span>
+      <span class="chip">Joan (English, feminine)</span>
+      <span class="chip">Jenna (English, feminine)</span>
+      <span class="chip">Siobhán (Irish, feminine)</span>
+      <span class="chip">Giovanna (Italian, feminine)</span>
+      <span class="chip">Nino (Georgian, feminine)</span>
+    </div>
+  </div>
+</div>
