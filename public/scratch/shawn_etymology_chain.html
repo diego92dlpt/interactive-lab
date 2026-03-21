@@ -41,9 +41,15 @@
 .conn-lbl{font-size:11px;color:var(--color-text-tertiary);padding:3px 12px;text-align:center;line-height:1.35;max-width:400px;}
 .conn-arr{color:var(--color-text-tertiary);font-size:13px;line-height:1;}
 .footer{margin-top:18px;padding-top:13px;border-top:0.5px solid var(--color-border-tertiary);font-size:11px;color:var(--color-text-tertiary);text-align:center;line-height:1.6;}
-.footnote{margin-top:10px;padding-top:10px;border-top:0.5px solid var(--color-border-tertiary);font-size:11px;color:var(--color-text-tertiary);line-height:1.6;text-align:left;}
-.footnote strong{font-weight:500;color:var(--color-text-secondary);}
-.name-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;}
+.fn-box{margin-top:12px;border:0.5px solid var(--color-border-secondary);border-radius:8px;padding:12px 14px;}
+.fn-label{display:flex;align-items:center;gap:7px;margin-bottom:7px;}
+.fn-icon{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;font-weight:500;}
+.fn-title{font-size:11px;font-weight:500;color:var(--color-text-secondary);}
+.fn-body{font-size:11px;color:var(--color-text-tertiary);line-height:1.6;}
+.fn-body em{color:var(--color-text-secondary);font-style:italic;}
+.fn-sources{margin-top:7px;font-size:10px;color:var(--color-text-tertiary);opacity:0.7;}
+.fn-sources a{color:inherit;}
+.name-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
 .chip{font-size:11px;padding:2px 9px;border-radius:20px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);color:var(--color-text-secondary);}
 </style>
 <div class="wrap">
@@ -83,12 +89,12 @@
           <div class="meta-item"><span class="meta-lbl">Region</span><span class="meta-val">Ireland</span></div>
         </div>
         <div class="divider"></div>
-        <div class="notes">Irish phonology transformed Anglo-Norman "Jehan" — the initial J shifted to Sh, and the vowel lengthened. The fada (á) marks the long vowel. One of the most common male names in Ireland.</div>
+        <div class="notes">Irish phonology transformed the Anglo-Norman name brought by the 1169 invasion — the initial J shifted to Sh, and the vowel lengthened. The fada (á) marks the long vowel. One of the most common male names in Ireland.</div>
       </div>
     </div>
   </div>
 
-  <div class="conn"><div class="conn-arr">↑</div><div class="conn-line"></div><div class="conn-lbl">Anglo-Norman settlers brought "Jehan" to Ireland (Norman invasion, 1169 CE); Irish phonology reshaped it</div><div class="conn-line"></div></div>
+  <div class="conn"><div class="conn-arr">↑</div><div class="conn-line"></div><div class="conn-lbl">Anglo-Norman settlers brought their name to Ireland (Norman invasion, 1169 CE); Irish phonology reshaped it</div><div class="conn-line"></div></div>
 
   <div class="card" style="background:var(--t50);border-color:var(--t100);color:var(--t800);">
     <div class="card-top">
@@ -188,8 +194,27 @@
     All seven forms carry a single meaning across 2,600+ years: <em>"God is gracious"</em>
   </div>
 
-  <div class="footnote">
-    <strong>Note:</strong> This diagram traces just one branch of a much larger family tree. A complete map of every name descending from Yohanan would fill a book — the name spread across nearly every language in the Christian and Jewish worlds. A small sample of siblings and cousins to Shawn:
+  <!-- Footnote 1: scholarly debate -->
+  <div class="fn-box">
+    <div class="fn-label">
+      <div class="fn-icon" style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);color:var(--color-text-tertiary);">①</div>
+      <span class="fn-title">A note on sources</span>
+    </div>
+    <div class="fn-body">
+      There is some scholarly debate as to which precise French form the Anglo-Norman invaders brought to Ireland in 1169 — and therefore which form directly preceded Irish <em>Seán</em>. The Online Etymology Dictionary traces the name through the Old French forms <em>Jan, Jean, Jehan</em> without clearly distinguishing which was current at the time of the invasion. Wikipedia's entry on Sean notes the name was adopted into Irish "most likely from <em>Jean</em>," yet elsewhere in the same article attributes the transmission to the Norman form <em>Jehan</em> or <em>Johan</em>. The most defensible position is that the Normans carried the two-syllable <em>Jehan</em> — since the contracted <em>Jean</em> emerged somewhat later — but the historical record is not precise enough to settle the matter definitively. The broader chain (Hebrew → Greek → Latin → French → Irish → English) is not in dispute.
+    </div>
+    <div class="fn-sources">Sources consulted: Online Etymology Dictionary (etymonline.com) · Wikipedia: Sean · Wikipedia: Jean</div>
+  </div>
+
+  <!-- Footnote 2: wider family tree -->
+  <div class="fn-box" style="margin-top:10px;">
+    <div class="fn-label">
+      <div class="fn-icon" style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);color:var(--color-text-tertiary);">②</div>
+      <span class="fn-title">Just one branch of a much larger tree</span>
+    </div>
+    <div class="fn-body">
+      This diagram traces a single path through the name's history. A complete map of every name descending from Yohanan would fill a book — the name spread across nearly every language in the Christian and Jewish worlds. A small sample of siblings and cousins to Shawn:
+    </div>
     <div class="name-chips">
       <span class="chip">John (English)</span>
       <span class="chip">Juan (Spanish)</span>
@@ -212,4 +237,5 @@
       <span class="chip">Nino (Georgian, feminine)</span>
     </div>
   </div>
+
 </div>
