@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cheatsheet 1 — Adding a New Experiment</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0d0d0d;
+      color: #e5e5e5;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      padding: 40px 24px 80px;
+    }
+
+    .page {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    /* ── Header ── */
+    .header-label {
+      font-family: monospace;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #4ade80;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      color: #6b7280;
+      font-size: 14px;
+      margin-bottom: 36px;
+    }
+
+    /* ── Phase headers ── */
+    .phase {
+      font-family: monospace;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #4b5563;
+      border-top: 1px solid #1f2937;
+      padding-top: 20px;
+      margin-top: 28px;
+      margin-bottom: 14px;
+    }
+
+    /* ── Step card ── */
+    .step {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    .step-num {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      background: #1a1a1a;
+      border: 1px solid #2d2d2d;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: monospace;
+      font-size: 12px;
+      color: #4ade80;
+      margin-top: 2px;
+    }
+
+    .step-body {
+      flex: 1;
+      background: #141414;
+      border: 1px solid #1f2937;
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+
+    .step-action {
+      font-weight: 600;
+      font-size: 15px;
+      color: #f3f4f6;
+      margin-bottom: 6px;
+    }
+
+    /* ── Code block inside a step ── */
+    .code-block {
+      background: #0a0a0a;
+      border: 1px solid #2d2d2d;
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin: 8px 0;
+      font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+      font-size: 12.5px;
+      color: #a3e635;
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    code {
+      font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+      font-size: 12.5px;
+      background: #1a1a1a;
+      color: #a3e635;
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+
+    /* ── Collapsible context ── */
+    details {
+      margin-top: 10px;
+    }
+
+    details summary {
+      cursor: pointer;
+      font-size: 12px;
+      color: #4b5563;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      user-select: none;
+    }
+
+    details summary::before {
+      content: "▶";
+      font-size: 9px;
+      transition: transform 0.15s;
+    }
+
+    details[open] summary::before {
+      transform: rotate(90deg);
+    }
+
+    details summary:hover {
+      color: #9ca3af;
+    }
+
+    details summary .summary-label {
+      font-family: monospace;
+      letter-spacing: 0.05em;
+    }
+
+    .details-body {
+      margin-top: 8px;
+      padding: 10px 12px;
+      background: #0f0f0f;
+      border-left: 2px solid #1f2937;
+      border-radius: 0 6px 6px 0;
+      font-size: 13px;
+      color: #6b7280;
+      line-height: 1.7;
+    }
+
+    .details-body p + p { margin-top: 6px; }
+
+    /* ── Alert / note boxes ── */
+    .note {
+      background: #111827;
+      border: 1px solid #1e3a5f;
+      border-left: 3px solid #3b82f6;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #93c5fd;
+      margin: 16px 0;
+    }
+
+    .note strong { color: #bfdbfe; }
+
+    /* ── Quick reference box ── */
+    .quick-ref {
+      margin-top: 40px;
+      background: #111;
+      border: 1px solid #2d2d2d;
+      border-radius: 12px;
+      padding: 20px 24px;
+    }
+
+    .quick-ref-title {
+      font-family: monospace;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #4ade80;
+      margin-bottom: 14px;
+    }
+
+    .qr-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 500px) { .qr-grid { grid-template-columns: 1fr; } }
+
+    .qr-item label {
+      display: block;
+      font-size: 11px;
+      color: #4b5563;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 3px;
+    }
+
+    .qr-item .qr-val {
+      font-family: monospace;
+      font-size: 13px;
+      color: #d1d5db;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top: 48px;
+      font-size: 12px;
+      color: #374151;
+      text-align: center;
+    }
+
+    .see-also {
+      margin-top: 32px;
+      background: #0f1f0f;
+      border: 1px solid #14532d;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #4ade80;
+    }
+
+    .see-also a {
+      color: #86efac;
+      text-decoration: none;
+    }
+
+    .see-also a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <p class="header-label">Interactive Lab — Cheatsheet 1 of 2</p>
+  <h1>Adding a New Experiment</h1>
+  <p class="subtitle">From idea to locally-running prototype, ready for deployment.</p>
+
+  <div class="note">
+    <strong>How to read this:</strong> Each step shows the action in bold — that's all you need to glance at.
+    Click <em>"▶ Details / Why"</em> only if you need more context or a reminder of why something matters.
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <p class="phase">Phase 1 — Set Up the Experiment Folder</p>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <div class="step-action">Create the experiment folder</div>
+      <div class="code-block">src/experiments/your-experiment-name/</div>
+      <details>
+        <summary><span class="summary-label">Details / Why</span></summary>
+        <div class="details-body">
+          <p>Use <strong>kebab-case</strong> (lowercase, hyphens, no spaces). This slug will become part of the public URL — e.g. <code>/experiments/epidemic-sim</code>.</p>
+          <p>Inside this folder, each experiment is self-contained: its own <code>index.jsx</code>, a <code>components/</code> subfolder, and any logic files.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <div class="step-action">Drop your documentation into a <code>docs/</code> subfolder inside it</div>
+      <div class="code-block">src/experiments/your-experiment-name/docs/
+  requirements.txt   ← or .md, .pdf — anything works
+  design-notes.txt
+  ...</div>
+      <details>
+        <summary><span class="summary-label">Details / Why</span></summary>
+        <div class="details-body">
+          <p>Claude Code can read <code>.txt</code>, <code>.md</code>, <code>.pdf</code>, and most text formats. Keeping docs here means you can start a fresh session and simply say <em>"read everything in this folder and give me a plan"</em> — no copy-pasting needed.</p>
+          <p>This also keeps experiment-specific context out of the project root.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <p class="phase">Phase 2 — Wire It Into the App (do this early)</p>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <div class="step-action">Register the route in <code>src/App.jsx</code></div>
+      <div class="code-block">// Add this import at the top:
+import MyExperiment from "./experiments/your-experiment-name";
+
+// Add this Route inside &lt;Routes&gt;:
+&lt;Route path="/experiments/your-experiment-name" element={&lt;MyExperiment /&gt;} /&gt;</div>
+      <details>
+        <summary><span class="summary-label">Details / Why</span></summary>
+        <div class="details-body">
+          <p>The <code>path</code> string here is what users see in the URL bar. It should match the folder name you chose in Step 1.</p>
+          <p>Do this early — even before Claude Code starts building — so you can navigate to the experiment in the browser while it's being built.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <div class="step-action">Add the experiment card in <code>src/pages/Home.jsx</code></div>
+      <div class="code-block">// Add an entry to the experiments array:
+{
+  title: "My Experiment",
+  description: "One sentence describing what this does.",
+  tag: "Category Label",
+  link: "/experiments/your-experiment-name",
+},</div>
+      <details>
+        <summary><span class="summary-label">Details / Why</span></summary>
+        <div class="details-body">
+          <p>The <code>tag</code> appears as the small green monospace label above the title (e.g., "Physics Simulation", "Epidemiology"). Pick something short and descriptive.</p>
+          <p>The <code>link</code> must exactly match the <code>path</code> you registered in App.jsx.</p>
+          <p>Wire this up early too — the card on the home page will work immediately and clicking it will route to your experiment as it's being built.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <p class="phase">Phase 3 — Build with Claude Code</p>
+
+  <div class="step">
+    <div class="step-num">5</div>
+    <div class="step-body">
+      <div class="step-action">Start a new Claude Code session. First prompt: ask it to read and plan — don't ask it to build yet</div>
+      <div class="code-block">"Please read all files in src/experiments/&lt;name&gt;/docs/ and give me
+a summary of what I'm building and a phased implementation plan."</div>
+      <details>
+        <summary><span class="summary-label">Details / Why</span></summary>
+        <div class="details-body">
+          <p>Letting CC read and summarize first surfaces any misunderstandings early, before code is written. Review its plan — make sure it has the right mental model before saying "go".</p>
+          <p>Ask for a <strong>phased plan</strong> if the experiment is complex. Phases let you test each piece before building the next.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">6</div>
+    <div class="step-body">
+      <div class="step-action">Approve the plan, then build one phase at a time</div>
+      <details>
+        <summary><span class="summary-label">Details / Why</span></summary>
+        <div class="details-body">
+          <p>Don't ask CC to build everything in one shot on complex experiments. A phased approach means each phase is testable and any mistakes are caught early instead of tangled into a large codebase.</p>
+          <p>Example prompts: <em>"Build phase 1 only"</em> → test → <em>"Phase 1 looks good, proceed to phase 2"</em>.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">7</div>
+    <div class="step-body">
+      <div class="step-action">Test constantly at <code>http://localhost:5173</code> — keep <code>npm run dev</code> running in the background</div>
+      <details>
+        <summary><span class="summary-label">Details / Why</span></summary>
+        <div class="details-body">
+          <p>Open a terminal in the project folder and run <code>npm run dev</code>. Leave it running the whole session — it hot-reloads automatically on every file save, so you see changes instantly without restarting.</p>
+          <p>To open a terminal in the right folder: navigate to <code>wait-calc-sim\</code> in File Explorer, right-click → "Open in Terminal".</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <p class="phase">Phase 4 — Wrap Up Locally</p>
+
+  <div class="step">
+    <div class="step-num">8</div>
+    <div class="step-body">
+      <div class="step-action">Run <code>npm run build</code> — it must complete with zero errors before deploying</div>
+      <details>
+        <summary><span class="summary-label">Details / Why</span></summary>
+        <div class="details-body">
+          <p><code>npm run dev</code> is forgiving — it lets some things slide. <code>npm run build</code> is strict and runs the same process Vercel uses. If it fails locally, it <em>will</em> fail on Vercel too.</p>
+          <p>Common things it catches: unused imports that are actually missing, syntax errors, broken asset paths.</p>
+          <p>Run this in the terminal from the project folder. A successful build ends with <strong>✓ built in Xs</strong>.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">9</div>
+    <div class="step-body">
+      <div class="step-action">Satisfied? → Switch to Cheatsheet 2 (Deploy)</div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <div class="quick-ref">
+    <p class="quick-ref-title">Quick Reference</p>
+    <div class="qr-grid">
+      <div class="qr-item">
+        <label>Local dev URL</label>
+        <span class="qr-val">http://localhost:5173</span>
+      </div>
+      <div class="qr-item">
+        <label>Start local server</label>
+        <span class="qr-val">npm run dev</span>
+      </div>
+      <div class="qr-item">
+        <label>Production build check</label>
+        <span class="qr-val">npm run build</span>
+      </div>
+      <div class="qr-item">
+        <label>Experiment folder</label>
+        <span class="qr-val">src/experiments/&lt;name&gt;/</span>
+      </div>
+      <div class="qr-item">
+        <label>Register route</label>
+        <span class="qr-val">src/App.jsx</span>
+      </div>
+      <div class="qr-item">
+        <label>Add home card</label>
+        <span class="qr-val">src/pages/Home.jsx</span>
+      </div>
+      <div class="qr-item">
+        <label>Shared components</label>
+        <span class="qr-val">src/components/</span>
+      </div>
+      <div class="qr-item">
+        <label>Experiment docs</label>
+        <span class="qr-val">src/experiments/&lt;name&gt;/docs/</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="see-also">
+    Ready to go live? →  <a href="cheatsheet-deploy.html">Cheatsheet 2 — Deploying to Production</a>
+  </div>
+
+  <p class="footer">interactive-lab · wait-calc-sim project · docs/cheatsheet-new-experiment.html</p>
+
+</div>
+</body>
+</html>

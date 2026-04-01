@@ -27,7 +27,7 @@ const RetroPanel = ({ title, theme, children, className = "" }) => (
 );
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
-export default function WaitCalculationSim() {
+export default function WaitCalculator() {
   const [themeKey, setThemeKey] = useState('emerald');
   const theme = THEMES[themeKey];
 

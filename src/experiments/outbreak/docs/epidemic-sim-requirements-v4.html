@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Epidemic Sim — Requirements v4 (Complete — all 17 sections locked)</title>
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --surface2: #222;
+    --border: #2a2a2a;
+    --text: #e0e0e0;
+    --muted: #888;
+    --accent: #4f8ef7;
+    --green: #3abfb8;
+    --amber: #e8c97a;
+    --red: #e05c3a;
+    --blue: #7a9ee8;
+    --mono: 'Courier New', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.7; }
+  .page { max-width: 960px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  /* Header */
+  .doc-header { border-bottom: 1px solid var(--border); padding-bottom: 24px; margin-bottom: 32px; }
+  .doc-title { font-size: 26px; font-weight: 600; color: #fff; margin-bottom: 6px; }
+  .doc-meta { font-size: 12px; color: var(--muted); display: flex; gap: 20px; flex-wrap: wrap; margin-top: 10px; }
+  .doc-meta span { display: flex; align-items: center; gap: 6px; }
+  .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 500; }
+  .badge-done { background: #1a3a2a; color: #3abfb8; border: 1px solid #2a5a3a; }
+  .badge-pending { background: #2a2a1a; color: #e8c97a; border: 1px solid #4a4a2a; }
+  .badge-scope { background: #1a2a3a; color: #7a9ee8; border: 1px solid #2a3a5a; }
+
+  /* Nav */
+  .toc { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px; margin-bottom: 40px; }
+  .toc-title { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+  .toc-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 24px; }
+  .toc-list li a { color: var(--accent); text-decoration: none; font-size: 13px; }
+  .toc-list li a:hover { text-decoration: underline; }
+  .toc-section { color: var(--muted); font-size: 11px; padding-top: 6px; }
+
+  /* Sections */
+  .section { margin-bottom: 48px; }
+  .section-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .section-num { font-size: 11px; color: var(--muted); font-family: var(--mono); min-width: 32px; }
+  .section-title { font-size: 18px; font-weight: 600; color: #fff; }
+  .section-tag { font-size: 11px; }
+
+  h3 { font-size: 14px; font-weight: 600; color: var(--amber); margin: 20px 0 8px; }
+  p { margin-bottom: 10px; color: var(--text); }
+
+  /* Tables */
+  .tbl-wrap { overflow-x: auto; margin: 12px 0 20px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: var(--surface2); color: var(--muted); font-weight: 500; text-align: left; padding: 8px 12px; border: 1px solid var(--border); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+  td { padding: 8px 12px; border: 1px solid var(--border); color: var(--text); vertical-align: top; }
+  tr:nth-child(even) td { background: #141414; }
+  code { font-family: var(--mono); font-size: 12px; background: var(--surface2); padding: 1px 5px; border-radius: 3px; color: var(--green); }
+
+  /* Info cards */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 16px 20px; margin: 12px 0; }
+  .card-title { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+  .card p { margin-bottom: 6px; font-size: 13px; }
+
+  /* Decision list */
+  .decision { border-left: 3px solid var(--accent); padding: 8px 0 8px 16px; margin: 8px 0; }
+  .decision-q { font-size: 12px; color: var(--muted); margin-bottom: 2px; }
+  .decision-a { font-size: 13px; color: var(--text); }
+
+  /* State colors */
+  .state-s { color: #aaa; }
+  .state-e { color: var(--amber); }
+  .state-i { color: var(--red); }
+  .state-r { color: var(--green); }
+  .state-d { color: #555; }
+  .state-v { color: var(--blue); }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+
+  /* Locked summary boxes */
+  .locked { background: #0f1f0f; border: 1px solid #1a3a1a; border-radius: 6px; padding: 16px 20px; margin: 16px 0; }
+  .locked-title { font-size: 11px; font-weight: 600; color: #3abfb8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+
+  /* Callout */
+  .callout { background: #1a1a2a; border-left: 3px solid var(--accent); padding: 10px 16px; margin: 12px 0; font-size: 13px; border-radius: 0 4px 4px 0; }
+  .callout.amber { background: #1f1a0f; border-color: var(--amber); }
+  .callout.red { background: #1f0f0f; border-color: var(--red); }
+
+  /* Divider */
+  .part-divider { text-align: center; padding: 20px 0; margin: 40px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .part-divider span { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+
+  /* Footer */
+  .doc-footer { margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="doc-header">
+    <div class="doc-title">Epidemic Simulation Tool — Requirements</div>
+    <p style="color:var(--muted);font-size:13px;margin-top:6px;">Interactive Labs — Experiment #2. Complete requirements document — all 17 sections locked.</p>
+    <div class="doc-meta">
+      <span><span class="badge badge-done">Outbreak</span> Fully scoped</span>
+      <span><span class="badge badge-done">Scenario Lab</span> All sections locked</span>
+      <span>Version: 4.0 — complete first pass</span>
+      <span>Status: Ready for build planning</span>
+    </div>
+  </div>
+
+  <div class="toc">
+    <div class="toc-title">Contents</div>
+    <ul class="toc-list">
+      <li class="toc-section">Overview</li>
+      <li class="toc-section">&nbsp;</li>
+      <li><a href="#s1">1. Tool Overview & Naming</a></li>
+      <li><a href="#s2">2. Report Export & Config Persistence</a></li>
+      <li class="toc-section">Outbreak (complete)</li>
+      <li class="toc-section">&nbsp;</li>
+      <li><a href="#s3">3. Disease Model</a></li>
+      <li><a href="#s4">4. Population Model</a></li>
+      <li><a href="#s5">5. Contact & Mobility</a></li>
+      <li><a href="#s6">6. Time Model</a></li>
+      <li><a href="#s7">7. Intervention & Policy</a></li>
+      <li><a href="#s8">8. Visualization & UI</a></li>
+      <li><a href="#s9">9. Output & Analytics</a></li>
+      <li class="toc-section">Scenario Lab (complete — all sections locked)</li>
+      <li class="toc-section">&nbsp;</li>
+      <li><a href="#s10">10. Scenario Lab Overview</a></li>
+      <li><a href="#s11">11. SL — Disease Model</a></li>
+      <li><a href="#s12">12. SL — Population Model</a></li>
+      <li><a href="#s13">13. SL — Contact & Mobility</a></li>
+      <li><a href="#s14">14. SL — Time Model</a></li>
+      <li><a href="#s15">15. SL — Intervention & Policy</a></li>
+      <li><a href="#s16">16. SL — Output & Analytics</a></li>
+      <li><a href="#s17">17. SL — Visualization & UI</a></li>
+    </ul>
+  </div>
+
+  <!-- SECTION 1 -->
+  <div class="section" id="s1">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <span class="section-title">Tool Overview & Naming</span>
+      <span class="badge badge-done">locked</span>
+    </div>
+
+    <p>This tool is Experiment #2 on the Interactive Lab portal (<code>interactive-lab.vercel.app</code>). It consists of two distinct simulation modes housed in a single tool, accessed from a shared landing page where the user chooses which mode to enter.</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Mode</th><th>Name</th><th>Landing page description</th></tr>
+        <tr>
+          <td><strong>ABM</strong></td>
+          <td><strong>Outbreak</strong></td>
+          <td>Watch a pathogen move through a population in real time. Configure transmission, immunity, and quarantine behavior — then let 1,000 individuals find their own fate.</td>
+        </tr>
+        <tr>
+          <td><strong>Monte Carlo</strong></td>
+          <td><strong>Scenario Lab</strong></td>
+          <td>Build a detailed epidemic model and run it hundreds of times. Tune demographics, disease parameters, policies, and behaviors — then compare outcomes across configurations to understand what actually moves the needle.</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="callout amber">Scenario Lab's full scope is documented in sections 10–17 of this document.</div>
+  </div>
+
+  <!-- SECTION 2 -->
+  <div class="section" id="s2">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <span class="section-title">Report Export & Config Persistence</span>
+      <span class="badge badge-scope">Scenario Lab only</span>
+    </div>
+
+    <p>Scenario Lab supports two persistence features: report export for sharing and record-keeping, and config save/load for returning to a previous parameter set. The original file-based compare tool has been superseded by the in-session what-if comparison system documented in Section 10.</p>
+
+    <h3>Report export</h3>
+    <p>After a run completes, the user can export the full report as a self-contained HTML file. This file is for sharing and archiving — not for comparison (comparison is in-session). The exported file contains:</p>
+    <div class="card">
+      <div class="card-title">Exported HTML structure</div>
+      <p><strong>Visible report</strong> — scenario name, description, date/time of run, curated key parameter summary, all charts and tables from the Output & Analytics section.</p>
+      <p><strong>Invisible JSON block</strong> — full config snapshot embedded as <code>&lt;script type="application/json" id="scenario-config"&gt;</code>. Never rendered in the browser. Used only for config reload.</p>
+    </div>
+
+    <h3>Config save and load</h3>
+    <p>The user can export their current config as a JSON file and reload it in a future session. On load, all sliders and toggles repopulate to the saved values. This allows returning to a previous parameter set without rebuilding from scratch.</p>
+    <p>Config load is also triggered by loading a previously exported HTML report — the tool reads the embedded JSON block and restores all parameters. The user can then modify settings and run a new scenario.</p>
+
+    <h3>Scenario name and description</h3>
+    <p>User-provided before running. Name is required — Run button is gated until a name is entered. Description is optional free text for context. Both appear prominently in the exported report header.</p>
+
+    <h3>No session memory</h3>
+    <p>No auto-save. No backend. No persistent state between browser sessions. If the user closes the tab without exporting, their run is lost. This is by design — the tool is stateless.</p>
+
+    <h3>What was superseded</h3>
+    <div class="callout amber">The original design included a file-based twin-pane compare tool with synchronized scrolling and format validation. This has been replaced entirely by the in-session what-if comparison system (Section 10). Two scenarios are now compared live within a single session using the same random seed — no file management required.</div>
+  </div>
+
+  <!-- DIVIDER -->
+  <div class="part-divider"><span>Outbreak — Full Scope</span></div>
+
+  <!-- SECTION 3 -->
+  <div class="section" id="s3">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <span class="section-title">Disease Model — Outbreak</span>
+      <span class="badge badge-done">locked</span>
+    </div>
+
+    <h3>State machine</h3>
+    <p>Six mutually exclusive states. Each dot is always in exactly one state. Transitions are one-way only — no backward transitions, no reinfection.</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>State</th><th>Label</th><th>Meaning</th><th>Transitions to</th></tr>
+        <tr><td><span class="dot" style="background:#aaa"></span><span class="state-s">S</span></td><td>Susceptible</td><td>Healthy, no immunity, can be infected</td><td>E</td></tr>
+        <tr><td><span class="dot" style="background:#e8c97a"></span><span class="state-e">E</span></td><td>Exposed</td><td>Infected, incubating, not yet infectious</td><td>I</td></tr>
+        <tr><td><span class="dot" style="background:#e05c3a"></span><span class="state-i">I</span></td><td>Infectious</td><td>Actively spreading disease</td><td>R or D</td></tr>
+        <tr><td><span class="dot" style="background:#3abfb8"></span><span class="state-r">R</span></td><td>Recovered</td><td>No longer infectious; partial or full immunity</td><td>—</td></tr>
+        <tr><td><span class="dot" style="background:#555"></span><span class="state-d">D</span></td><td>Dead</td><td>Frozen in place, × marker, stays on canvas</td><td>—</td></tr>
+        <tr><td><span class="dot" style="background:#7a9ee8"></span><span class="state-v">V</span></td><td>Vaccinated</td><td>Pre-immune at sim start; partial or full immunity</td><td>—</td></tr>
+      </table>
+    </div>
+
+    <h3>Transmission mechanics</h3>
+    <p>Every S×I dot collision triggers an independent Bernoulli trial (coin-toss) at probability <code>p</code>. Success = S transitions to E. No distributions, no memory, no correlation between events.</p>
+    <p>R×I collisions use the same coin-toss with effective probability = <code>p × (1 − RI%)</code>. At RI = 100% the collision is inert. At RI = 0% recovered dots are as vulnerable as susceptible.</p>
+    <p>V×I collisions use the same coin-toss with effective probability = <code>p × (1 − VI%)</code>. At VI = 100% the collision is inert. VI% and RI% are independent sliders — vaccine-derived and infection-derived immunity are not assumed to be equal.</p>
+    <p>E×any collisions do <strong>not</strong> trigger transmission. E-dots are infected but not yet infectious — they participate in Brownian motion and physical bouncing normally, but never act as a transmission source.</p>
+
+    <h3>Mask wearing — per-collision modifier</h3>
+    <p>Applies to all transmission-eligible collisions: S×I, R×I, and V×I. The table below uses S-dot as shorthand for the receiving dot, but the same formula applies when the receiving dot is R or V (with their respective immunity factors applied first, then the mask modifier).</p>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>I-dot masked</th><th>S-dot masked</th><th>Effective transmission probability</th></tr>
+        <tr><td>No</td><td>No</td><td><code>p</code></td></tr>
+        <tr><td>Yes</td><td>No</td><td><code>p × (1 − ME%)</code></td></tr>
+        <tr><td>No</td><td>Yes</td><td><code>p × (1 − ME%)</code></td></tr>
+        <tr><td>Yes</td><td>Yes</td><td><code>p × (1 − ME%)²</code></td></tr>
+      </table>
+    </div>
+    <p>Mask assignment is per-dot at initialization, coin-tossed at probability MW%. Never changes during run.</p>
+
+    <h3>Disease parameters (all sliders)</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Parameter</th><th>Description</th><th>Notes</th></tr>
+        <tr><td><code>p</code></td><td>Transmission risk per contact</td><td>0–100%. Direct input. R₀ is the emergent output, not a direct input.</td></tr>
+        <tr><td>Incubation period</td><td>Days in E before becoming I</td><td>Point estimate, not a distribution</td></tr>
+        <tr><td>Infectious duration</td><td>Days in I before resolving</td><td>Point estimate</td></tr>
+        <tr><td>IFR</td><td>Probability of D vs R at I resolution</td><td>Infection fatality rate</td></tr>
+        <tr><td>VI%</td><td>Vaccine immunity factor for V dots</td><td>0–100%. Dampens effective p in V×I collisions.</td></tr>
+        <tr><td>RI%</td><td>Recovery immunity factor for R dots</td><td>0–100%. Independent of VI%.</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Emergent R₀</div>
+      <p>R₀ is not a direct input. It emerges from the combination of <code>p</code>, temperature (contact rate), and infectious duration. Displayed as a live "Observed R₀" readout during and after the run. The readout is labeled clearly as emergent/observed to distinguish from a theoretical input.</p>
+    </div>
+
+    <h3>Explicitly out of scope for Outbreak</h3>
+    <p>Age/demographic variation in p or IFR · asymptomatic carriers as a distinct state · immunity waning · reinfection · stochastic parameter variation (all params are point estimates).</p>
+  </div>
+
+  <!-- SECTION 4 -->
+  <div class="section" id="s4">
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <span class="section-title">Population Model — Outbreak</span>
+      <span class="badge badge-done">locked</span>
+    </div>
+
+    <p>Homogeneous population. All dots are identical in behavior and vulnerability. The only differentiator between dots is their current SEIRD/V state.</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Parameter</th><th>Range</th><th>Default</th><th>Notes</th></tr>
+        <tr><td>N — total population</td><td>100–2000</td><td>1000</td><td>Dot count. Capped at 2000 for performance.</td></tr>
+        <tr><td>Initial infected</td><td>1–10</td><td>3</td><td>Whole number. Seeded as I (visible, infectious) at t=0.</td></tr>
+        <tr><td>V% — immunity head-start</td><td>0–100%</td><td>0%</td><td>% of population beginning in V state. Never entered S.</td></tr>
+      </table>
+    </div>
+
+    <p>All inputs support slider + manual type-in. All inputs have tooltips. All inputs are touch-accessible. Config is locked once sim starts.</p>
+
+    <p>Demographic attributes, household structure, social clustering — all deferred to Scenario Lab.</p>
+  </div>
+
+  <!-- SECTION 5 -->
+  <div class="section" id="s5">
+    <div class="section-header">
+      <span class="section-num">05</span>
+      <span class="section-title">Contact & Mobility Model — Outbreak</span>
+      <span class="badge badge-done">locked</span>
+    </div>
+
+    <h3>The arena</h3>
+    <p>Single rectangular box, fixed 16:9 aspect ratio (landscape). Hard wall boundaries — dots bounce off walls. No zones, no geography. Responsive to device orientation: on portrait tablets, aspect ratio rotates/refits to use available space. Dot radius is auto-tuned relative to box size and N — not user-exposed.</p>
+
+    <h3>Brownian motion</h3>
+    <p>Each dot has position (x, y) and a velocity vector (direction + speed). Each tick: velocity applied to position, then a small random directional nudge (JITTER_FACTOR) perturbs direction to produce organic wandering. Two named constants live at top of config/constants file:</p>
+    <div class="card">
+      <p><code>BASE_SPEED</code> — canonical starting velocity magnitude before temperature scaling</p>
+      <p><code>JITTER_FACTOR</code> — magnitude of per-tick random directional nudge</p>
+    </div>
+
+    <h3>Temperature</h3>
+    <p>Three discrete settings: L / M / H. Controls average dot speed via a scalar applied to BASE_SPEED. Auto-normalized for density: <code>BASE_SPEED = k × (box_area / N)^0.5</code> where k_L, k_M, k_H are tunable constants. This ensures LMH feels consistently meaningful regardless of population size. Temperature affects all dots except compliant I-dots (stationary) and D-dots (frozen).</p>
+
+    <h3>Collision detection — two types</h3>
+    <p><strong>Dot-dot:</strong> collision = distance between centers ≤ sum of radii. S×I pairs trigger transmission coin-toss. R×I pairs trigger partial immunity coin-toss. Physical elastic bounce on all collisions (velocity exchange). A named boolean constant <code>DOT_DOT_ELASTIC</code> toggles this off to pass-through if performance testing requires it.</p>
+    <p><strong>Dot-fence:</strong> collision = distance from dot center to fence center ≤ fence radius. Per-DOT-FENCE pair flag prevents re-evaluation mid-penetration. Flag released when dot distance > fence radius (checked every tick). Fence is circular.</p>
+
+    <h3>Quarantine fence mechanics (detailed)</h3>
+    <div class="decision">
+      <div class="decision-q">When does a fence appear?</div>
+      <div class="decision-a">When an I-dot is coin-tossed as compliant (per QC%), it stops moving and a static circular fence F is instantiated at 3× dot radius, centered on that I-dot.</div>
+    </div>
+    <div class="decision">
+      <div class="decision-q">Overlapping fences?</div>
+      <div class="decision-a">Each fence is an independent entity. A dot can carry simultaneous pass-through flags for multiple fences with no conflict.</div>
+    </div>
+    <div class="decision">
+      <div class="decision-q">Fence lifecycle?</div>
+      <div class="decision-a">Destroyed immediately when its I-dot transitions to R or D.</div>
+    </div>
+    <div class="decision">
+      <div class="decision-q">Non-compliant I-dots?</div>
+      <div class="decision-a">Continue moving freely at normal temperature. No fence is created. Behave identically to pre-quarantine model.</div>
+    </div>
+    <div class="decision">
+      <div class="decision-q">Fence visual treatment?</div>
+      <div class="decision-a">Low-opacity dashed ring. Subtle — present but not visually dominant. Does not obscure dots moving nearby.</div>
+    </div>
+    <div class="decision">
+      <div class="decision-q">All other dots vs fence?</div>
+      <div class="decision-a">100% bounce off fence (compliance model is on I-dots, not on other dots respecting the fence). S×I collision detection inside the fence continues unchanged.</div>
+    </div>
+  </div>
+
+  <!-- SECTION 6 -->
+  <div class="section" id="s6">
+    <div class="section-header">
+      <span class="section-num">06</span>
+      <span class="section-title">Time Model — Outbreak</span>
+      <span class="badge badge-done">locked</span>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Concept</th><th>Value / Rule</th></tr>
+        <tr><td>Sim time unit</td><td>Abstract sim-days</td></tr>
+        <tr><td>Internal tick resolution</td><td>60 ticks = 1 sim-day (fixed constant)</td></tr>
+        <tr><td>Render decoupling</td><td>Tick rate is independent of framerate. Playback speed controls ticks-per-rendered-frame.</td></tr>
+        <tr><td>Biological durations</td><td>Expressed in sim-days by user; converted to ticks internally</td></tr>
+        <tr><td>Day counter display</td><td><code>[11.3 days]</code> — always visible, one decimal, updates every rendered frame</td></tr>
+      </table>
+    </div>
+
+    <h3>Playback controls</h3>
+    <p>Discrete speed buttons (touch-friendly): <code>0.2×</code> · <code>0.5×</code> · <code>1×</code> · <code>2×</code> · <code>3×</code> · <code>5×</code> · <code>⏩</code></p>
+    <p>Fast-finish (⏩): tight compute loop, no rendering, jumps to end state and initiates parade.</p>
+
+    <h3>PAUSE and STOP</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Button</th><th>Behavior</th><th>Reversible?</th></tr>
+        <tr><td>PAUSE</td><td>Freezes sim and day counter. RESUME appears in its place.</td><td>Yes</td></tr>
+        <tr><td>STOP</td><td>Terminal. Confirmation nudge required. Initiates end-state parade.</td><td>No</td></tr>
+      </table>
+    </div>
+
+    <h3>End conditions</h3>
+    <p>Whichever triggers first wins.</p>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Condition</th><th>Notes</th></tr>
+        <tr><td>No I-dots remaining</td><td>Natural terminus — outbreak resolved</td></tr>
+        <tr><td>No infectable dots remaining</td><td>S = 0 AND (V = 0 OR VI% = 100%)</td></tr>
+        <tr><td>Fizzle condition</td><td>Fewer than 1 new infection per day for X consecutive sim-days. X is user-settable 1–14, default 3.</td></tr>
+        <tr><td>Max sim-days</td><td>Hard ceiling. Suggested default: 365 sim-days.</td></tr>
+        <tr><td>User hits STOP</td><td>Terminal, immediate parade.</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- SECTION 7 -->
+  <div class="section" id="s7">
+    <div class="section-header">
+      <span class="section-num">07</span>
+      <span class="section-title">Intervention & Policy Model — Outbreak</span>
+      <span class="badge badge-done">locked</span>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Parameter</th><th>Type</th><th>Range</th><th>Default</th><th>Notes</th></tr>
+        <tr><td>QP — Quarantine Practiced</td><td>Toggle</td><td>On / Off</td><td>Off</td><td>Enables quarantine mechanics. Set before run only.</td></tr>
+        <tr><td>QC — Quarantine Compliance</td><td>Slider</td><td>0–100%</td><td>50%</td><td>% of I-dots that self-isolate. Coin-tossed at moment of I-transition. Visible only if QP = On.</td></tr>
+        <tr><td>MW — Mask Wearing</td><td>Slider</td><td>0–100%</td><td>0%</td><td>% of dots assigned a mask flag at initialization.</td></tr>
+        <tr><td>ME — Mask Effectiveness</td><td>Slider</td><td>0–50%</td><td>30%</td><td>Per-participant dampener on p. Compounds if both parties masked.</td></tr>
+      </table>
+    </div>
+
+    <div class="callout amber">Quarantine compliance model: QC governs whether infected people self-isolate. Other dots 100% respect fences. This models real-world compliance failure as primarily an infected-person behavior, not a bystander behavior.</div>
+  </div>
+
+  <!-- SECTION 8 -->
+  <div class="section" id="s8">
+    <div class="section-header">
+      <span class="section-num">08</span>
+      <span class="section-title">Visualization & UI — Outbreak</span>
+      <span class="badge badge-done">locked</span>
+    </div>
+
+    <h3>Color palette</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>State</th><th>Color</th><th>Marker</th></tr>
+        <tr><td><span class="state-s">S — Susceptible</span></td><td>Soft white/light grey</td><td>Filled circle</td></tr>
+        <tr><td><span class="state-e">E — Exposed</span></td><td>Amber/warm yellow</td><td>Filled circle (toggle: same as S or distinct)</td></tr>
+        <tr><td><span class="state-i">I — Infectious</span></td><td>Vivid red-orange</td><td>Filled circle</td></tr>
+        <tr><td><span class="state-r">R — Recovered</span></td><td>Teal/cyan</td><td>Filled circle</td></tr>
+        <tr><td><span class="state-d">D — Dead</span></td><td>Desaturated grey</td><td>Circle + × marker</td></tr>
+        <tr><td><span class="state-v">V — Vaccinated</span></td><td>Soft blue/periwinkle</td><td>Filled circle + center dot</td></tr>
+      </table>
+    </div>
+    <p>Color vision deficiency safe — no red/green-only differentiation. Works on both dark (default) and light backgrounds.</p>
+
+    <h3>Layout</h3>
+    <p><strong>Landscape:</strong> sim canvas (majority of space) + sidebar to the right (live counts, config, playback).</p>
+    <p><strong>Portrait tablet:</strong> canvas stacks above, control panel below. Canvas always gets priority on space.</p>
+
+    <h3>Live readouts (always visible during run)</h3>
+    <p>Day counter · current S/E/I/R/D/V counts (raw + %) · Observed R₀ (rolling) · mini epidemic curve (compact inline line chart of daily new infections, grows rightward)</p>
+
+    <h3>Configuration panel</h3>
+    <p>Collapsible sections: Population · Disease · Mobility · Interventions · Simulation. Each parameter: slider + manual type-in + hover/tap tooltip + [?] link to wiki section. Panel collapses during run to give canvas more space.</p>
+
+    <h3>Display settings</h3>
+    <p>Persistent icon (gear/sliders) opens a compact popover with: Dark/Light mode toggle (Dark default) · E dots distinct from S toggle · Volume slider.</p>
+
+    <h3>Sound</h3>
+    <p>Subtle audio on: dot-dot collisions · dot-fence collisions · dot-wall collisions. Volume slider in display settings. Default: medium.</p>
+
+    <h3>Help system</h3>
+    <p>One-liner tooltip on every parameter. Persistent [?] button opens wiki-style panel with navigable sections (table of contents, each section 2–4 paragraphs, plain English). Sections: What is this simulation · Disease states · Understanding R₀ · How transmission works · Quarantine mechanics · Mask wearing model · Reading the epidemic curve · End-state parade.</p>
+
+    <h3>Accessibility</h3>
+    <p>Touch-native from ground up. No mouse assumptions. Discrete buttons preferred over continuous sliders where applicable. Responsive to device orientation changes mid-session.</p>
+  </div>
+
+  <!-- SECTION 9 -->
+  <div class="section" id="s9">
+    <div class="section-header">
+      <span class="section-num">09</span>
+      <span class="section-title">Output & Analytics — Outbreak</span>
+      <span class="badge badge-done">locked</span>
+    </div>
+
+    <h3>End-state parade</h3>
+    <p>Triggered by any end condition or user STOP. All Brownian motion halts simultaneously. Dots animate into ordered columns grouped by final state.</p>
+    <p><strong>Column order (left to right):</strong> S · V · R · D — narrative arc from never-infected (left) to worst outcome (right).</p>
+    <p>D-dots retain animatable position (frozen during run, but moveable for parade). Dot size unchanged during parade. Above each column: state label + count + % of N.</p>
+
+    <h3>Summary stats (shown after parade)</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Stat</th><th>Label</th></tr>
+        <tr><td>Total infected</td><td>Count + % of N</td></tr>
+        <tr><td>Deaths</td><td>Count + % of N</td></tr>
+        <tr><td>Never infected</td><td>S + V survivors combined</td></tr>
+        <tr><td>Observed R₀</td><td>Emergent from run</td></tr>
+        <tr><td>Duration</td><td>Sim-days to end condition</td></tr>
+      </table>
+    </div>
+
+    <h3>Config strip</h3>
+    <p>Below summary stats: key parameters shown as compact pills — p · IFR · Temp · Incubation · Infectious duration · QP · QC · MW · ME · N. Not a full dump of all params.</p>
+
+    <h3>Post-run actions</h3>
+    <p>Two buttons: <strong>Reset & reconfigure</strong> (returns to config panel, blank state) · <strong>Run again (same config)</strong> (re-runs immediately with identical settings).</p>
+
+    <div class="callout">No export, no save, no Monte Carlo output. Single-run only. Outbreak's output is entirely visual and ephemeral — summary is shown on screen but not saveable. Saveable reports are Scenario Lab territory.</div>
+  </div>
+
+  <!-- DIVIDER -->
+  <div class="part-divider"><span>Scenario Lab — Partial Scope</span></div>
+
+  <!-- SECTION 10 -->
+  <div class="section" id="s10">
+    <div class="section-header">
+      <span class="section-num">10</span>
+      <span class="section-title">Scenario Lab — Overview</span>
+      <span class="badge badge-done">locked</span>
+    </div>
+
+    <p>Scenario Lab is the Monte Carlo simulation mode. No live animation. The user configures a detailed disease model, optionally sets up a what-if comparison scenario, then runs 100–1000 simulations. Results are presented as statistical distributions, not single outcomes. The core pedagogical goal is illuminating the <strong>flaw of averages</strong> — showing that average inputs produce a distribution of outcomes, not a single average outcome.</p>
+
+    <h3>Pedagogical focus</h3>
+    <p>Three specific MCS lessons are woven into the tool's design:</p>
+    <div class="decision">
+      <div class="decision-q">Lesson 1 — Stochastic extinction</div>
+      <div class="decision-a">At R₀ = 2.5, roughly 30% of outbreaks fizzle naturally from a single introduction. The average predicts explosive growth. The distribution reveals a bimodal world of fizzles and explosions.</div>
+    </div>
+    <div class="decision">
+      <div class="decision-q">Lesson 2 — Superspreader overdispersion</div>
+      <div class="decision-a">Two diseases with identical R₀ but different k produce completely different outbreak distributions. Same average, wildly different risk profiles. A formula cannot show this.</div>
+    </div>
+    <div class="decision">
+      <div class="decision-q">Lesson 3 — Compounding variance</div>
+      <div class="decision-a">Pre-symptomatic window, asymptomatic fraction, and infectious duration each have variance. That variance compounds across transmission chains. The distribution of outcomes is far wider than any formula predicts.</div>
+    </div>
+
+    <h3>What-if comparison system</h3>
+    <p>Before running, the user may optionally configure a what-if scenario alongside the baseline. The flow:</p>
+    <div class="decision">
+      <div class="decision-q">Step 1</div>
+      <div class="decision-a">User configures baseline — all sliders, toggles, and parameters set as desired. Does not hit Run yet.</div>
+    </div>
+    <div class="decision">
+      <div class="decision-q">Step 2 (optional)</div>
+      <div class="decision-a">A checkbox/button asks: "Compare with a what-if scenario?" Default = No. If Yes, a modal opens pre-populated with all baseline settings. User changes 1–3 parameters to create the what-if variant.</div>
+    </div>
+    <div class="decision">
+      <div class="decision-q">Step 3</div>
+      <div class="decision-a">User hits Run. Both scenarios execute using the same random seed, same MC run count, same N. Results appear in twin-pane side-by-side view.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Locked vs free parameters between baseline and what-if</div>
+      <p><strong>Locked (cannot differ):</strong> random seed · N · MC run count · max sim-days · initial infected · V% · M%</p>
+      <p><strong>Free to differ:</strong> any disease model parameter · any intervention/policy parameter · contact rate c</p>
+    </div>
+
+    <h3>Design philosophy</h3>
+    <p>Modern and polished visual design — distinct from Outbreak's retro aesthetic. Not generic AI-generated UI. Full details deferred to Section 17.</p>
+  </div>
+
+  <!-- SECTION 11 -->
+  <div class="section" id="s11">
+    <div class="section-header">
+      <span class="section-num">11</span>
+      <span class="section-title">Scenario Lab — Disease Model</span>
+      <span class="badge badge-done">locked</span>
+    </div>
+
+    <h3>State machine</h3>
+    <p>Eight mutually exclusive states. Origin flag (S, V, or M) is assigned at infection and never changes. It governs effective transmission probability, IFR applied at I, and post-recovery destination.</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>State</th><th>Label</th><th>Duration</th><th>Transmits?</th><th>Notes</th></tr>
+        <tr><td>S</td><td>Susceptible</td><td>—</td><td>No</td><td>Baseline infection probability p</td></tr>
+        <tr><td>V</td><td>Vaccinated</td><td>—</td><td>No</td><td>p × (1 − VI%). Returns to V after recovery.</td></tr>
+        <tr><td>M</td><td>Immune</td><td>—</td><td>No</td><td>p × (1 − MI%). S-origin recovers here.</td></tr>
+        <tr><td>E</td><td>Exposed/Latent</td><td>~2 days fixed constant</td><td>No</td><td>Not user-configurable. Required for accurate programming.</td></tr>
+        <tr><td>P</td><td>Pre-symptomatic</td><td>PSD: shifted NegBin(μ−1, k), floor=1</td><td>Yes — full p</td><td>Never quarantines. Person unaware they are infectious.</td></tr>
+        <tr><td>A</td><td>Asymptomatic</td><td>SD: shifted NegBin(μ−1, k), floor=1</td><td>Yes — p × AS%</td><td>Never quarantines. Always resolves to M.</td></tr>
+        <tr><td>I</td><td>Symptomatic</td><td>SD: shifted NegBin(μ−1, k), floor=1</td><td>Yes — full p</td><td>May quarantine if QP=On. Resolves to D or origin state.</td></tr>
+        <tr><td>D</td><td>Dead</td><td>Terminal</td><td>No</td><td>No exit. Frozen.</td></tr>
+      </table>
+    </div>
+
+    <h3>State transitions</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>From</th><th>To</th><th>Trigger / splitting variable</th></tr>
+        <tr><td>S, V, or M</td><td>E</td><td>Contact with P, I, or A. Effective p determined by origin state.</td></tr>
+        <tr><td>E</td><td>P</td><td>(1 − AF%) coin toss at end of latent period</td></tr>
+        <tr><td>E</td><td>A</td><td>AF% coin toss at end of latent period</td></tr>
+        <tr><td>P</td><td>I</td><td>After PSD duration. Always — no split.</td></tr>
+        <tr><td>I</td><td>D</td><td>IFR_origin coin toss at end of SD duration</td></tr>
+        <tr><td>I</td><td>origin state</td><td>(1 − IFR_origin) — recovery returns to V, M, or M depending on origin</td></tr>
+        <tr><td>A</td><td>M</td><td>Always — after SD duration. No fatality on asymptomatic path.</td></tr>
+      </table>
+    </div>
+
+    <h3>Effective transmission probability by collision type</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Transmitter</th><th>Receiver</th><th>Base p</th><th>Mask modifier</th></tr>
+        <tr><td>P</td><td>S</td><td>p</td><td>see mask formula</td></tr>
+        <tr><td>P</td><td>V</td><td>p × (1 − VI%)</td><td>see mask formula</td></tr>
+        <tr><td>P</td><td>M</td><td>p × (1 − MI%)</td><td>see mask formula</td></tr>
+        <tr><td>I</td><td>S/V/M</td><td>same as P rows + quarantine modifier</td><td>see mask formula</td></tr>
+        <tr><td>A</td><td>S/V/M</td><td>P rows × AS%</td><td>see mask formula</td></tr>
+      </table>
+    </div>
+
+    <h3>Mask modifier formula</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Transmitter masked</th><th>Receiver masked</th><th>Multiplier on base p</th></tr>
+        <tr><td>No</td><td>No</td><td>1.0</td></tr>
+        <tr><td>Yes</td><td>No</td><td>(1 − ME%)</td></tr>
+        <tr><td>No</td><td>Yes</td><td>(1 − ME%)</td></tr>
+        <tr><td>Yes</td><td>Yes</td><td>(1 − ME%)²</td></tr>
+      </table>
+    </div>
+
+    <h3>IFR by origin state</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Origin</th><th>Effective IFR</th><th>Notes</th></tr>
+        <tr><td>S</td><td>IFR_S</td><td>Baseline — no prior protection</td></tr>
+        <tr><td>V</td><td>IFR_S × (1 − VE_sev%)</td><td>Vaccine reduces severity even if infection not prevented</td></tr>
+        <tr><td>M</td><td>IFR_S × (1 − ME_sev%)</td><td>Prior immunity reduces severity on reinfection</td></tr>
+      </table>
+    </div>
+
+    <h3>Full disease model parameter set</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Parameter</th><th>Type</th><th>Range</th><th>Default</th><th>Notes</th></tr>
+        <tr><td>p — transmission risk per contact</td><td>Slider</td><td>0–100%</td><td>15%</td><td>R₀ is emergent, displayed as readout</td></tr>
+        <tr><td>R₀ dispersion k</td><td>Slider</td><td>0.01–5.0</td><td>0.1</td><td>NegBin dispersion on individual infectiousness. Drawn per person at infection.</td></tr>
+        <tr><td>AF% — asymptomatic fraction</td><td>Slider</td><td>0–80%</td><td>20%</td><td>Binomial coin toss at E→branch</td></tr>
+        <tr><td>AS% — asymptomatic transmission scalar</td><td>Slider</td><td>0–100%</td><td>50%</td><td>A-state infectiousness as % of full p</td></tr>
+        <tr><td>PSD mean</td><td>Slider</td><td>2–14 days</td><td>3 days</td><td>Floor = 1. Internal: 1 + NegBin(mean−1, k)</td></tr>
+        <tr><td>PSD k</td><td>Slider</td><td>0.01–5.0</td><td>0.5</td><td>Shared k concept, independent value from R₀ k</td></tr>
+        <tr><td>SD mean</td><td>Slider</td><td>2–30 days</td><td>7 days</td><td>Floor = 1. Shared by I and A states.</td></tr>
+        <tr><td>SD k</td><td>Slider</td><td>0.01–5.0</td><td>0.5</td><td>Right tail = chronic shedders / late resurgence lesson</td></tr>
+        <tr><td>IFR_S</td><td>Slider</td><td>0–20%</td><td>1%</td><td>Baseline fatality for S-origin</td></tr>
+        <tr><td>VI% — vaccine infection protection</td><td>Slider</td><td>0–100%</td><td>70%</td><td>Reduces p for V-origin</td></tr>
+        <tr><td>VE_sev% — vaccine severity protection</td><td>Slider</td><td>0–100%</td><td>90%</td><td>Reduces IFR_S for V-origin</td></tr>
+        <tr><td>MI% — immunity infection protection</td><td>Slider</td><td>0–100%</td><td>50%</td><td>Reduces p for M-origin</td></tr>
+        <tr><td>ME_sev% — immunity severity protection</td><td>Slider</td><td>0–100%</td><td>70%</td><td>Reduces IFR_S for M-origin</td></tr>
+      </table>
+    </div>
+
+    <h3>Distribution implementation</h3>
+    <p>All duration parameters use a <strong>shifted negative binomial</strong>: draw = floor + NegBin(mean − floor, k). Floor = 1 for both PSD and SD. User always sets and sees real-world mean. The gamma distribution is the theoretically correct continuous fit; NegBin is the standard discrete approximation for day-resolution simulations, with a slightly heavier right tail that conservatively overstates tail risk.</p>
+
+    <p>R₀ dispersion k uses a standard NegBin with floor = 0 — infecting zero people is a valid and common real-world outcome.</p>
+
+    <h3>Preset scenario templates</h3>
+    <p>Pre-populated parameter sets based on historical diseases. Allow users to start from a grounded baseline before tweaking. p and c are pre-set to values that produce the known historical R₀ as an emergent readout.</p>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Template</th><th>R₀ (emergent)</th><th>k</th><th>IFR</th><th>Notes</th></tr>
+        <tr><td>COVID-19 (2020, pre-variant)</td><td>~2.5</td><td>0.1</td><td>~0.8%</td><td>High overdispersion, ~10% cause 80% of spread</td></tr>
+        <tr><td>Spanish Flu (1918)</td><td>~1.8</td><td>~1.0</td><td>~2.5%</td><td>Near-Poisson, W-shaped mortality anomaly</td></tr>
+        <tr><td>SARS (2003)</td><td>~2.75</td><td>0.06–0.16</td><td>~10%</td><td>Most overdispersed historical pandemic</td></tr>
+        <tr><td>Measles (pre-vaccine)</td><td>~15</td><td>&lt;1</td><td>&lt;0.1%</td><td>High R₀ overwhelms overdispersion</td></tr>
+        <tr><td>Seasonal flu</td><td>~1.3</td><td>~1.0</td><td>&lt;0.1%</td><td>Near-uniform spread, low extinction risk</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- SECTION 12 -->
+  <div class="section" id="s12">
+    <div class="section-header">
+      <span class="section-num">12</span>
+      <span class="section-title">Scenario Lab — Population Model</span>
+      <span class="badge badge-done">locked</span>
+    </div>
+
+    <p>Homogeneous population. No demographics, no household structure, no geographic clustering. Every person is identical except for their origin state flag.</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Parameter</th><th>Range</th><th>Default</th><th>Notes</th></tr>
+        <tr><td>N — population size</td><td>1,000–100,000</td><td>10,000</td><td>Performance ceiling TBD at build time</td></tr>
+        <tr><td>Initial infected</td><td>1–50</td><td>3</td><td>Seeded as E. Drawn from S pool only.</td></tr>
+        <tr><td>V% — vaccinated fraction</td><td>0–100%</td><td>0%</td><td>Origin flag = V</td></tr>
+        <tr><td>M% — prior immune fraction</td><td>0–(100−V%)</td><td>0%</td><td>Origin flag = M. Slider max = 100−V% dynamically enforced.</td></tr>
+        <tr><td>S% — susceptible fraction</td><td>Derived</td><td>100%</td><td>= 100 − V% − M%. Displayed only, not a slider.</td></tr>
+      </table>
+    </div>
+
+    <p>Initialization order: assign V% → assign M% from remainder → remainder become S → seed initial infected from S pool as E. V and M pools are never seeded as initially infected.</p>
+
+    <div class="callout amber">V% + M% must sum to less than 100%. Enforced via dynamic slider ceiling — M% slider maximum = 100 − V% at all times. No validation error, no silent capping.</div>
+  </div>
+
+  <!-- SECTION 13 -->
+  <div class="section" id="s13">
+    <div class="section-header">
+      <span class="section-num">13</span>
+      <span class="section-title">Scenario Lab — Contact & Mobility Model</span>
+      <span class="badge badge-done">locked</span>
+    </div>
+
+    <p>Homogeneous random mixing. No zones, no geography, no Brownian motion. Every person has a fixed daily contact rate — the average number of other people encountered per sim-day, drawn randomly from the full population.</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Parameter</th><th>Range</th><th>Default</th><th>Notes</th></tr>
+        <tr><td>c — daily contact rate</td><td>1–50</td><td>10</td><td>Point estimate. No distribution. Tooltip: urban 8–15, rural 2–5.</td></tr>
+      </table>
+    </div>
+
+    <p>c is deliberately exposed as a user-facing slider (not derived from R₀) to enable urban vs rural comparisons with all other parameters held equal. R₀ is the emergent readout: <code>R₀ ≈ p × c × SD_mean</code>. Users set p and c independently; R₀ falls out.</p>
+
+    <div class="callout">Only S, V, and M state people can receive new infection events. E, P, I, A, D cannot be infected. Each transmission-eligible contact between an infectious person and a susceptible person triggers the appropriate coin toss.</div>
+  </div>
+
+  <!-- SECTION 14 -->
+  <div class="section" id="s14">
+    <div class="section-header">
+      <span class="section-num">14</span>
+      <span class="section-title">Scenario Lab — Time Model</span>
+      <span class="badge badge-done">locked</span>
+    </div>
+
+    <p>Discrete sim-days. No animation clock, no tick resolution. Each sim-day: evaluate contacts and transmissions for all infectious people, advance state durations, check end conditions.</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Parameter</th><th>Range/Options</th><th>Default</th><th>Notes</th></tr>
+        <tr><td>Max sim-days</td><td>30–730</td><td>365</td><td>Hard ceiling per run. 730 = 2 years.</td></tr>
+        <tr><td>MC run count</td><td>100 / 500 / 1000</td><td>1000</td><td>Discrete choice. Revisit after performance testing.</td></tr>
+        <tr><td>Fizzle X</td><td>1–14 days</td><td>3</td><td>Consecutive zero-infection days to trigger fizzle end condition.</td></tr>
+        <tr><td>Random seed</td><td>Optional integer</td><td>Off</td><td>When set, runs are fully reproducible. Enables true A vs B controlled comparison.</td></tr>
+      </table>
+    </div>
+
+    <h3>End conditions per run</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Condition</th><th>Notes</th></tr>
+        <tr><td>No infectious people remaining</td><td>P = 0 AND I = 0 AND A = 0</td></tr>
+        <tr><td>No infectable people remaining</td><td>S = 0 AND (V = 0 OR VI% = 100%) AND (M = 0 OR MI% = 100%)</td></tr>
+        <tr><td>Fizzle</td><td>Fewer than 1 new infection for X consecutive sim-days</td></tr>
+        <tr><td>Max sim-days reached</td><td>Hard backstop — guaranteed termination</td></tr>
+      </table>
+    </div>
+
+    <p>Each run terminates independently on whichever condition fires first. Progress bar shows completion across MC batch: "Running simulation 347 of 1000." Estimated time remaining shown if feasible.</p>
+  </div>
+
+  <!-- SECTION 15 -->
+  <div class="section" id="s15">
+    <div class="section-header">
+      <span class="section-num">15</span>
+      <span class="section-title">Scenario Lab — Intervention & Policy Model</span>
+      <span class="badge badge-done">locked</span>
+    </div>
+
+    <p>Four policy levers. All are static for the entire run — no mid-simulation policy changes. Config is locked at run start.</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Parameter</th><th>Type</th><th>Range</th><th>Default</th><th>Notes</th></tr>
+        <tr><td>QP — quarantine practiced</td><td>Toggle</td><td>On/Off</td><td>Off</td><td>Enables quarantine mechanics</td></tr>
+        <tr><td>QC% — quarantine compliance</td><td>Slider</td><td>0–100%</td><td>50%</td><td>Only I-state. Coin toss at I-transition. Visible only if QP = On.</td></tr>
+        <tr><td>MW% — mask wearing fraction</td><td>Slider</td><td>0–100%</td><td>0%</td><td>Assigned per-person at initialization. All states.</td></tr>
+        <tr><td>ME% — mask effectiveness</td><td>Slider</td><td>0–50%</td><td>30%</td><td>Per-participant dampener. Compounds if both parties masked.</td></tr>
+        <tr><td>CT% — contact tracing effectiveness</td><td>Slider</td><td>0–100%</td><td>0%</td><td>See formula below.</td></tr>
+      </table>
+    </div>
+
+    <h3>Quarantine mechanics</h3>
+    <p>Only I-state people can quarantine — P and A never quarantine because they don't know they're sick. This structural ceiling is a key teaching point: symptom-based quarantine cannot intercept pre-symptomatic or asymptomatic transmission regardless of compliance rate.</p>
+    <p>Compliant I-people reduce daily contacts to <code>c_q = 1</code> (fixed internal constant, not user-exposed) for the remainder of their infectious duration.</p>
+
+    <h3>Contact tracing formula</h3>
+    <p>CT% applies to P and A state people — tracing finds pre-symptomatic and asymptomatic contacts of confirmed cases regardless of symptoms, via PCR testing.</p>
+    <p>Since no contact history is stored (homogeneous random mixing has no memory), tracing reach is computed probabilistically each sim-day using the coupon collector formula:</p>
+    <div class="card">
+      <div class="card-title">CT% reach formula</div>
+      <p><code>P(person reached by tracing) = 1 − (1 − 1/N)^(I × c × L)</code></p>
+      <p>Where L = 7-day lookback window (fixed internal constant). For each P and A person each day: coin toss at <code>CT% × P(reached)</code>. If isolated: contacts reduce to c_q = 1 for remainder of their state duration.</p>
+      <p>Naturally saturates at 1.0 as I grows — never produces absurd values exceeding population size. At small I: tracing reach is low and roughly linear. At large I: reach saturates toward CT%, making further case growth the binding constraint.</p>
+    </div>
+
+    <div class="callout amber">Key teaching point: CT% = 90% sounds impressive. But in high-k overdispersed outbreaks, most transmission happens before any case is confirmed. Tracing is always chasing the past. MCS reveals the distribution of "tracing success" — bimodal in overdispersed diseases, working well in slow runs, nearly useless in explosive ones.</div>
+  </div>
+
+  <!-- SECTION 16 -->
+  <div class="section" id="s16">
+    <div class="section-header">
+      <span class="section-num">16</span>
+      <span class="section-title">Scenario Lab — Output & Analytics</span>
+      <span class="badge badge-done">locked</span>
+    </div>
+
+    <p>The report is structured into nine buckets. Buckets 1–7 are visual and interactive. Bucket 8 is parked for future consideration. Bucket 9 is raw data export. All buckets appear in a single scrolling report page with a sticky mini-navigation bar for jumping between sections.</p>
+
+    <div class="callout">What-if comparison is in-session only. Both baseline and what-if use the same random seed, N, MC run count, and max sim-days. Locked vs free parameters are documented in Section 10. Common random numbers must be pre-generated per run and stored in a fixed array indexed by person and day — both scenarios consume from the same array so policy differences change outcomes but never which random draw is used.</div>
+
+    <h3>Bucket 1 — Final state distributions</h3>
+    <p>Histograms showing the distribution of key outcome metrics across all MC runs. The primary MCS deliverable — makes the flaw of averages visible.</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Metric</th><th>Treatment</th><th>Notes</th></tr>
+        <tr><td>Cumulative infected %</td><td>Primary histogram</td><td>Headline metric. Denominator = N.</td></tr>
+        <tr><td>Total deaths</td><td>Primary histogram</td><td>Toggle between % of N and raw count.</td></tr>
+        <tr><td>Peak daily infectious %</td><td>Primary histogram</td><td>Peak (P+I+A)/N on any single day. Toggle % / raw count.</td></tr>
+        <tr><td>Extinction rate</td><td>Single headline callout — not a histogram</td><td>"X% of runs never exceeded [threshold]% cumulative infections." Threshold = user-set slider. Formula: cumulative ever-infected / N.</td></tr>
+        <tr><td>Outbreak burden duration</td><td>Secondary histogram</td><td>Days per run where daily active (P+I+A)/N exceeded user-set threshold. Filtered to established runs only (those that crossed extinction threshold). Two independent sliders: fizzle threshold (cumulative) and active outbreak threshold (daily).</td></tr>
+        <tr><td>Final immune fraction</td><td>Discarded</td><td>—</td></tr>
+      </table>
+    </div>
+
+    <p>Every histogram includes: formula prediction line (vertical marker showing deterministic formula result — its distance from the median is the flaw of averages lesson) · fixed 10th/25th/50th/75th/90th percentile markers, color-coded · interactive crosshair on hover showing frequency at cursor, left cumulation (≤ this value), right cumulation (&gt; this value) summing to 100%.</p>
+
+    <p>What-if display: overlaid histograms on the same axis — baseline and what-if in contrasting colors. Single distributions are readable when overlaid; fan charts are not (fan charts use side-by-side panels in Bucket 2).</p>
+
+    <h3>Bucket 2 — Epidemic curve distributions</h3>
+    <p>1000 runs produce a family of epidemic curves. Visualized as a fan/envelope rather than spaghetti.</p>
+
+    <div class="card">
+      <div class="card-title">Chart structure</div>
+      <p>Single chart area. Dropdown selects which of four metrics to display: daily new infections · daily deaths · daily active infectious (P+I+A) · cumulative infections. Default = daily new infections.</p>
+      <p>Each metric shows: median line (solid, prominent) · 25th–75th band (medium opacity) · 10th–90th band (light opacity) · fizzle overlay (dashed median of fizzled runs only, muted color, toggleable on/off, uses median not mean).</p>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Interactive element</th><th>Detail</th></tr>
+        <tr><td>Day cursor</td><td>Hover shows: median value · 10th–90th range · % of runs that had already peaked by this day</td></tr>
+        <tr><td>Fizzle toggle</td><td>Include/exclude fizzled runs from envelope. Default = exclude (fizzles compress y-axis). Toggle makes the choice explicit.</td></tr>
+        <tr><td>Axis alignment toggle</td><td>Sim start vs outbreak onset (day when cumulative infections first crossed 0.1% of N). Default = outbreak onset for comparable curve shapes.</td></tr>
+      </table>
+    </div>
+
+    <p>What-if display: side-by-side panels — baseline fan on left, what-if fan on right, same y-axis scale. A delta line below both panels shows median(baseline) − median(what-if) per day, making visible where and when the intervention had effect.</p>
+
+    <h3>Bucket 3 — Policy effectiveness analysis</h3>
+    <p>Only renders when what-if is active. Requires that at least one policy parameter (QP, MW%, CT%) differs between baseline and what-if. If no policy difference exists, a prompt appears instead.</p>
+    <p>Four paired delta histograms, one per metric. Each delta = baseline run #n outcome − what-if run #n outcome. Valid causal comparison because both use the same seed — run #n represents the same stochastic world under each policy regime.</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Histogram</th><th>X-axis</th><th>Notes</th></tr>
+        <tr><td>Lives saved</td><td>Deaths baseline − deaths what-if per run</td><td>Positive = what-if helped</td></tr>
+        <tr><td>Infections averted</td><td>Cumulative infected baseline − what-if per run</td><td>Same structure</td></tr>
+        <tr><td>Peak reduction</td><td>Peak infectious baseline − what-if per run</td><td>Healthcare load framing</td></tr>
+        <tr><td>Outbreak duration shortened</td><td>Burden duration baseline − what-if per run</td><td>Days of active outbreak saved</td></tr>
+      </table>
+    </div>
+
+    <p>Four headline probability numbers displayed above the histograms: "What-if reduced [metric] in X% of runs." Fizzle-flip annotation: "Y runs switched from established to fizzle under what-if" — shown as a callout, not a separate chart. Negative delta values are expected and labeled: they reflect runs where stochastic variation outweighed the intervention effect.</p>
+
+    <h3>Bucket 4 — Percentile / risk profile table</h3>
+    <p>Structured summary table — the executive summary of the report. Shows key metrics at specific percentiles alongside the deterministic formula prediction.</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Row</th><th>Default columns</th><th>Optional columns</th></tr>
+        <tr><td>Cumulative infected %</td><td rowspan="5">10th · 25th · 50th · 75th · 90th · Mean · Formula prediction</td><td rowspan="5">5th · 95th (user-addable via checkbox)</td></tr>
+        <tr><td>Total deaths</td></tr>
+        <tr><td>Peak daily infectious %</td></tr>
+        <tr><td>Outbreak burden duration (days)</td></tr>
+        <tr><td>Extinction rate</td></tr>
+      </table>
+    </div>
+
+    <p>Formula prediction column: deterministic approximation using mean parameter values, ignoring all variance. Labeled "deterministic approx." · toggleable off · [?] explains assumptions and why it diverges from simulation. Divergence is asymmetric: formula overpredicts median (ignores extinction risk) and underpredicts 90th percentile (ignores tail variance).</p>
+    <p>What-if mode: split cells — baseline value top · what-if value below · delta in muted third sub-row.</p>
+    <p>Row navigation: small "→ view distribution" link per row scrolls to corresponding Bucket 1 histogram with brief highlight.</p>
+
+    <h3>Bucket 5 — Parameter sensitivity / tornado charts</h3>
+    <p>Two side-by-side tornado charts showing which parameters drove outcome variance. Method: Spearman rank correlation between per-run realized parameter values and per-run outcome metric. Target metric is user-selectable dropdown shared across both charts.</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Chart</th><th>Parameters</th><th>Condition</th></tr>
+        <tr><td>Left — Distributional uncertainty</td><td>Individual infectiousness draws (R₀ k) · PSD duration draws · SD duration draws</td><td>Always shown</td></tr>
+        <tr><td>Right — Policy sampling variance</td><td>Realized AF% · Realized QC% · Realized MW% · Realized CT%</td><td>QC% only if QP=On · MW% only if MW%&gt;0 · CT% only if CT%&gt;0 · AF% always</td></tr>
+      </table>
+    </div>
+
+    <p>X-axis scales are independent per panel. Single footnote below both: "Bar lengths are not comparable across panels." Each bar shows 95% CI as a thin line — bars where CI crosses zero are flagged as not statistically significant. Target metric dropdown: cumulative infected % · total deaths · peak infectious · burden duration. What-if: dropdown switches between baseline and what-if tornado sets — one set visible at a time.</p>
+
+    <h3>Bucket 6 — Transmission decomposition</h3>
+    <p>Breaks down where infections actually came from. Always shown regardless of policy settings — it is a disease model property, not a policy property.</p>
+
+    <div class="card">
+      <div class="card-title">Primary display</div>
+      <p>Stacked bar showing median transmission source split: P-sourced % · A-sourced % · I-sourced %.</p>
+      <p>Key callout above chart: "X% of all transmissions occurred before any symptoms appeared (P + A combined) — this is the structural floor that symptom-based quarantine cannot intercept regardless of compliance rate."</p>
+      <p>Ceiling annotation: "Maximum quarantine interception = I-sourced % × QC%" — shown always, even when quarantine is off (shows theoretical maximum).</p>
+    </div>
+
+    <p>Expandable detail: three histograms showing distribution of each source % across runs — toggle to show/hide.</p>
+    <p>Secondary display: stacked bar by receiver origin (S/V/M) — conditional on V%&gt;0 or M%&gt;0. Shows breakthrough vs naive infection split.</p>
+    <p>What-if display: side-by-side stacked bars. If CT% differs between baseline and what-if, the shift in P% and A% is highlighted with a callout: "CT% reduced the untouchable floor from X% to Y%" — showing that testing-based tracing can chip away at the structural floor in a way symptom-based quarantine cannot.</p>
+
+    <h3>Bucket 7 — Superspreader dynamics</h3>
+    <p>Visualizes the empirical offspring distribution from simulation runs. Closes the loop between the k explainer widget (shown during configuration) and actual simulation outcomes.</p>
+
+    <div class="card">
+      <div class="card-title">Three-layer histogram</div>
+      <p>Empirical offspring distribution (blue bars) — pooled across all runs.</p>
+      <p>Theoretical NegBin(R₀, k) curve (red outline) — matching user's configured parameters.</p>
+      <p>Poisson(R₀) benchmark (gray outline) — what distribution would look like with uniform spread. The gap between empirical and Poisson is the superspreading signal.</p>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Callout</th><th>Content</th></tr>
+        <tr><td>Empirical 80-20 figure</td><td>"X% of infected people caused 80% of all transmissions" — compared against theoretical prediction from k</td></tr>
+        <tr><td>Superspreader event count</td><td>Plain English label · technical Lloyd-Smith 99th percentile definition in [?] tooltip</td></tr>
+        <tr><td>Extinction contribution</td><td>"X% of fizzled runs ended because patient zero drew a near-zero infectiousness value" — connects to stochastic extinction lesson</td></tr>
+      </table>
+    </div>
+
+    <p>Expandable secondary: per-run 80-20 distribution histogram — toggle to show/hide.</p>
+    <p>Widget link: "Revisit distribution explorer →" opens NegBin explainer widget from config panel.</p>
+    <p>What-if display: side-by-side histograms if k differs between baseline and what-if. Single note if k unchanged: "Superspreader dynamics unchanged — k was not modified in the what-if scenario."</p>
+
+    <h3>Bucket 8 — Run-level scatter / outlier explorer</h3>
+    <p>Parking lot. Each dot = one run, axes user-selectable, color-coded by end condition, clickable to view individual run epidemic curve. Deferred due to implementation complexity — core lessons are fully covered by Buckets 1–7.</p>
+
+    <h3>Bucket 9 — Raw data export</h3>
+    <p>Single "Export data" button opens a modal. User checks which exports to generate. Size warnings shown for large exports before selection. All selected files generated on confirm.</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Export</th><th>Format</th><th>Sheets</th><th>Size estimate</th><th>Availability</th></tr>
+        <tr><td>Summary export</td><td>XLSX</td><td>Config & Dictionary · Run Summary (one row per run, all metrics + realized parameter draws)</td><td>~500KB</td><td>Always</td></tr>
+        <tr><td>Transmission log</td><td>XLSX</td><td>Config & Dictionary · Transmission Events (one row per event: run, day, transmitter state, origin, receiver origin, mask flags, k draw)</td><td>~100MB</td><td>Optional · size warning</td></tr>
+        <tr><td>Daily state counts</td><td>XLSX</td><td>Config & Dictionary · Daily Counts (one row per run per day · all 8 state counts)</td><td>~10MB</td><td>Optional · size warning</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Config & Dictionary sheet — present in all exports</div>
+      <p>Top section: scenario name · description · date/time · MC run count · N · random seed if set · end condition summary.</p>
+      <p>Bottom section: parameter dictionary table with columns — Parameter · Value used · Plain English meaning · Units · Valid range · Distribution type. Makes every export self-documenting. Same content as report header — reuses existing data structure, low additional implementation cost.</p>
+    </div>
+
+    <p>What-if exports: when what-if is active, all exports include both scenarios. Each XLSX gains a third sheet "What-if Config & Dictionary." Run Summary sheet gains a "Scenario" column (Baseline / What-if) to distinguish rows. Paired run numbers allow delta computation in Excel.</p>
+  </div>
+
+  <!-- SECTION 17 -->
+  <div class="section" id="s17">
+    <div class="section-header">
+      <span class="section-num">17</span>
+      <span class="section-title">Scenario Lab — Visualization & UI</span>
+      <span class="badge badge-done">locked</span>
+    </div>
+
+    <h3>Design philosophy — entire tool</h3>
+    <p>One consistent modern and polished design language across the entire tool — landing page, Outbreak module, and Scenario Lab module. No retro elements anywhere. The reference aesthetic is tools like Linear, Vercel's dashboard, or Observable: clean typographic hierarchy, generous whitespace, purposeful use of color, no decorative chrome. The kind of UI that signals craft rather than generation.</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Principle</th><th>Detail</th></tr>
+        <tr><td>Color mode</td><td>Dark default · light mode toggle available · consistent across both modules</td></tr>
+        <tr><td>Color usage</td><td>Semantic only — encodes meaning (disease states, baseline vs what-if, risk levels) · never decorative</td></tr>
+        <tr><td>Typography</td><td>Clear hierarchy: headings · labels · data values · annotations · spacing and weight do the work, not borders</td></tr>
+        <tr><td>Touch/tablet</td><td>Native throughout — no mouse assumptions in either module · adequate tap targets on all interactive elements</td></tr>
+        <tr><td>Contrast with Experiment #1</td><td>The Wait Calculator used a retro vibe. This tool uses none of that. All three surfaces (landing · Outbreak · Scenario Lab) share the same modern visual identity.</td></tr>
+      </table>
+    </div>
+
+    <h3>Config panel layout</h3>
+    <p>Scrolling single-column layout. Parameters grouped into nine named sections with subtle dividers. All sections collapsible but open by default.</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>#</th><th>Section name</th><th>Key parameters</th></tr>
+        <tr><td>1</td><td>Scenario identity</td><td>Name (required — Run gated until entered) · description (optional)</td></tr>
+        <tr><td>2</td><td>Population</td><td>N · initial infected · V% · M% · S% (derived readout)</td></tr>
+        <tr><td>3</td><td>Disease — transmission</td><td>p · R₀ k · AF% · AS% · Emergent R₀ readout</td></tr>
+        <tr><td>4</td><td>Disease — progression</td><td>PSD mean · PSD k · SD mean · SD k</td></tr>
+        <tr><td>5</td><td>Disease — severity & immunity</td><td>IFR_S · VI% · VE_sev% · MI% · ME_sev%</td></tr>
+        <tr><td>6</td><td>Contact & mobility</td><td>c (daily contact rate)</td></tr>
+        <tr><td>7</td><td>Interventions</td><td>QP · QC% · MW% · ME% · CT%</td></tr>
+        <tr><td>8</td><td>Simulation settings</td><td>MC runs · max sim-days · fizzle X · random seed</td></tr>
+        <tr><td>9</td><td>What-if setup</td><td>Checkbox to enable · opens what-if modal when checked</td></tr>
+      </table>
+    </div>
+
+    <h3>Per-parameter UI pattern</h3>
+    <p>Every parameter follows the same structure — no exceptions:</p>
+    <div class="card">
+      <p><strong>Parameter label</strong> — left-aligned · value readout right-aligned · updates live as slider moves</p>
+      <p><strong>Slider</strong> — touch-friendly · adequate tap target · full range of valid values</p>
+      <p><strong>Type-in field</strong> — alternative to slider · validates on blur · rejects out-of-range values with inline error</p>
+      <p><strong>Always-visible tooltip</strong> — one line, plain English, always shown below the slider (not on hover) · never truncated</p>
+      <p><strong>[?] button</strong> — opens three-tab modal · Biology · Reference ranges · Try this</p>
+    </div>
+
+    <h3>[?] three-tab modal</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Tab</th><th>Contents</th></tr>
+        <tr><td>Biology</td><td>Plain English explanation of what this parameter means biologically and why it matters for epidemic dynamics. 2–4 paragraphs. No jargon without definition. Written to be readable by a curious non-expert.</td></tr>
+        <tr><td>Reference ranges</td><td>Table of real-world values for the five historical disease templates. Columns: Disease · Value · Confidence (well-established / moderate — varies by study / estimated — limited data). Confidence column is essential — prevents the tool from presenting uncertain estimates as settled facts.</td></tr>
+        <tr><td>Try this</td><td>A guided experiment. Structure: "Set [parameter] to [value]. Run [N] simulations. Observe [specific thing to look for]. The takeaway: [one-sentence lesson]." Directly connected to the three core MCS lessons (stochastic extinction · overdispersion · compounding variance) wherever applicable.</td></tr>
+      </table>
+    </div>
+
+    <h3>Emergent R₀ readout</h3>
+    <p>Persistent live display in the Disease — transmission section. Updates whenever p, c, or SD mean changes. Formula: <code>R₀ ≈ p × c × SD_mean</code>. Labeled "Observed R₀ (emergent)" with a small note: "Determined by p and c — not a direct input." Styled prominently — larger than surrounding parameter values, clearly a derived result not a setting.</p>
+
+    <h3>NegBin distribution widget</h3>
+    <p>An inline mini-histogram appears below each parameter that uses a NegBin distribution: PSD mean/k, SD mean/k, and R₀ k. Updates live as mean or k changes. Shows the current distribution shape at a glance — the user immediately sees how changing k widens or sharpens the tail.</p>
+    <p>Every such parameter also shows a "learn more →" link. All instances open the same shared NegBin explainer modal regardless of which parameter triggered it. The modal is general — it teaches NegBin as a concept, not any one parameter specifically.</p>
+
+    <div class="card">
+      <div class="card-title">NegBin explainer modal contents</div>
+      <p>Why gamma is the theoretically correct continuous fit for duration data · Why NegBin is the appropriate discrete approximation for day-resolution simulation · What k means visually — interactive histogram showing shape at different k values · The floor/shifted distribution explanation (draw = floor + NegBin(mean − floor, k)) · Why lower k means more variance, not less, despite the zero bar growing taller · The COVID-19 and Spanish Flu k values as concrete anchors</p>
+    </div>
+
+    <h3>Preset templates</h3>
+    <p>"Load preset" button near the top of the config panel, above the parameter sections. Opens a modal showing five historical templates. Selecting a preset populates all disease model parameters (sections 3–5). Intervention and simulation settings are unchanged. Confirmation dialog: "This will overwrite your current disease settings. Intervention settings will not be changed." After loading, the emergent R₀ readout should closely match the known historical value — a built-in sanity check that the preset is well-calibrated.</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Template</th><th>Key values shown in modal</th></tr>
+        <tr><td>COVID-19 (2020, pre-variant)</td><td>R₀ ≈ 2.5 · k = 0.1 · IFR ≈ 0.8% · AF ≈ 30%</td></tr>
+        <tr><td>Spanish Flu (1918)</td><td>R₀ ≈ 1.8 · k ≈ 1.0 · IFR ≈ 2.5%</td></tr>
+        <tr><td>SARS (2003)</td><td>R₀ ≈ 2.75 · k ≈ 0.1 · IFR ≈ 10%</td></tr>
+        <tr><td>Measles (pre-vaccine)</td><td>R₀ ≈ 15 · k &lt; 1 · IFR &lt; 0.1%</td></tr>
+        <tr><td>Seasonal flu</td><td>R₀ ≈ 1.3 · k ≈ 1.0 · IFR &lt; 0.1%</td></tr>
+      </table>
+    </div>
+
+    <h3>V% and M% constraint</h3>
+    <p>M% slider maximum dynamically enforced at 100 − V% at all times. S% shown as a derived readout below both sliders — not a slider itself. Label: "Susceptible (derived): X%". Updates live as V% or M% changes.</p>
+
+    <h3>What-if modal</h3>
+    <p>Triggered by the what-if checkbox at the bottom of the config panel. Opens a full-screen modal (large drawer on tablet).</p>
+    <div class="card">
+      <div class="card-title">What-if modal structure</div>
+      <p><strong>Header:</strong> "What-if scenario — adjust 1–3 parameters to compare against your baseline."</p>
+      <p><strong>Body:</strong> Full config panel replicated, pre-populated with all baseline values. Same section structure, same slider/type-in/tooltip pattern.</p>
+      <p><strong>Changed parameter highlighting:</strong> Any parameter that differs from baseline gets a subtle colored left border or background tint. Immediately visible which parameters have been modified.</p>
+      <p><strong>Differences summary panel:</strong> Persistent sidebar (or bottom panel on mobile) listing only changed parameters — "p: 15% → 25%" — gives a clean audit of what differs between the two scenarios.</p>
+      <p><strong>Locked parameters:</strong> N · random seed · MC runs · max sim-days · initial infected · V% · M% — shown but grayed out and uneditable. Tooltip explains why: "Must match baseline for valid paired comparison."</p>
+      <p><strong>Actions:</strong> Cancel (discards changes, returns to config) · Confirm (saves what-if config, returns to config with what-if indicator active).</p>
+    </div>
+
+    <h3>Run experience</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Phase</th><th>UI state</th></tr>
+        <tr><td>On Run click</td><td>Config panel dims · all inputs become read-only · what-if modal no longer accessible</td></tr>
+        <tr><td>During run</td><td>Progress bar (0–100%) · "Running simulation X of Y" counter · estimated time remaining · Cancel button (terminates early, shows partial results with warning banner)</td></tr>
+        <tr><td>On completion</td><td>Smooth transition to report · config panel collapses to a summary strip showing scenario name and 5–6 key parameter values · strip is always visible at top of report page</td></tr>
+        <tr><td>What-if active</td><td>Progress bar shows both scenarios if run sequentially · or single bar if parallelized · "Baseline complete · Running what-if (X of Y)"</td></tr>
+      </table>
+    </div>
+
+    <h3>Report page navigation</h3>
+    <p>Sticky pill navigation bar at the top of the report page. Updates active pill as user scrolls. Smooth-scrolls to section on click. On mobile/tablet: collapses to a compact dropdown.</p>
+
+    <div class="card">
+      <div class="card-title">Navigation pills</div>
+      <p>Final States · Epidemic Curves · Policy Effect · Risk Table · Sensitivity · Transmission · Superspreader · Export</p>
+      <p>Policy Effect pill only appears if what-if is active. Each pill shows a small dot indicator if that section has content to show (e.g. Policy Effect grays out if no policy difference exists between scenarios).</p>
+    </div>
+
+    <h3>Report bucket headers</h3>
+    <p>Every bucket uses a consistent header structure:</p>
+    <div class="card">
+      <p><strong>Bucket title</strong> — large, prominent</p>
+      <p><strong>One-sentence plain English description</strong> — "What this shows and why it matters." Written for a non-expert.</p>
+      <p><strong>[?] help link</strong> — opens the relevant section of the tool's help documentation</p>
+      <p><strong>Scenario indicator</strong> — when what-if is active, a small baseline/what-if toggle or label appears in the bucket header where relevant</p>
+    </div>
+
+    <h3>Report export button</h3>
+    <p>Persistent "Export data" button in the report page header (not in the sticky nav — separate, always accessible). Opens the Bucket 9 export modal. Also a separate "Save report as HTML" button for the shareable report export documented in Section 2.</p>
+  </div>
+
+  <div class="doc-footer">
+    <span>Epidemic Sim Requirements v4 — Complete first pass · All 17 sections locked · Ready for build planning</span>
+    <span>Interactive Lab · Experiment #2 · github.com/diego92dlpt/interactive-lab</span>
+  </div>
+
+</div>
+</body>
+</html>

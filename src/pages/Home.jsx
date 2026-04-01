@@ -8,6 +8,13 @@ const experiments = [
     tag: "Physics Simulation",
     link: "/experiments/wait-calculator",
   },
+  {
+    title: "Outbreak",
+    description:
+      "Watch a pathogen move through a population in real time. Configure transmission, immunity, and quarantine behavior — then let 1,000 individuals find their own fate.",
+    tag: "Agent-Based Model",
+    link: "/experiments/outbreak",
+  },
 ];
 
 export default function Home() {

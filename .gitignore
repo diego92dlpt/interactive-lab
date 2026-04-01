@@ -6,6 +6,10 @@ dist/
 
 # Temporary / local only
 screenshots (temporary)/
+Clipboard Text.txt
+
+# Claude Code local config
+.claude/
 
 # Local env files
 .env

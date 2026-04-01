@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cheatsheet 2 — Deploying to Production</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0d0d0d;
+      color: #e5e5e5;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      padding: 40px 24px 80px;
+    }
+
+    .page {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    /* ── Header ── */
+    .header-label {
+      font-family: monospace;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #818cf8;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      color: #6b7280;
+      font-size: 14px;
+      margin-bottom: 36px;
+    }
+
+    /* ── Phase headers ── */
+    .phase {
+      font-family: monospace;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #4b5563;
+      border-top: 1px solid #1f2937;
+      padding-top: 20px;
+      margin-top: 28px;
+      margin-bottom: 14px;
+    }
+
+    /* ── Step card ── */
+    .step {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    .step-num {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      background: #1a1a1a;
+      border: 1px solid #2d2d2d;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: monospace;
+      font-size: 12px;
+      color: #818cf8;
+      margin-top: 2px;
+    }
+
+    .step-body {
+      flex: 1;
+      background: #141414;
+      border: 1px solid #1f2937;
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+
+    .step-action {
+      font-weight: 600;
+      font-size: 15px;
+      color: #f3f4f6;
+      margin-bottom: 6px;
+    }
+
+    /* ── Code block ── */
+    .code-block {
+      background: #0a0a0a;
+      border: 1px solid #2d2d2d;
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin: 8px 0;
+      font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+      font-size: 12.5px;
+      color: #a5b4fc;
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    code {
+      font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+      font-size: 12.5px;
+      background: #1a1a1a;
+      color: #a5b4fc;
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+
+    code.green {
+      color: #a3e635;
+      background: #1a1a1a;
+    }
+
+    /* ── Collapsible context ── */
+    details {
+      margin-top: 10px;
+    }
+
+    details summary {
+      cursor: pointer;
+      font-size: 12px;
+      color: #4b5563;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      user-select: none;
+    }
+
+    details summary::before {
+      content: "▶";
+      font-size: 9px;
+      transition: transform 0.15s;
+    }
+
+    details[open] summary::before {
+      transform: rotate(90deg);
+    }
+
+    details summary:hover {
+      color: #9ca3af;
+    }
+
+    details summary .summary-label {
+      font-family: monospace;
+      letter-spacing: 0.05em;
+    }
+
+    .details-body {
+      margin-top: 8px;
+      padding: 10px 12px;
+      background: #0f0f0f;
+      border-left: 2px solid #1f2937;
+      border-radius: 0 6px 6px 0;
+      font-size: 13px;
+      color: #6b7280;
+      line-height: 1.7;
+    }
+
+    .details-body p + p { margin-top: 6px; }
+
+    /* ── Alert/Note boxes ── */
+    .note {
+      background: #111827;
+      border: 1px solid #1e3a5f;
+      border-left: 3px solid #3b82f6;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #93c5fd;
+      margin: 16px 0;
+    }
+    .note strong { color: #bfdbfe; }
+
+    .warn {
+      background: #1c1410;
+      border: 1px solid #78350f;
+      border-left: 3px solid #f59e0b;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #fcd34d;
+      margin: 16px 0;
+    }
+    .warn strong { color: #fde68a; }
+
+    /* ── URL highlight ── */
+    .url-highlight {
+      display: inline-block;
+      background: #0f1f0f;
+      border: 1px solid #14532d;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-family: monospace;
+      font-size: 14px;
+      color: #4ade80;
+      margin: 6px 0;
+    }
+
+    /* ── Branching box for "if broken" ── */
+    .branch-box {
+      background: #140f0f;
+      border: 1px solid #3f1f1f;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-top: 8px;
+    }
+
+    .branch-title {
+      font-size: 12px;
+      color: #f87171;
+      font-family: monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+
+    .branch {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .branch-label {
+      flex-shrink: 0;
+      background: #1f1010;
+      border: 1px solid #451a1a;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-family: monospace;
+      font-size: 11px;
+      color: #fca5a5;
+      align-self: flex-start;
+      margin-top: 1px;
+    }
+
+    .branch-action { color: #d1d5db; }
+
+    /* ── Quick reference box ── */
+    .quick-ref {
+      margin-top: 40px;
+      background: #111;
+      border: 1px solid #2d2d2d;
+      border-radius: 12px;
+      padding: 20px 24px;
+    }
+
+    .quick-ref-title {
+      font-family: monospace;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #818cf8;
+      margin-bottom: 16px;
+    }
+
+    .qr-section-label {
+      font-size: 11px;
+      color: #374151;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 14px 0 6px;
+      font-family: monospace;
+    }
+
+    .cmd-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .cmd-row {
+      display: flex;
+      gap: 12px;
+      align-items: baseline;
+    }
+
+    .cmd-val {
+      font-family: monospace;
+      font-size: 13px;
+      color: #a5b4fc;
+      flex-shrink: 0;
+      min-width: 240px;
+    }
+
+    .cmd-desc {
+      font-size: 12px;
+      color: #4b5563;
+    }
+
+    .qr-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    @media (max-width: 500px) { .qr-grid { grid-template-columns: 1fr; } }
+
+    .qr-item label {
+      display: block;
+      font-size: 11px;
+      color: #4b5563;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 3px;
+    }
+
+    .qr-item .qr-val {
+      font-family: monospace;
+      font-size: 13px;
+      color: #d1d5db;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top: 48px;
+      font-size: 12px;
+      color: #374151;
+      text-align: center;
+    }
+
+    .see-also {
+      margin-top: 32px;
+      background: #0f0f1f;
+      border: 1px solid #1e1b4b;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #818cf8;
+    }
+
+    .see-also a {
+      color: #a5b4fc;
+      text-decoration: none;
+    }
+
+    .see-also a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <p class="header-label">Interactive Lab — Cheatsheet 2 of 2</p>
+  <h1>Deploying to Production</h1>
+  <p class="subtitle">From a working local build to live at interactive-lab.vercel.app.</p>
+
+  <div class="note">
+    <strong>How to read this:</strong> Each step shows the action in bold — that's all you need to glance at.
+    Click <em>"▶ Details / Why"</em> only if you need more context or a reminder of why something matters.
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <p class="phase">Phase 1 — Pre-Flight Check</p>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <div class="step-action">Run <code>npm run build</code> — must complete with zero errors</div>
+      <details>
+        <summary><span class="summary-label">Details / Why</span></summary>
+        <div class="details-body">
+          <p>This runs the same build process Vercel will run. If it fails locally, it will fail on Vercel too — better to catch it now.</p>
+          <p>A successful build ends with <strong>✓ built in Xs</strong> and lists the output files. Any errors or warnings in red need to be fixed first.</p>
+          <p>Run this from the <code>wait-calc-sim\</code> folder in a terminal.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <p class="phase">Phase 2 — Commit and Push to GitHub</p>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <div class="step-action">Check what's changed: <code>git status</code></div>
+      <details>
+        <summary><span class="summary-label">Details / Why</span></summary>
+        <div class="details-body">
+          <p>This shows you all modified and new files. Glance through it — make sure nothing unexpected appears (like <code>.env</code> files or temp folders you didn't intend to commit).</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <div class="step-action">Stage your changes — be specific about which files</div>
+      <div class="code-block"># Stage specific files (preferred):
+git add src/ index.html package.json
+
+# Or stage everything modified (fine if you reviewed step 2):
+git add -A</div>
+      <details>
+        <summary><span class="summary-label">Details / Why</span></summary>
+        <div class="details-body">
+          <p>Staging means "include these in the next commit". <code>git add src/</code> stages all changes inside the <code>src/</code> folder.</p>
+          <p>The <code>dist/</code> folder (the built output) is in <code>.gitignore</code> and will be ignored automatically — Vercel rebuilds from source.</p>
+          <p>If you only changed experiment files: <code>git add src/experiments/your-name/</code> is precise and safe.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <div class="step-action">Commit with a clear message</div>
+      <div class="code-block">git commit -m "Add epidemic simulation experiment"
+# or
+git commit -m "Fix: [describe what was broken]"</div>
+      <details>
+        <summary><span class="summary-label">Details / Why</span></summary>
+        <div class="details-body">
+          <p>The commit message is for your future self. Keep it short but descriptive — "Add X" for new features, "Fix X" for bug fixes.</p>
+          <p>If git asks for your name/email the first time, run:<br>
+          <code>git config --global user.email "you@example.com"</code><br>
+          <code>git config --global user.name "Your Name"</code></p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">5</div>
+    <div class="step-body">
+      <div class="step-action">Push to GitHub</div>
+      <div class="code-block">git push origin main</div>
+      <details>
+        <summary><span class="summary-label">Details / Why</span></summary>
+        <div class="details-body">
+          <p>This sends your commits to GitHub (<code>github.com/diego92dlpt/interactive-lab</code>). Vercel watches this repo and <strong>automatically triggers a deployment</strong> the moment a push to <code>main</code> lands.</p>
+          <p>If git asks for credentials, use your GitHub username and a Personal Access Token (not your password) — GitHub disabled password auth in 2021.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <p class="phase">Phase 3 — Watch the Vercel Deployment</p>
+
+  <div class="step">
+    <div class="step-num">6</div>
+    <div class="step-body">
+      <div class="step-action">Go to vercel.com → your <code>interactive-lab</code> project → watch the deployment status</div>
+      <details>
+        <summary><span class="summary-label">Details / Why</span></summary>
+        <div class="details-body">
+          <p>After your push, a new deployment appears at the top of the list with status <strong>Building</strong>. It typically takes 1–2 minutes.</p>
+          <p>It will go: <strong>Queued → Building → Ready</strong> (green checkmark). If it turns red with <strong>Error</strong>, click it to see the build log — the error message is usually clear.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">7</div>
+    <div class="step-body">
+      <div class="step-action">Once status is <strong>Ready</strong>, open the production URL — not a preview URL</div>
+      <div style="margin-top:8px;">
+        <div class="url-highlight">https://interactive-lab.vercel.app</div>
+      </div>
+      <details>
+        <summary><span class="summary-label">Details / Why — what's the difference between all those URLs?</span></summary>
+        <div class="details-body">
+          <p>Vercel shows several URLs in the deployment panel. Here's what they are:</p>
+          <p><strong>interactive-lab.vercel.app</strong> — your <em>production</em> URL. This is what's public. Always use this one to verify.</p>
+          <p><strong>interactive-lab-abc123xyz.vercel.app</strong> (with a hash) — a <em>preview</em> URL unique to this specific deployment. Useful for sharing a specific version, but not the canonical public address.</p>
+          <p><strong>interactive-lab-git-main-xyz.vercel.app</strong> — a branch-specific preview. Ignore for production testing.</p>
+          <p><strong>Rule of thumb:</strong> if the URL has a hash or "git" in it, it's a preview. Use the clean URL.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">8</div>
+    <div class="step-body">
+      <div class="step-action">Test in a fresh incognito / private window</div>
+      <details>
+        <summary><span class="summary-label">Details / Why</span></summary>
+        <div class="details-body">
+          <p>Your browser may have cached an old version of the site. An incognito window starts fresh with no cache, so you see exactly what a new visitor would see.</p>
+          <p>Test: home page loads → new experiment card appears → clicking it routes correctly → experiment works end-to-end.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <p class="phase">Phase 4 — If Something Is Broken</p>
+
+  <div class="step">
+    <div class="step-num">9</div>
+    <div class="step-body">
+      <div class="step-action">Diagnose: is the bug present locally too?</div>
+      <div class="branch-box">
+        <p class="branch-title">Decision Tree</p>
+        <div class="branch">
+          <span class="branch-label">Bug is local too</span>
+          <span class="branch-action">Fix the code → <code>npm run build</code> → commit → push. Vercel redeploys automatically.</span>
+        </div>
+        <div class="branch">
+          <span class="branch-label">Works locally, broken on Vercel</span>
+          <span class="branch-action">Likely a build-time issue. Run <code>npm run build</code> locally and look carefully at warnings/errors. Common causes: missing file, wrong import path casing (Windows is case-insensitive, Linux is not), an env variable that exists locally but not on Vercel.</span>
+        </div>
+        <div class="branch">
+          <span class="branch-label">Vercel build failed (red)</span>
+          <span class="branch-action">Click the failed deployment → "View Build Logs". The error is usually on the last few lines. Fix it locally, confirm <code>npm run build</code> passes, then push again.</span>
+        </div>
+      </div>
+      <details>
+        <summary><span class="summary-label">Details / Why — the casing issue</span></summary>
+        <div class="details-body">
+          <p>The most common "works locally, fails on Vercel" issue: import paths with wrong casing. Windows doesn't care if you write <code>import X from "./Components/foo"</code> vs <code>./components/foo"</code> — both work. Linux (which Vercel runs on) treats them as different files and will fail.</p>
+          <p>Always match import paths exactly to actual folder/file names.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">10</div>
+    <div class="step-body">
+      <div class="step-action">After fixing: commit and push again — Vercel redeploys automatically</div>
+      <div class="code-block">git add src/
+git commit -m "Fix: [describe the fix]"
+git push origin main</div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <div class="quick-ref">
+    <p class="quick-ref-title">Quick Reference</p>
+
+    <p class="qr-section-label">Essential commands</p>
+    <div class="cmd-list">
+      <div class="cmd-row">
+        <span class="cmd-val">npm run build</span>
+        <span class="cmd-desc">Production build check — must pass before deploying</span>
+      </div>
+      <div class="cmd-row">
+        <span class="cmd-val">git status</span>
+        <span class="cmd-desc">See what's changed / staged</span>
+      </div>
+      <div class="cmd-row">
+        <span class="cmd-val">git add src/</span>
+        <span class="cmd-desc">Stage all changes in src/</span>
+      </div>
+      <div class="cmd-row">
+        <span class="cmd-val">git commit -m "message"</span>
+        <span class="cmd-desc">Commit staged changes</span>
+      </div>
+      <div class="cmd-row">
+        <span class="cmd-val">git push origin main</span>
+        <span class="cmd-desc">Push to GitHub → triggers Vercel deploy</span>
+      </div>
+      <div class="cmd-row">
+        <span class="cmd-val">git log --oneline -5</span>
+        <span class="cmd-desc">See last 5 commits — confirm push landed</span>
+      </div>
+    </div>
+
+    <p class="qr-section-label">Key URLs</p>
+    <div class="qr-grid">
+      <div class="qr-item">
+        <label>Production site</label>
+        <span class="qr-val">interactive-lab.vercel.app</span>
+      </div>
+      <div class="qr-item">
+        <label>Vercel dashboard</label>
+        <span class="qr-val">vercel.com (log in)</span>
+      </div>
+      <div class="qr-item">
+        <label>GitHub repo</label>
+        <span class="qr-val">github.com/diego92dlpt/interactive-lab</span>
+      </div>
+      <div class="qr-item">
+        <label>Local dev</label>
+        <span class="qr-val">http://localhost:5173</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="see-also">
+    Starting a new experiment? ← <a href="cheatsheet-new-experiment.html">Cheatsheet 1 — Adding a New Experiment</a>
+  </div>
+
+  <p class="footer">interactive-lab · wait-calc-sim project · docs/cheatsheet-deploy.html</p>
+
+</div>
+</body>
+</html>
