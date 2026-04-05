@@ -28,16 +28,19 @@ function GroupLabel({ children }) {
   )
 }
 
-function MetricRow({ label, color, count, total, value, suffix = '', muted = false }) {
+function MetricRow({ label, color, count, total, value, suffix = '', muted = false, tooltip, highlight = false }) {
   const N = total
   const showCount = count != null
   return (
     <div className="flex items-center justify-between gap-1 py-[2px]">
       <span
-        className="font-mono text-[11px] shrink-0"
+        className="font-mono text-[11px] shrink-0 flex items-center gap-1"
         style={{ color: color || (muted ? '#6b7280' : '#9ca3af') }}
+        title={tooltip}
       >
         {label}
+        {tooltip && <span className="text-gray-700 cursor-help text-[9px]">ⓘ</span>}
+        {highlight && <span className="text-yellow-600 text-[9px]">*</span>}
       </span>
       <span className="flex items-center gap-1.5 font-mono text-[11px] tabular-nums">
         {showCount ? (
@@ -73,7 +76,7 @@ function NullState() {
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 
-export default function Dashboard({ simRef, simStarted, speed = 1 }) {
+export default function Dashboard({ simRef, simStarted, speed = 1, configRef }) {
   const [snap, setSnap] = useState(null)
 
   useEffect(() => {
@@ -95,7 +98,7 @@ export default function Dashboard({ simRef, simStarted, speed = 1 }) {
         Dashboard
       </div>
 
-      {!simStarted || !snap ? (
+      {!snap ? (
         <NullState />
       ) : (() => {
         const { N, counts, cumStats, tick } = snap
@@ -107,6 +110,15 @@ export default function Dashboard({ simRef, simStarted, speed = 1 }) {
         const obsIFR = cumStats.iResolutions >= 20
           ? (cumStats.iDeaths / cumStats.iResolutions) * 100
           : null
+
+        // Detect whether interventions are active in the running sim config.
+        // If so, the measured number is Rₑff, not R₀ — label accordingly.
+        const cfg = configRef?.current
+        const interventionsActive = cfg && (cfg.mwPct > 0 || cfg.qp || cfg.initialVaxPct > 0)
+        const r0Label   = interventionsActive ? 'Emergent Rₑff' : 'Emergent R₀'
+        const r0Tooltip = interventionsActive
+          ? 'Interventions or vaccination are active. This is Rₑff (effective reproduction number) — R₀ reduced by current conditions. Disable all interventions and re-run to measure baseline R₀.'
+          : 'Average secondary infections per resolved case in the sim. Approaches true R₀ in the early epidemic; declines as susceptibles deplete.'
 
         return (
           <div className="flex-1 overflow-hidden pt-0.5">
@@ -131,9 +143,11 @@ export default function Dashboard({ simRef, simStarted, speed = 1 }) {
             {/* ── Epidemiology ───────────────────────────────────────── */}
             <GroupLabel>Epidemiology</GroupLabel>
             <MetricRow
-              label="Emergent R₀"
+              label={r0Label}
+              tooltip={r0Tooltip}
               value={obsR0 != null ? fmtDecimal(obsR0, 2) : '< 10 cases'}
               muted={obsR0 == null}
+              highlight={interventionsActive && obsR0 != null}
             />
             <MetricRow
               label="Obs. IFR"

@@ -14,7 +14,7 @@ const BARS = [
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 
-export default function PopulationChart({ simRef, simStarted, speed = 1 }) {
+export default function PopulationChart({ simRef, simStarted, speed = 1, baseline = null }) {
   const [snap, setSnap] = useState(null)
   const [showPct, setShowPct] = useState(true)
 
@@ -29,15 +29,26 @@ export default function PopulationChart({ simRef, simStarted, speed = 1 }) {
     return () => clearInterval(id)
   }, [simRef, speed])
 
-  const hasData = simStarted && snap && snap.N > 0
+  const hasData = snap && snap.N > 0
+
+  // Baseline final snapshot — last entry in baseline history
+  const blSnap = baseline?.history?.length
+    ? baseline.history[baseline.history.length - 1]
+    : null
+  const blN = baseline?.N ?? 0
 
   return (
-    <div className="w-64 shrink-0 flex flex-col border-l border-gray-800">
+    <div className="w-80 shrink-0 flex flex-col border-l border-gray-800">
 
       {/* Header */}
       <div className="shrink-0 flex items-center justify-between px-3 pt-2 pb-1.5 border-b border-green-900">
-        <div className="text-green-500 font-mono text-[10px] tracking-widest uppercase shrink-0">
-          Population
+        <div className="flex items-baseline gap-2 shrink-0">
+          <div className="text-green-500 font-mono text-[10px] tracking-widest uppercase">
+            Population
+          </div>
+          {blSnap && (
+            <span className="font-mono text-[8px] text-gray-600">BL | Now</span>
+          )}
         </div>
         <div className="flex gap-1">
           {['%', '#'].map(label => (
@@ -68,28 +79,68 @@ export default function PopulationChart({ simRef, simStarted, speed = 1 }) {
             const N     = snap.N
             const pct   = N > 0 ? count / N : 0
 
+            const blCount = blSnap?.[key] ?? 0
+            const blPct   = blN > 0 ? blCount / blN : 0
+
             return (
               <div key={key} className="flex-1 flex flex-col items-center gap-1 h-full">
-                {/* Bar column */}
-                <div className="flex-1 flex flex-col justify-end w-full">
-                  <div
-                    className="w-full rounded-t transition-all duration-200"
-                    style={{
-                      background: STATE_COLORS[key],
-                      height: `${Math.max(pct * 100, pct > 0 ? 2 : 0)}%`,
-                      minHeight: count > 0 ? '2px' : '0',
-                      opacity: 0.88,
-                    }}
-                  />
-                </div>
-                {/* Value label above bar */}
-                <div
-                  className="font-mono text-[9px] tabular-nums leading-none text-center"
-                  style={{ color: STATE_COLORS[key] }}
-                >
-                  {showPct
-                    ? (pct * 100).toFixed(0) + '%'
-                    : count.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                {/* Bar column — grouped side-by-side when baseline active */}
+                <div className="flex-1 flex items-end gap-px w-full">
+                  {blSnap ? (
+                    <>
+                      {/* BL bar (left, faded) — label sits just above bar */}
+                      <div className="flex-1 h-full flex flex-col justify-end items-center">
+                        <div className="font-mono text-[10px] tabular-nums leading-none mb-0.5"
+                          style={{ color: STATE_COLORS[key], opacity: 0.55 }}>
+                          {showPct
+                            ? (blPct * 100).toFixed(0) + '%'
+                            : blCount.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                        </div>
+                        <div className="w-full rounded-t"
+                          style={{
+                            background: STATE_COLORS[key],
+                            height: `${Math.max(blPct * 100, blPct > 0 ? 2 : 0)}%`,
+                            minHeight: blCount > 0 ? '2px' : '0',
+                            opacity: 0.38,
+                          }}
+                        />
+                      </div>
+                      {/* NOW bar (right, full) — label sits just above bar */}
+                      <div className="flex-1 h-full flex flex-col justify-end items-center">
+                        <div className="font-mono text-[10px] tabular-nums leading-none mb-0.5"
+                          style={{ color: STATE_COLORS[key] }}>
+                          {showPct
+                            ? (pct * 100).toFixed(0) + '%'
+                            : count.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                        </div>
+                        <div className="w-full rounded-t transition-all duration-200"
+                          style={{
+                            background: STATE_COLORS[key],
+                            height: `${Math.max(pct * 100, pct > 0 ? 2 : 0)}%`,
+                            minHeight: count > 0 ? '2px' : '0',
+                            opacity: 0.88,
+                          }}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="w-full h-full flex flex-col justify-end items-center">
+                      <div className="font-mono text-[10px] tabular-nums leading-none mb-0.5"
+                        style={{ color: STATE_COLORS[key] }}>
+                        {showPct
+                          ? (pct * 100).toFixed(0) + '%'
+                          : count.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                      </div>
+                      <div className="w-full rounded-t transition-all duration-200"
+                        style={{
+                          background: STATE_COLORS[key],
+                          height: `${Math.max(pct * 100, pct > 0 ? 2 : 0)}%`,
+                          minHeight: count > 0 ? '2px' : '0',
+                          opacity: 0.88,
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
                 {/* State letter */}
                 <div

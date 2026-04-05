@@ -7,7 +7,7 @@ export const TICKS_PER_DAY = 60
 // ─── PHYSICS ─────────────────────────────────────────────────────────────────
 export const DOT_DOT_ELASTIC       = true
 export const JITTER_FACTOR         = 0.15  // max random angle nudge per tick (radians)
-export const FENCE_RADIUS_MULT     = 3     // fence radius = FENCE_RADIUS_MULT × dot radius
+export const FENCE_PADDING         = 3     // fence radius = dotRadius + FENCE_PADDING (px)
 export const QUARANTINE_CONTACT_R  = 1     // c_q: effective contact rate for isolated dots
 
 // Elastic collision radius as a fraction of visual dot radius.
@@ -39,6 +39,7 @@ export const DEFAULT_INFECTIOUS_DAYS  = 7
 export const DEFAULT_TEMPERATURE      = 0.30
 
 // ─── INTERVENTION DEFAULTS ───────────────────────────────────────────────────
+export const DEFAULT_INTERVENTION_DAY = 7    // day on which all NPI policies activate
 export const DEFAULT_QP     = false
 export const DEFAULT_QC_PCT = 0.50
 export const DEFAULT_MW_PCT = 0

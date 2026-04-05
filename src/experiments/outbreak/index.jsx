@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { createSimState, defaultConfig, tickSim } from './engine.js'
 import { drawFrame, computeCanvasSize } from './renderer.js'
-import { DEBUG_MODE, TICKS_PER_DAY, FENCE_RADIUS_MULT } from './constants.js'
+import { DEBUG_MODE, TICKS_PER_DAY, FENCE_PADDING } from './constants.js'
 import { computeDotRadius, computeBaseSpeed } from './physics.js'
 import DebugOverlay from './debug/DebugOverlay.jsx'
 import ConfigPanel from './components/ConfigPanel.jsx'
 import Dashboard   from './components/Dashboard.jsx'
 import LineChart        from './components/LineChart.jsx'
 import PopulationChart  from './components/PopulationChart.jsx'
+import PresetModal             from './components/PresetModal.jsx'
+import PresetCalibrationModal from './components/PresetCalibrationModal.jsx'
 
 export default function Outbreak() {
   const canvasRef     = useRef(null)
@@ -23,9 +25,13 @@ export default function Outbreak() {
   const speedRef         = useRef(1)   // ticks per frame (0.5 = every other frame)
   const frameCountRef    = useRef(0)   // total frames elapsed, for sub-1× gating
   const lastRunConfigRef = useRef(null) // config snapshot at last startSim call
+  const seedRef          = useRef(null) // seed used by the current/last run
+  const seedLockedRef    = useRef(false)
 
   const [speed, setSpeed]               = useState(1)   // 0.2 | 0.5 | 1 | 2 | 5 | 10
   const [endSnap, setEndSnap]           = useState(null)
+  const [learnPreset, setLearnPreset]           = useState(null)  // preset id for deep-dive modal
+  const [showCalibrationGuide, setShowCalibrationGuide] = useState(false) // one-time R₀ guide
   const [staged, setStaged]             = useState(() => {
     try {
       const saved = localStorage.getItem('outbreak-config')
@@ -38,11 +44,19 @@ export default function Outbreak() {
   const [paused, setPaused]             = useState(true)
   const [midSimPaused, setMidSimPaused] = useState(false)
   const [day, setDay]                   = useState(0)
+  const [seed, setSeed]                 = useState(null)
+  const [seedLocked, setSeedLocked]     = useState(false)
+  const [baseline, setBaseline]         = useState(null)  // { history, N, maxDays } | null
 
   // ── Start / restart simulation ─────────────────────────────────────────────
   const startSim = useCallback((cfg, autoPlay = false) => {
     const { w, h } = canvasSizeRef.current
-    const liveCfg = { ...cfg, canvasW: w, canvasH: h }
+    const useSeed = (seedLockedRef.current && seedRef.current != null)
+      ? seedRef.current
+      : (Math.random() * 2 ** 31 | 0)
+    seedRef.current = useSeed
+    setSeed(useSeed)
+    const liveCfg = { ...cfg, canvasW: w, canvasH: h, seed: useSeed }
     configRef.current      = liveCfg
     lastRunConfigRef.current = liveCfg
     simRef.current         = createSimState(liveCfg)
@@ -79,7 +93,10 @@ export default function Outbreak() {
     const savedOverrides = (() => {
       try { const s = localStorage.getItem('outbreak-config'); return s ? JSON.parse(s) : null } catch { return null }
     })()
-    const initialCfg = { ...defaultConfig(w, h), ...(savedOverrides ?? {}), canvasW: w, canvasH: h }
+    const initSeed = Math.random() * 2 ** 31 | 0
+    seedRef.current = initSeed
+    setSeed(initSeed)
+    const initialCfg = { ...defaultConfig(w, h), ...(savedOverrides ?? {}), canvasW: w, canvasH: h, seed: initSeed }
     setStaged(initialCfg)
     configRef.current   = initialCfg
     simRef.current      = createSimState(initialCfg)
@@ -195,7 +212,7 @@ export default function Outbreak() {
         for (const fence of sim.fences) {
           fence.x      *= scaleX
           fence.y      *= scaleY
-          fence.radius  = FENCE_RADIUS_MULT * newRadius
+          fence.radius  = newRadius + FENCE_PADDING
         }
 
         sim.canvasW   = newW
@@ -214,6 +231,12 @@ export default function Outbreak() {
   // ── Control handlers ──────────────────────────────────────────────────────
   const handleRun    = useCallback(() => { startSim(staged, true)  }, [staged, startSim])
   const handleReset  = useCallback(() => { startSim(staged, false) }, [staged, startSim])
+
+  const handleToggleSeedLock = useCallback(() => {
+    const next = !seedLockedRef.current
+    seedLockedRef.current = next
+    setSeedLocked(next)
+  }, [])
 
   const handlePause  = useCallback(() => {
     pausedRef.current = true; setPaused(true); setMidSimPaused(true)
@@ -263,7 +286,7 @@ export default function Outbreak() {
 
             {/* Dashboard sidebar — full canvas height */}
             <div className="w-52 shrink-0 border-r border-gray-800 bg-gray-950 overflow-y-auto">
-              <Dashboard simRef={simRef} simStarted={simStarted} speed={speed} />
+              <Dashboard simRef={simRef} simStarted={simStarted} speed={speed} configRef={configRef} />
             </div>
 
             {/* Canvas */}
@@ -357,23 +380,46 @@ export default function Outbreak() {
           {/* ── Analytics row: Line chart + Population bar chart ───────── */}
           <div className="shrink-0 h-52 flex border-t border-gray-800 bg-gray-950">
 
-            <LineChart simRef={simRef} configRef={configRef} simStarted={simStarted} speed={speed} />
+            <LineChart
+              simRef={simRef} configRef={configRef} simStarted={simStarted} speed={speed}
+              baseline={baseline}
+              onSetBaseline={setBaseline}
+              onRemoveBaseline={() => setBaseline(null)}
+            />
 
-            <PopulationChart simRef={simRef} simStarted={simStarted} speed={speed} />
+            <PopulationChart simRef={simRef} simStarted={simStarted} speed={speed} baseline={baseline} />
 
           </div>
         </div>
 
         {/* ── Config panel — full-height right column ─────────────────── */}
         <div className="w-72 shrink-0 border-l border-gray-800 overflow-y-auto bg-gray-950">
-          <ConfigPanel config={staged} onChange={cfg => {
-            setStaged(cfg)
-            try { localStorage.setItem('outbreak-config', JSON.stringify(cfg)) } catch {}
-          }} />
+          <ConfigPanel
+            config={staged}
+            seed={seed}
+            seedLocked={seedLocked}
+            onToggleSeedLock={handleToggleSeedLock}
+            onLearnMore={setLearnPreset}
+            onShowCalibrationGuide={() => setShowCalibrationGuide(true)}
+            onChange={cfg => {
+              setStaged(cfg)
+              try { localStorage.setItem('outbreak-config', JSON.stringify(cfg)) } catch {}
+            }}
+          />
         </div>
       </div>
 
       <DebugOverlay simRef={simRef} config={configRef} running={true} />
+
+      {/* ── Preset learn-more modal ─────────────────────────────────────── */}
+      {learnPreset && (
+        <PresetModal presetId={learnPreset} onClose={() => setLearnPreset(null)} />
+      )}
+
+      {/* ── R₀ calibration guide (one-time on first preset use, re-openable via ?) ── */}
+      {showCalibrationGuide && (
+        <PresetCalibrationModal onClose={() => setShowCalibrationGuide(false)} />
+      )}
     </div>
   )
 }

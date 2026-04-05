@@ -1,0 +1,345 @@
+// ─── DISEASE PRESETS ──────────────────────────────────────────────────────────
+//
+// All p values are calibrated for N=300, temperature=0.30, dotRadiusMult=0.25.
+// Emergent R₀ will be higher at lower N and lower at higher N, because the
+// physics normalisation (speed & radius ∝ √area/N) keeps contact rate ∝ 1/N,
+// so doubling N roughly halves emergent R₀ for the same p.
+//
+// IFR, incubation, and infectious periods represent published central estimates;
+// real values vary widely by age, nutritional status, healthcare access, and era.
+//
+// Sources: WHO disease factsheets, published systematic reviews, and the
+// disease_comparison_table.html compiled by an earlier research session.
+// ──────────────────────────────────────────────────────────────────────────────
+
+export const PRESETS = [
+  // ── 1. Ebola ────────────────────────────────────────────────────────────────
+  {
+    id: 'ebola',
+    name: 'Ebola',
+    subtitle: 'Zaire ebolavirus · West Africa 2014',
+    tagline: 'Extremely lethal, difficult to spread.',
+    color: '#f87171',        // red-400
+    targetR0: '1.5 – 2.5',
+    keyFacts: [
+      { label: 'Target R₀',  value: '1.5 – 2.5' },
+      { label: 'IFR',        value: '~50%'       },
+      { label: 'Incubation', value: '8 days'     },
+      { label: 'Infectious', value: '9 days'     },
+    ],
+    config: {
+      N:                   300,
+      initialInfected:     3,
+      initialVaxPct:       0,
+      p:                   0.08,
+      ifr:                 0.50,
+      riPct:               0.85,
+      viPct:               0.95,
+      incubationDays:      8,
+      infectiousDays:      9,
+      temperature:         0.30,
+      dotRadiusMult:       0.25,
+      collisionRadiusMult: 0.80,
+      brownianMotion:      true,
+      mwPct:               0,
+      mePct:               0,
+      qp:                  false,
+      qcPct:               0,
+      maxDays:             180,
+      fizzleDays:          7,
+    },
+    learn: {
+      overview: `Ebola hemorrhagic fever is one of humanity's most feared pathogens — not because it spreads easily, but because it kills so efficiently. The 2014–2016 West Africa outbreak was the largest ever recorded, infecting over 28,000 people and killing more than 11,000. Despite its terrifying reputation, Ebola's relatively low R₀ of 1.5–2.5 means that with aggressive isolation it can be contained.`,
+      transmission: `Unlike respiratory diseases, Ebola spreads only through direct contact with the bodily fluids of a symptomatic individual. This limits its reach compared to airborne pathogens, but makes caregiving and traditional burial practices extremely high-risk. In the sim, the low p value (0.08) reflects this: dots must be in close proximity and even then transmission is far from guaranteed.`,
+      assumptions: [
+        'p = 0.08 — low per-contact probability; bodily-fluid contact required',
+        'IFR = 50%, drawn from the 2014 West Africa case fatality rate',
+        'Incubation 8 days = mean of the reported 2–21 day range',
+        'Infectious period 9 days covers symptomatic phase through death or recovery',
+        'Survivor immunity 85% — strong but not fully characterised in literature',
+        'Vaccine immunity 95% — rVSV-ZEBOV ring-vaccination trial effectiveness',
+        'maxDays = 180; Ebola outbreaks tend to resolve quickly relative to respiratory diseases',
+        'Calibrated at N=300, temperature=0.30, dotRadiusMult=0.25',
+      ],
+      tryThis: [
+        { prompt: 'Run without interventions', description: 'Does it always cause a large outbreak? With R₀ near 1.5 it may fizzle naturally — run several times and observe the variance.' },
+        { prompt: 'Enable quarantine at 80 %+ compliance', description: 'Can strict isolation stop it? This mirrors real-world ring containment — the strategy that worked in 2014.' },
+        { prompt: 'Compare to Measles', description: 'Ebola kills ~50 %; measles kills ~0.15 %. Which causes more total deaths in your sim? The answer surprises most people.' },
+      ],
+    },
+  },
+
+  // ── 2. COVID-19 Ancestral ────────────────────────────────────────────────────
+  {
+    id: 'covid',
+    name: 'COVID-19',
+    subtitle: 'Ancestral strain · Wuhan 2019',
+    tagline: 'The pandemic that changed the world.',
+    color: '#60a5fa',        // blue-400
+    targetR0: '2 – 3',
+    keyFacts: [
+      { label: 'Target R₀',  value: '2 – 3'  },
+      { label: 'IFR',        value: '~0.7%'  },
+      { label: 'Incubation', value: '5 days' },
+      { label: 'Infectious', value: '8 days' },
+    ],
+    config: {
+      N:                   300,
+      initialInfected:     3,
+      initialVaxPct:       0,
+      p:                   0.20,
+      ifr:                 0.007,
+      riPct:               0.85,
+      viPct:               0.92,
+      incubationDays:      5,
+      infectiousDays:      8,
+      temperature:         0.30,
+      dotRadiusMult:       0.25,
+      collisionRadiusMult: 0.80,
+      brownianMotion:      true,
+      mwPct:               0,
+      mePct:               0,
+      qp:                  false,
+      qcPct:               0,
+      maxDays:             360,
+      fizzleDays:          5,
+    },
+    learn: {
+      overview: `The ancestral SARS-CoV-2 strain emerged in Wuhan, China in late 2019 and triggered the first global pandemic in a century. With an R₀ of 2–3 and an IFR around 0.7 %, it occupied a dangerous middle ground: transmissible enough to spread globally before most countries noticed, deadly enough to overwhelm healthcare systems. Over 6 million confirmed deaths are attributed to COVID-19 worldwide.`,
+      transmission: `SARS-CoV-2 spreads primarily via respiratory droplets and aerosols, with indoor crowded spaces being highest-risk. A critical feature not fully captured in our sim: infected individuals are contagious for about 2 days before symptoms appear, making symptom-based isolation far less effective than it was for diseases like SARS-2003.`,
+      assumptions: [
+        'p = 0.20 reflects a household secondary attack rate of ~15–20%',
+        'IFR = 0.7% — population average; varies enormously by age (< 0.01% in children, > 5% in elderly)',
+        'Incubation 5 days = median from early Wuhan surveillance data',
+        'Infectious period 8 days represents mild-to-moderate cases',
+        'Recovered immunity 85% — pre-Omicron waning protection estimates',
+        'Vaccine immunity 92% — early mRNA efficacy vs. ancestral strain (pre-waning)',
+        'Calibrated at N=300, temperature=0.30, dotRadiusMult=0.25',
+      ],
+      tryThis: [
+        { prompt: 'Try mask wearing at 50 %, then 80 %', description: 'How much does adoption change the peak? Masks are surprisingly powerful even at partial uptake.' },
+        { prompt: 'Vary initial vaccination %', description: 'What threshold keeps this from becoming a major outbreak? Notice how close the herd-immunity threshold is.' },
+        { prompt: 'Compare to Delta', description: 'Run this preset, note the peak, then switch to Delta. Same IFR, but watch how much faster and higher the curve climbs.' },
+      ],
+    },
+  },
+
+  // ── 3. Spanish Flu 1918 ─────────────────────────────────────────────────────
+  {
+    id: 'flu1918',
+    name: 'Flu 1918',
+    subtitle: 'Spanish Influenza H1N1 · 1918–1919',
+    tagline: 'Similar spread to COVID — far deadlier.',
+    color: '#c084fc',        // purple-400
+    targetR0: '2 – 3',
+    keyFacts: [
+      { label: 'Target R₀',  value: '2 – 3'  },
+      { label: 'IFR',        value: '~1.5%'  },
+      { label: 'Incubation', value: '2 days' },
+      { label: 'Infectious', value: '4 days' },
+    ],
+    config: {
+      N:                   300,
+      initialInfected:     3,
+      initialVaxPct:       0,
+      p:                   0.15,
+      ifr:                 0.015,
+      riPct:               0.90,
+      viPct:               0.50,
+      incubationDays:      2,
+      infectiousDays:      4,
+      temperature:         0.30,
+      dotRadiusMult:       0.25,
+      collisionRadiusMult: 0.80,
+      brownianMotion:      true,
+      mwPct:               0,
+      mePct:               0,
+      qp:                  false,
+      qcPct:               0,
+      maxDays:             360,
+      fizzleDays:          5,
+    },
+    learn: {
+      overview: `The 1918 influenza pandemic killed an estimated 50–100 million people worldwide — more than World War I, which was still raging. With an R₀ similar to COVID-19 ancestral but an IFR of roughly 1.5 %, it demonstrates how a relatively small increase in lethality produces catastrophic outcomes at pandemic scale. Unusually, it killed young adults disproportionately, possibly via cytokine storm.`,
+      transmission: `Influenza spreads via respiratory droplets with a characteristically short incubation period. People become infectious quickly — often within 2 days of exposure — and remain contagious for only 3–5 days. This "fast and furious" profile produces sharper epidemic curves that can both surge and resolve faster than slower-moving diseases.`,
+      assumptions: [
+        'p = 0.15 reflects household secondary attack rates similar to ancestral COVID-19',
+        'IFR = 1.5% — global estimate; highly uncertain, ranges from 1–2% across studies',
+        'Incubation 2 days is characteristic of influenza (shorter than COVID)',
+        'Infectious period 4 days covers peak viral shedding window',
+        'No initial vaccination — no flu vaccine existed in 1918',
+        'Vaccine immunity 50% represents modern seasonal flu vaccine in good-match years',
+        'Calibrated at N=300, temperature=0.30, dotRadiusMult=0.25',
+      ],
+      tryThis: [
+        { prompt: 'Compare to COVID ancestral', description: 'Same R₀, 2× the IFR. Run both in sequence and compare total deaths — the difference is stark.' },
+        { prompt: 'Try 5× or 10× speed', description: 'The short infectious window makes this burn out fast. Great to watch at high speed — the whole epidemic resolves in seconds.' },
+        { prompt: 'Non-pharmaceutical interventions', description: 'In 1918, cities used masks, bans on gatherings, and school closures. Try various combinations — what actually bends the curve?' },
+      ],
+    },
+  },
+
+  // ── 4. Smallpox ─────────────────────────────────────────────────────────────
+  {
+    id: 'smallpox',
+    name: 'Smallpox',
+    subtitle: 'Variola major · eradicated 1980',
+    tagline: 'Deadly, slow-burning, and stopped by vaccines.',
+    color: '#fb923c',        // orange-400
+    targetR0: '3 – 6',
+    keyFacts: [
+      { label: 'Target R₀',  value: '3 – 6'   },
+      { label: 'IFR',        value: '~35%'     },
+      { label: 'Incubation', value: '12 days'  },
+      { label: 'Infectious', value: '18 days'  },
+    ],
+    config: {
+      N:                   300,
+      initialInfected:     3,
+      initialVaxPct:       0,
+      p:                   0.30,
+      ifr:                 0.35,
+      riPct:               0.97,
+      viPct:               0.97,
+      incubationDays:      12,
+      infectiousDays:      18,
+      temperature:         0.30,
+      dotRadiusMult:       0.25,
+      collisionRadiusMult: 0.80,
+      brownianMotion:      true,
+      mwPct:               0,
+      mePct:               0,
+      qp:                  false,
+      qcPct:               0,
+      maxDays:             360,
+      fizzleDays:          5,
+    },
+    learn: {
+      overview: `Smallpox killed an estimated 300 million people in the 20th century alone. With a fatality rate of 20–50 % and an R₀ of 3–6, it combined real transmissibility with devastating lethality. The global eradication campaign — completed in 1980 — remains the greatest public health achievement in human history. It is the only human infectious disease ever fully eradicated.`,
+      transmission: `Smallpox spreads through respiratory droplets and direct contact with skin lesions. What makes it particularly dangerous in the sim is its long infectious period — individuals remained contagious for roughly 3 weeks. Notice how dots stay in the Infectious (red) state far longer than in faster-moving diseases.`,
+      assumptions: [
+        'p = 0.30 reflects moderate-to-high per-contact probability via respiratory/contact routes',
+        'IFR = 35% — midpoint of the 20–50 % Variola major range',
+        'Incubation 12 days = median of the 7–17 day range',
+        'Infectious period 18 days represents the ~3-week contagious window (fever through scabbing)',
+        'Survivor immunity 97% — historically near-lifelong after recovery',
+        'Vaccine immunity 97% — the highly effective vaccinia (cowpox-derived) vaccine',
+        'Calibrated at N=300, temperature=0.30, dotRadiusMult=0.25',
+      ],
+      tryThis: [
+        { prompt: 'Try 40–60 % initial vaccination', description: 'This mirrors the ring-vaccination eradication strategy. At what coverage does a major outbreak become unlikely?' },
+        { prompt: 'Compare the epidemic curve to Spanish Flu', description: 'An 18-day vs 4-day infectious period produces very different curve shapes even when R₀ is similar. Which is easier to spot coming?' },
+        { prompt: 'Enable quarantine at high compliance', description: 'Isolation was central to the eradication campaign. What compliance level is needed to contain a smallpox introduction?' },
+      ],
+    },
+  },
+
+  // ── 5. COVID Delta ──────────────────────────────────────────────────────────
+  {
+    id: 'delta',
+    name: 'COVID Delta',
+    subtitle: 'B.1.617.2 variant · India 2021',
+    tagline: 'A variant nearly twice as contagious as the original.',
+    color: '#34d399',        // emerald-400
+    targetR0: '5 – 8',
+    keyFacts: [
+      { label: 'Target R₀',  value: '5 – 8'  },
+      { label: 'IFR',        value: '~1.0%'  },
+      { label: 'Incubation', value: '4 days' },
+      { label: 'Infectious', value: '8 days' },
+    ],
+    config: {
+      N:                   300,
+      initialInfected:     3,
+      initialVaxPct:       0,
+      p:                   0.38,
+      ifr:                 0.010,
+      riPct:               0.80,
+      viPct:               0.90,
+      incubationDays:      4,
+      infectiousDays:      8,
+      temperature:         0.30,
+      dotRadiusMult:       0.25,
+      collisionRadiusMult: 0.80,
+      brownianMotion:      true,
+      mwPct:               0,
+      mePct:               0,
+      qp:                  false,
+      qcPct:               0,
+      maxDays:             360,
+      fizzleDays:          5,
+    },
+    learn: {
+      overview: `The Delta variant (B.1.617.2) emerged in India in late 2020 and became the globally dominant strain by mid-2021. It was estimated to be roughly twice as transmissible as the ancestral strain, with an R₀ of 5–8. It showed how a pathogen can evolve to dramatically increase its spread, overwhelming countries with significant prior immunity or high vaccination rates.`,
+      transmission: `Delta's increased transmissibility came from higher viral loads in infected individuals — infected people carried more virus and shed it more efficiently. The transmission routes were identical to the ancestral strain (respiratory droplets/aerosols), but the probability of infection per exposure was substantially higher.`,
+      assumptions: [
+        'p = 0.38 reflects substantially higher household secondary attack rates (25–40%) vs ancestral',
+        'IFR = 1.0% — some studies found slightly higher severity than ancestral per infection',
+        'Shorter incubation (4 days) consistent with early Delta surveillance data',
+        'Reduced recovered immunity (80%) reflects partial immune escape from prior ancestral infection',
+        'Vaccine immunity 90% — maintained strong post full mRNA series, pre-waning',
+        'Calibrated at N=300, temperature=0.30, dotRadiusMult=0.25',
+      ],
+      tryThis: [
+        { prompt: 'Run back-to-back with COVID ancestral', description: 'Keep all other settings identical. Delta should peak higher and faster — the difference illustrates how much a transmissibility jump matters.' },
+        { prompt: 'Find the vaccination threshold', description: 'At what initial vaccination % does Delta fail to cause a major outbreak? Compare to the ancestral COVID threshold.' },
+        { prompt: 'Quarantine vs masks — which is more cost-effective?', description: 'Try quarantine at 50% compliance vs masks at 70% wearing. Which bends the curve more per "societal cost"?' },
+      ],
+    },
+  },
+
+  // ── 6. Measles ──────────────────────────────────────────────────────────────
+  {
+    id: 'measles',
+    name: 'Measles',
+    subtitle: 'Measles morbillivirus · pre-vaccine era',
+    tagline: 'The most contagious disease ever recorded.',
+    color: '#fbbf24',        // amber-400
+    targetR0: '12 – 18',
+    keyFacts: [
+      { label: 'Target R₀',  value: '12 – 18' },
+      { label: 'IFR',        value: '~0.15%'  },
+      { label: 'Incubation', value: '10 days' },
+      { label: 'Infectious', value: '6 days'  },
+    ],
+    config: {
+      N:                   300,
+      initialInfected:     3,
+      initialVaxPct:       0,
+      p:                   0.80,
+      ifr:                 0.0015,
+      riPct:               0.99,
+      viPct:               0.97,
+      incubationDays:      10,
+      infectiousDays:      6,
+      temperature:         0.30,
+      dotRadiusMult:       0.25,
+      collisionRadiusMult: 0.80,
+      brownianMotion:      true,
+      mwPct:               0,
+      mePct:               0,
+      qp:                  false,
+      qcPct:               0,
+      maxDays:             360,
+      fizzleDays:          5,
+    },
+    learn: {
+      overview: `Measles is one of the most contagious diseases ever studied, with an R₀ of 12–18. A single infectious person, in a fully susceptible population, will on average infect 12–18 others. This extraordinary transmissibility exists because measles is airborne — viral particles can linger in a room for up to two hours after an infected person has left. Before widespread vaccination, virtually every child contracted measles.`,
+      transmission: `Measles spreads through the air over distances far greater than most respiratory diseases. The very high p value (0.80) approximates this efficiency: if a susceptible dot gets anywhere near an infectious one, transmission is almost certain. Notice in the sim how the wave of infection moves almost like a flash fire through the population.`,
+      assumptions: [
+        'p = 0.80 reflects >80% household secondary attack rate in unvaccinated populations',
+        'IFR = 0.15% — reflects high-income, well-nourished settings; 1–5% or higher in resource-poor settings',
+        'Incubation 10 days = average of the 7–21 day range (prodromal phase included)',
+        'Infectious period 6 days covers the prodromal and early rash phases',
+        'Survivor immunity 99% — lifelong immunity is near-universal after natural infection',
+        'Vaccine immunity 97% — 2-dose MMR series in routine immunisation programmes',
+        'Calibrated at N=300, temperature=0.30, dotRadiusMult=0.25',
+      ],
+      tryThis: [
+        { prompt: 'Run without any interventions', description: 'Watch nearly every dot turn red. This is not an exaggeration — measles infected virtually every unvaccinated child before vaccines.' },
+        { prompt: 'Try 80%, then 90%, then 95% vaccination', description: 'Herd immunity for measles requires ~95% coverage. The gap between 90% and 95% is dramatic — notice what happens in each case.' },
+        { prompt: 'Compare total deaths to Ebola', description: 'Ebola kills 50% of those infected; measles kills 0.15%. Run both at identical settings and count the deaths. Which is actually more dangerous to a population?' },
+      ],
+    },
+  },
+]

@@ -1,4 +1,4 @@
-import { DOT_DOT_ELASTIC, JITTER_FACTOR, FENCE_RADIUS_MULT } from './constants.js'
+import { DOT_DOT_ELASTIC, JITTER_FACTOR } from './constants.js'
 
 // ─── SIZING HELPERS ───────────────────────────────────────────────────────────
 
@@ -15,7 +15,7 @@ export function computeBaseSpeed(canvasW, canvasH, N, temperatureK) {
 // Mutates dot positions/velocities in place.
 // Returns nothing — caller reads updated dots.
 
-export function applyPhysics(dots, fences, canvasW, canvasH, dotRadius, collisionRadiusMult, debugStats, brownianMotion = true) {
+export function applyPhysics(dots, fences, canvasW, canvasH, dotRadius, collisionRadiusMult, debugStats, brownianMotion = true, rng = Math.random) {
   // 1. Move each mobile dot + wall bounce
   for (const dot of dots) {
     if (dot.state === 'D') continue
@@ -25,7 +25,7 @@ export function applyPhysics(dots, fences, canvasW, canvasH, dotRadius, collisio
     // Ballistic: heading only changes from wall/dot collisions.
     if (brownianMotion) {
       const angle = Math.atan2(dot.vy, dot.vx)
-      const jitter = (Math.random() - 0.5) * 2 * JITTER_FACTOR
+      const jitter = (rng() - 0.5) * 2 * JITTER_FACTOR
       const speed = Math.sqrt(dot.vx * dot.vx + dot.vy * dot.vy)
       const newAngle = angle + jitter
       dot.vx = Math.cos(newAngle) * speed
