@@ -17,7 +17,7 @@ const SECTION_STYLES = {
 
 const SECTIONS_STORAGE_KEY = 'outbreak-sections'
 
-function Section({ title, color = 'gray', defaultOpen = true, children }) {
+function Section({ title, color = 'gray', defaultOpen = true, tourId, children }) {
   const [open, setOpen] = useState(() => {
     try {
       const stored = JSON.parse(localStorage.getItem(SECTIONS_STORAGE_KEY) ?? '{}')
@@ -40,7 +40,7 @@ function Section({ title, color = 'gray', defaultOpen = true, children }) {
 
   const c = SECTION_STYLES[color] ?? SECTION_STYLES.gray
   return (
-    <div className={`mb-2 rounded-md overflow-hidden ${c.bg}`}>
+    <div className={`mb-2 rounded-md overflow-hidden ${c.bg}`} {...(tourId ? { 'data-tour': tourId } : {})}>
       <button
         onClick={toggle}
         className={`w-full flex items-center justify-between px-3 py-2 border-b ${c.border} hover:brightness-125 transition-all`}
@@ -65,7 +65,7 @@ function SliderRow({ label, tooltip, min, max, step, value, onChange, display })
         <span className="text-gray-400 text-xs flex items-center gap-1">
           {label}
           {tooltip && (
-            <span className="text-gray-600 cursor-help text-xs" title={tooltip}>ⓘ</span>
+            <span className="text-gray-400 cursor-help text-xs" title={tooltip}>ⓘ</span>
           )}
         </span>
         <span className="text-green-400 font-mono text-xs tabular-nums">
@@ -92,7 +92,7 @@ function SliderRow({ label, tooltip, min, max, step, value, onChange, display })
 export default function ConfigPanel({
   config, onChange,
   seed, seedLocked, onToggleSeedLock,
-  onLearnMore, onShowCalibrationGuide,
+  onLearnMore, onShowCalibrationGuide, onCompare,
 }) {
   const set = key => val => onChange({ ...config, [key]: val })
 
@@ -106,9 +106,9 @@ export default function ConfigPanel({
 
       {/* ── Seed ─────────────────────────────────────────────────────────────── */}
       {seed != null && (
-        <div className="flex items-center justify-between mb-3 px-1 py-2 border-b border-gray-800">
+        <div data-tour="seed" className="flex items-center justify-between mb-3 px-1 py-2 border-b border-gray-800">
           <div>
-            <div className="text-gray-600 font-mono text-[9px] tracking-widest uppercase leading-none mb-0.5">
+            <div className="text-gray-400 font-mono text-[9px] tracking-widest uppercase leading-none mb-0.5">
               Seed
             </div>
             <div className="text-gray-300 font-mono text-xs tabular-nums">{seed}</div>
@@ -130,17 +130,18 @@ export default function ConfigPanel({
       )}
 
       {/* ── Presets ──────────────────────────────────────────────────────────── */}
-      <Section title="Presets" color="green">
+      <Section title="Presets" color="green" tourId="presets-section">
         <PresetPanel
           config={config}
           onChange={onChange}
           onLearnMore={onLearnMore}
           onShowCalibrationGuide={onShowCalibrationGuide}
+          onCompare={onCompare}
         />
       </Section>
 
-      {/* ── Physics ──────────────────────────────────────────────────────────── */}
-      <Section title="Physics" color="indigo">
+      {/* ── Physics & Movement ───────────────────────────────────────────────── */}
+      <Section title="Physics & Movement" color="indigo" tourId="physics-movement">
         <SliderRow
           label="Dot size"
           tooltip="Visual and physical dot radius as a multiplier of arena scale. Smaller = less crowding, dots travel further between collisions."
@@ -148,10 +149,10 @@ export default function ConfigPanel({
           value={config.dotRadiusMult} onChange={set('dotRadiusMult')} display={as2dp}
         />
         <SliderRow
-          label="Collision radius"
-          tooltip="Physical bounce boundary as a fraction of visual dot radius. Below 0.60 becomes visually noticeable — dots appear to overlap before bouncing."
-          min={0.60} max={1.0} step={0.01}
-          value={config.collisionRadiusMult} onChange={set('collisionRadiusMult')} display={as2dp}
+          label="Speed (k)"
+          tooltip="BASE_SPEED = k × √(arena / N). Dot size and speed together control contact frequency and emergent R₀. Low ≈ 0.05–0.15 (slow spread), medium ≈ 0.20–0.40, high ≈ 0.50–0.80 (rapid mixing)."
+          min={0.05} max={0.80} step={0.01}
+          value={config.temperature} onChange={set('temperature')} display={as2dp}
         />
         <div>
           <div className="flex justify-between items-center mb-1">
@@ -160,7 +161,7 @@ export default function ConfigPanel({
               {config.brownianMotion ? 'Brownian' : 'Ballistic'}
             </span>
           </div>
-          <div className="text-gray-600 text-xs mb-2">
+          <div className="text-gray-400 text-xs mb-2">
             {config.brownianMotion
               ? 'Random heading nudge every tick — molecules in a gas.'
               : 'Heading only changes from wall/dot collisions — billiard balls.'}
@@ -183,21 +184,8 @@ export default function ConfigPanel({
         </div>
       </Section>
 
-      {/* ── Temperature ──────────────────────────────────────────────────────── */}
-      <Section title="Temperature" color="amber">
-        <div className="text-gray-600 text-xs">
-          Movement speed — affects contact rate and epidemic spread
-        </div>
-        <SliderRow
-          label="Speed (k)"
-          tooltip="BASE_SPEED = k × √(arena / N). Low ≈ 0.05–0.15 (slow spread), medium ≈ 0.20–0.40, high ≈ 0.50–0.80 (rapid mixing)."
-          min={0.05} max={0.80} step={0.01}
-          value={config.temperature} onChange={set('temperature')} display={as2dp}
-        />
-      </Section>
-
       {/* ── Disease Model ────────────────────────────────────────────────────── */}
-      <Section title="Disease Model" color="rose">
+      <Section title="Disease Model" color="rose" tourId="disease-model-section">
         <SliderRow
           label="Transmission p"
           tooltip="Probability of transmission per S×I collision per tick."
@@ -207,7 +195,7 @@ export default function ConfigPanel({
         <SliderRow
           label="Fatality (IFR)"
           tooltip="Fraction of Infectious dots that die (I→D) rather than recover (I→R)."
-          min={0} max={0.20} step={0.001}
+          min={0} max={0.60} step={0.001}
           value={config.ifr} onChange={set('ifr')} display={asPct}
         />
         <SliderRow
@@ -225,7 +213,7 @@ export default function ConfigPanel({
         <SliderRow
           label="Incubation period"
           tooltip="Days in Exposed (E) state — infected but not yet infectious."
-          min={1} max={14} step={0.5}
+          min={1} max={21} step={0.5}
           value={config.incubationDays} onChange={set('incubationDays')} display={asDays}
         />
         <SliderRow
@@ -237,7 +225,7 @@ export default function ConfigPanel({
       </Section>
 
       {/* ── Interventions ────────────────────────────────────────────────────── */}
-      <Section title="Interventions" color="purple">
+      <Section title="Interventions" color="purple" tourId="interventions-section">
         <SliderRow
           label="Policy onset day"
           tooltip="All non-pharmaceutical interventions (quarantine, mask effectiveness) are inactive before this day. Set to 0 for immediate policy. Reflects the real-world delay between outbreak detection and public health action."
@@ -249,7 +237,7 @@ export default function ConfigPanel({
         <div className="flex justify-between items-center">
           <span className="text-gray-400 text-xs flex items-center gap-1">
             Quarantine practiced
-            <span className="text-gray-600 cursor-help text-xs"
+            <span className="text-gray-400 cursor-help text-xs"
               title="When on, each dot that becomes Infectious flips a compliance coin (QC%). Compliant dots self-isolate inside a quarantine fence.">ⓘ</span>
           </span>
           <button
@@ -284,7 +272,7 @@ export default function ConfigPanel({
       </Section>
 
       {/* ── Population ───────────────────────────────────────────────────────── */}
-      <Section title="Population" color="teal">
+      <Section title="Population" color="teal" tourId="population-section">
         <SliderRow
           label="Dots (N)"
           tooltip="Total number of dots. Higher N = slower performance above ~1500."
@@ -300,13 +288,13 @@ export default function ConfigPanel({
         <SliderRow
           label="Initial vaccinated"
           tooltip="Fraction of dots starting in Vaccinated (V) state at t=0."
-          min={0} max={0.99} step={0.01}
+          min={0} max={1.0} step={0.01}
           value={config.initialVaxPct} onChange={set('initialVaxPct')} display={asPct}
         />
       </Section>
 
-      {/* ── Simulation ───────────────────────────────────────────────────────── */}
-      <Section title="Simulation" color="gray">
+      {/* ── End Conditions ───────────────────────────────────────────────────── */}
+      <Section title="End Conditions" color="gray" tourId="simulation-section">
         <SliderRow
           label="Max sim days"
           tooltip="Hard ceiling on simulation length. Prevents runs that never naturally terminate."
@@ -316,7 +304,7 @@ export default function ConfigPanel({
         <SliderRow
           label="Fizzle threshold"
           tooltip="Simulation ends if zero new infections occur for this many consecutive sim-days."
-          min={1} max={14} step={1}
+          min={1} max={30} step={1}
           value={config.fizzleDays} onChange={set('fizzleDays')} display={asDays}
         />
       </Section>

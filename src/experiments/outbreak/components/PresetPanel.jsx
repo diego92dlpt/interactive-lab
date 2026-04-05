@@ -9,9 +9,16 @@ import { hasSeenCalibrationGuide } from './PresetCalibrationModal.jsx'
 // First click on any preset triggers the calibration guide modal (one-time).
 // ──────────────────────────────────────────────────────────────────────────────
 
-export default function PresetPanel({ config, onChange, onLearnMore, onShowCalibrationGuide }) {
-  const [activeId, setActiveId] = useState(null)
-  const active = PRESETS.find(p => p.id === activeId) ?? null
+function fmtPct(v) {
+  if (v >= 0.01) return (v * 100).toFixed(1).replace(/\.0$/, '') + '%'
+  return (v * 100).toFixed(2) + '%'
+}
+
+export default function PresetPanel({ config, onChange, onLearnMore, onShowCalibrationGuide, onCompare }) {
+  const [activeId, setActiveId]   = useState(null)
+  const [hoveredId, setHoveredId] = useState(null)
+  const active  = PRESETS.find(p => p.id === activeId)  ?? null
+  const hovered = PRESETS.find(p => p.id === hoveredId) ?? null
 
   function applyPreset(preset) {
     setActiveId(preset.id)
@@ -23,19 +30,31 @@ export default function PresetPanel({ config, onChange, onLearnMore, onShowCalib
 
   return (
     <div className="mb-5">
-      {/* Section header with persistent ⓘ */}
-      <div className="flex items-center justify-between mb-3 pb-1 border-b border-green-900">
-        <div className="text-green-500 font-mono text-xs tracking-widest uppercase">
-          Presets
-        </div>
+      {/* Section label */}
+      <div className="text-green-500 font-mono text-xs tracking-widest uppercase mb-2">
+        Presets
+      </div>
+
+      {/* Help / info buttons — visually distinct from presets */}
+      <div className="flex flex-col gap-1 mb-3">
+        {onCompare && (
+          <button
+            onClick={onCompare}
+            className="w-full py-1.5 rounded border border-gray-700 bg-gray-900 hover:bg-gray-800 hover:border-gray-500 font-mono text-[11px] text-gray-400 hover:text-gray-200 tracking-wide transition-all flex items-center justify-center gap-1.5"
+          >
+            <span className="text-gray-600">⊞</span> Compare all 6 diseases
+          </button>
+        )}
         <button
           onClick={onShowCalibrationGuide}
-          title="How presets & R₀ work in this sim"
-          className="w-4 h-4 rounded-full border border-gray-700 text-gray-600 hover:text-gray-300 hover:border-gray-500 font-mono text-[10px] flex items-center justify-center transition-colors"
+          className="w-full py-1.5 rounded border border-gray-700 bg-gray-900 hover:bg-gray-800 hover:border-gray-500 font-mono text-[11px] text-gray-400 hover:text-gray-200 tracking-wide transition-all flex items-center justify-center gap-1.5"
         >
-          ?
+          <span className="text-gray-600">ⓘ</span> R₀ &amp; Calibration
         </button>
       </div>
+
+      {/* Divider */}
+      <div className="border-b border-green-900 mb-3" />
 
       {/* 2 × 3 button grid */}
       <div className="grid grid-cols-3 gap-1.5 mb-3">
@@ -45,8 +64,10 @@ export default function PresetPanel({ config, onChange, onLearnMore, onShowCalib
             <button
               key={preset.id}
               onClick={() => applyPreset(preset)}
+              onMouseEnter={() => setHoveredId(preset.id)}
+              onMouseLeave={() => setHoveredId(null)}
               title={preset.subtitle}
-              className={`px-1.5 py-1.5 rounded font-mono text-[10px] font-bold tracking-wide transition-all truncate text-left ${
+              className={`px-1.5 py-1.5 rounded font-mono text-[12px] font-bold tracking-wide transition-all truncate text-left ${
                 isActive ? 'text-black' : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200'
               }`}
               style={isActive ? { background: preset.color } : {}}
@@ -56,6 +77,37 @@ export default function PresetPanel({ config, onChange, onLearnMore, onShowCalib
           )
         })}
       </div>
+
+      {/* Hover strip — quick stats preview while hovering a non-active preset */}
+      {hovered && hovered.id !== activeId && (
+        <div
+          className="rounded-lg border px-3 py-2 mb-3 transition-all"
+          style={{ borderColor: hovered.color + '40', background: hovered.color + '0e' }}
+        >
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <span className="font-mono text-[12px] font-bold" style={{ color: hovered.color }}>
+              {hovered.name}
+            </span>
+            <span className="text-gray-500 font-mono text-[11px] truncate">{hovered.subtitle}</span>
+          </div>
+          <div className="grid grid-cols-4 gap-1 mb-1.5">
+            {[
+              { label: 'R₀',     value: hovered.targetR0 },
+              { label: 'p',      value: fmtPct(hovered.config.p) },
+              { label: 'IFR',    value: fmtPct(hovered.config.ifr) },
+              { label: 'Infect', value: hovered.config.infectiousDays + 'd' },
+            ].map(({ label, value }) => (
+              <div key={label} className="bg-gray-900/60 rounded px-1.5 py-1 text-center">
+                <div className="font-mono text-[12px] font-bold tabular-nums" style={{ color: hovered.color }}>
+                  {value}
+                </div>
+                <div className="font-mono text-[10px] text-gray-500 leading-tight">{label}</div>
+              </div>
+            ))}
+          </div>
+          <p className="text-gray-400 font-mono text-[11px] italic leading-snug">{hovered.tagline}</p>
+        </div>
+      )}
 
       {/* Active preset info card */}
       {active && (
@@ -69,20 +121,20 @@ export default function PresetPanel({ config, onChange, onLearnMore, onShowCalib
               <div className="font-mono text-xs font-bold truncate" style={{ color: active.color }}>
                 {active.name}
               </div>
-              <div className="text-gray-500 font-mono text-[9px] leading-tight truncate">
+              <div className="text-gray-500 font-mono text-[11px] leading-tight truncate">
                 {active.subtitle}
               </div>
             </div>
             <button
               onClick={() => onLearnMore(active.id)}
-              className="shrink-0 font-mono text-[9px] underline underline-offset-2 transition-colors text-gray-600 hover:text-gray-300"
+              className="shrink-0 font-mono text-[12px] underline underline-offset-2 transition-colors text-gray-300 hover:text-white"
             >
               learn more
             </button>
           </div>
 
           {/* Tagline */}
-          <p className="text-gray-400 font-mono text-[10px] leading-relaxed mb-2">
+          <p className="text-gray-400 font-mono text-[12px] leading-relaxed mb-2">
             {active.tagline}
           </p>
 
@@ -90,8 +142,8 @@ export default function PresetPanel({ config, onChange, onLearnMore, onShowCalib
           <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
             {active.keyFacts.map(({ label, value }) => (
               <div key={label} className="flex justify-between items-center">
-                <span className="text-gray-600 font-mono text-[9px]">{label}</span>
-                <span className="font-mono text-[10px] font-bold tabular-nums" style={{ color: active.color }}>
+                <span className="text-gray-400 font-mono text-[11px]">{label}</span>
+                <span className="font-mono text-[12px] font-bold tabular-nums" style={{ color: active.color }}>
                   {value}
                 </span>
               </div>
@@ -101,8 +153,8 @@ export default function PresetPanel({ config, onChange, onLearnMore, onShowCalib
       )}
 
       {/* Calibration footnote */}
-      <p className="text-gray-700 font-mono text-[9px] italic mt-2 leading-relaxed">
-        Target R₀ is approximate — varies with N, speed &amp; dot size. See <span className="text-gray-600">?</span> above.
+      <p className="text-gray-400 font-mono text-[12px] italic mt-2 leading-relaxed">
+        Target R₀ is approximate — varies with N, speed &amp; dot size. See <span className="text-gray-300">R₀ &amp; Calibration</span> above.
       </p>
     </div>
   )

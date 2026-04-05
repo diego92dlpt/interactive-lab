@@ -215,7 +215,7 @@ export const PRESETS = [
       fizzleDays:          5,
     },
     learn: {
-      overview: `Smallpox killed an estimated 300 million people in the 20th century alone. With a fatality rate of 20–50 % and an R₀ of 3–6, it combined real transmissibility with devastating lethality. The global eradication campaign — completed in 1980 — remains the greatest public health achievement in human history. It is the only human infectious disease ever fully eradicated.`,
+      overview: `Smallpox killed an estimated 300 million people in the 20th century alone. With a fatality rate of 20–50 % and an R₀ of 3–6, it combined real transmissibility with devastating lethality. The global eradication campaign — completed in 1980 — remains the greatest public health achievement in human history. It is the only human infectious disease ever fully eradicated.\n\nThe math of eradication is worth understanding. The herd immunity threshold for smallpox sits around 80–85% — but crossing that threshold only slows the disease; it does not eliminate deaths among the remaining susceptibles. With a 35% fatality rate, any residual circulation was catastrophic in absolute terms. Even at 99% vaccination, the 1% unvaccinated plus 3% vaccine failures leave enough susceptible individuals that a single introduction can still kill dozens. This is why "high coverage" was never the goal — only true elimination closed the door permanently. No other disease so clearly justified eradication as the only acceptable endpoint.`,
       transmission: `Smallpox spreads through respiratory droplets and direct contact with skin lesions. What makes it particularly dangerous in the sim is its long infectious period — individuals remained contagious for roughly 3 weeks. Notice how dots stay in the Infectious (red) state far longer than in faster-moving diseases.`,
       assumptions: [
         'p = 0.30 reflects moderate-to-high per-contact probability via respiratory/contact routes',
@@ -227,6 +227,7 @@ export const PRESETS = [
         'Calibrated at N=300, temperature=0.30, dotRadiusMult=0.25',
       ],
       tryThis: [
+        { prompt: 'Step up vaccination: 0% → 50% → 90% → 99% → 100%', description: 'Lock the seed, then run each level and track total deaths. You\'ll find 50% barely moves the needle, 90% helps but still produces significant mortality, and even 99% leaves dozens dead. This is the sim proof of why the eradication campaign targeted 100% — with a 35% fatality rate, containment was never enough.' },
         { prompt: 'Try 40–60 % initial vaccination', description: 'This mirrors the ring-vaccination eradication strategy. At what coverage does a major outbreak become unlikely?' },
         { prompt: 'Compare the epidemic curve to Spanish Flu', description: 'An 18-day vs 4-day infectious period produces very different curve shapes even when R₀ is similar. Which is easier to spot coming?' },
         { prompt: 'Enable quarantine at high compliance', description: 'Isolation was central to the eradication campaign. What compliance level is needed to contain a smallpox introduction?' },

@@ -11,12 +11,9 @@ export const FENCE_PADDING         = 3     // fence radius = dotRadius + FENCE_P
 export const QUARANTINE_CONTACT_R  = 1     // c_q: effective contact rate for isolated dots
 
 // Elastic collision radius as a fraction of visual dot radius.
-// Controls how much "breathing room" dots have before bouncing off each other.
-// Lower = dots travel further before colliding; higher = more jiggling in place.
-// Hard floor: 0.60 (below this, users would notice dots visually overlapping
-// without bouncing and get confused). Exposed as a user slider in a future phase.
+// Fixed at 0.80 — matches all disease presets and produces good visual/physics balance.
 // Transmission detection always uses full visual radius (disease spreads on visual contact).
-export const COLLISION_RADIUS_MULT  = 0.65
+export const COLLISION_RADIUS_MULT  = 0.80
 export const DEFAULT_BROWNIAN       = true   // true = Brownian (jitter every tick), false = Ballistic (collisions only)
 export const DEFAULT_DOT_RADIUS_MULT = 0.35
 

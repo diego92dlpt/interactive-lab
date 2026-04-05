@@ -38,7 +38,7 @@ export default function PopulationChart({ simRef, simStarted, speed = 1, baselin
   const blN = baseline?.N ?? 0
 
   return (
-    <div className="w-80 shrink-0 flex flex-col border-l border-gray-800">
+    <div data-tour="population-chart" className="w-80 shrink-0 flex flex-col border-l border-gray-800">
 
       {/* Header */}
       <div className="shrink-0 flex items-center justify-between px-3 pt-2 pb-1.5 border-b border-green-900">
@@ -47,7 +47,7 @@ export default function PopulationChart({ simRef, simStarted, speed = 1, baselin
             Population
           </div>
           {blSnap && (
-            <span className="font-mono text-[8px] text-gray-600">BL | Now</span>
+            <span className="font-mono text-[8px] text-gray-400">BL | Now</span>
           )}
         </div>
         <div className="flex gap-1">
@@ -71,7 +71,7 @@ export default function PopulationChart({ simRef, simStarted, speed = 1, baselin
       <div className="flex-1 flex items-end gap-1.5 px-3 pb-3 pt-2 min-h-0">
         {!hasData ? (
           <div className="flex-1 flex items-center justify-center">
-            <span className="text-gray-700 font-mono text-xs italic">Run a simulation to see data</span>
+            <span className="text-gray-500 font-mono text-xs italic">Run a simulation to see data</span>
           </div>
         ) : (
           BARS.map(({ key, label }) => {

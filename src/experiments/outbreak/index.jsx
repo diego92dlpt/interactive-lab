@@ -10,6 +10,9 @@ import LineChart        from './components/LineChart.jsx'
 import PopulationChart  from './components/PopulationChart.jsx'
 import PresetModal             from './components/PresetModal.jsx'
 import PresetCalibrationModal from './components/PresetCalibrationModal.jsx'
+import PresetCompareModal     from './components/PresetCompareModal.jsx'
+import TourOverlay            from './tour/TourOverlay.jsx'
+import { TOUR_STORAGE_KEY }   from './tour/tourSteps.js'
 
 export default function Outbreak() {
   const canvasRef     = useRef(null)
@@ -30,8 +33,10 @@ export default function Outbreak() {
 
   const [speed, setSpeed]               = useState(1)   // 0.2 | 0.5 | 1 | 2 | 5 | 10
   const [endSnap, setEndSnap]           = useState(null)
-  const [learnPreset, setLearnPreset]           = useState(null)  // preset id for deep-dive modal
+  const [learnPreset, setLearnPreset]           = useState(null)   // preset id for deep-dive modal
   const [showCalibrationGuide, setShowCalibrationGuide] = useState(false) // one-time R₀ guide
+  const [showPresetCompare, setShowPresetCompare] = useState(false) // all-diseases comparison table
+  const [showTour, setShowTour]                   = useState(false)
   const [staged, setStaged]             = useState(() => {
     try {
       const saved = localStorage.getItem('outbreak-config')
@@ -102,6 +107,9 @@ export default function Outbreak() {
     simRef.current      = createSimState(initialCfg)
     simEndedRef.current = false
     pausedRef.current   = true
+
+    // Auto-launch tour on first-ever visit
+    if (!localStorage.getItem(TOUR_STORAGE_KEY)) setShowTour(true)
 
     function loop() {
       const sim = simRef.current
@@ -272,7 +280,15 @@ export default function Outbreak() {
       <div className="flex items-center px-5 py-3 border-b border-gray-800 shrink-0">
         <span className="text-green-400 font-mono text-xs tracking-widest uppercase mr-4">Experiment #2</span>
         <span className="text-white font-bold text-lg">Outbreak</span>
-        {DEBUG_MODE && <span className="ml-auto text-gray-700 font-mono text-xs">Shift+D — debug</span>}
+        <div className="ml-auto flex items-center gap-3">
+          {DEBUG_MODE && <span className="text-gray-700 font-mono text-xs">Shift+D — debug</span>}
+          <button
+            onClick={() => setShowTour(true)}
+            className="px-3 py-1 rounded font-mono text-xs font-bold tracking-wide transition-colors bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-gray-200 border border-gray-700"
+          >
+            TOUR
+          </button>
+        </div>
       </div>
 
       {/* ── Main content ─────────────────────────────────────────────────── */}
@@ -285,12 +301,12 @@ export default function Outbreak() {
           <div className="flex-1 flex min-h-0 overflow-hidden">
 
             {/* Dashboard sidebar — full canvas height */}
-            <div className="w-52 shrink-0 border-r border-gray-800 bg-gray-950 overflow-y-auto">
+            <div data-tour="dashboard" className="w-52 shrink-0 border-r border-gray-800 bg-gray-950 overflow-y-auto">
               <Dashboard simRef={simRef} simStarted={simStarted} speed={speed} configRef={configRef} />
             </div>
 
             {/* Canvas */}
-            <div ref={containerRef}
+            <div ref={containerRef} data-tour="canvas"
               className="flex-1 bg-black flex items-center justify-center min-w-0 relative">
               <canvas ref={canvasRef} className="block rounded" />
 
@@ -324,7 +340,7 @@ export default function Outbreak() {
           </div>
 
           {/* ── Control bar ────────────────────────────────────────────── */}
-          <div className="shrink-0 flex items-center gap-3 px-4 py-2 border-t border-gray-800 bg-gray-950">
+          <div data-tour="control-bar" className="shrink-0 flex items-center gap-3 px-4 py-2 border-t border-gray-800 bg-gray-950">
             <span className="text-gray-500 font-mono text-sm tabular-nums w-20">Day {day}</span>
 
             <div className="flex items-center gap-2">
@@ -371,7 +387,7 @@ export default function Outbreak() {
                   </button>
                 ))}
               </div>
-              <span className="text-gray-700 font-mono text-[9px] italic">
+              <span className="text-gray-500 font-mono text-[9px] italic">
                 max effective speed depends on dot count &amp; your device
               </span>
             </div>
@@ -393,7 +409,7 @@ export default function Outbreak() {
         </div>
 
         {/* ── Config panel — full-height right column ─────────────────── */}
-        <div className="w-72 shrink-0 border-l border-gray-800 overflow-y-auto bg-gray-950">
+        <div data-tour="config-panel" className="w-72 shrink-0 border-l border-gray-800 overflow-y-auto bg-gray-950">
           <ConfigPanel
             config={staged}
             seed={seed}
@@ -401,6 +417,7 @@ export default function Outbreak() {
             onToggleSeedLock={handleToggleSeedLock}
             onLearnMore={setLearnPreset}
             onShowCalibrationGuide={() => setShowCalibrationGuide(true)}
+            onCompare={() => setShowPresetCompare(true)}
             onChange={cfg => {
               setStaged(cfg)
               try { localStorage.setItem('outbreak-config', JSON.stringify(cfg)) } catch {}
@@ -419,6 +436,19 @@ export default function Outbreak() {
       {/* ── R₀ calibration guide (one-time on first preset use, re-openable via ?) ── */}
       {showCalibrationGuide && (
         <PresetCalibrationModal onClose={() => setShowCalibrationGuide(false)} />
+      )}
+
+      {/* ── All-diseases comparison table ──────────────────────────────────── */}
+      {showPresetCompare && (
+        <PresetCompareModal onClose={() => setShowPresetCompare(false)} />
+      )}
+
+      {/* ── Onboarding tour ────────────────────────────────────────────────── */}
+      {showTour && (
+        <TourOverlay onClose={() => {
+          setShowTour(false)
+          localStorage.setItem(TOUR_STORAGE_KEY, '1')
+        }} />
       )}
     </div>
   )

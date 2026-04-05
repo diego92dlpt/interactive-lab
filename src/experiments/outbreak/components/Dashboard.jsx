@@ -22,7 +22,7 @@ function fmtDecimal(n, places = 2) {
 
 function GroupLabel({ children }) {
   return (
-    <div className="text-gray-600 font-mono text-[10px] tracking-widest uppercase mt-2 mb-0.5">
+    <div className="text-gray-400 font-mono text-[10px] tracking-widest uppercase mt-2 mb-0.5">
       {children}
     </div>
   )
@@ -39,14 +39,14 @@ function MetricRow({ label, color, count, total, value, suffix = '', muted = fal
         title={tooltip}
       >
         {label}
-        {tooltip && <span className="text-gray-700 cursor-help text-[9px]">ⓘ</span>}
+        {tooltip && <span className="text-gray-500 cursor-help text-[9px]">ⓘ</span>}
         {highlight && <span className="text-yellow-600 text-[9px]">*</span>}
       </span>
       <span className="flex items-center gap-1.5 font-mono text-[11px] tabular-nums">
         {showCount ? (
           <>
             <span className="text-gray-300 w-8 text-right">{fmt(count)}</span>
-            <span className="text-gray-600 w-8 text-right">{pct(count, N)}</span>
+            <span className="text-gray-400 w-8 text-right">{pct(count, N)}</span>
           </>
         ) : (
           <span className={`${muted ? 'text-gray-500' : 'text-gray-300'} text-right`}>
@@ -67,7 +67,7 @@ function Divider() {
 function NullState() {
   return (
     <div className="flex-1 flex flex-col justify-center items-center gap-1">
-      <span className="text-gray-700 font-mono text-[10px] italic text-center leading-relaxed">
+      <span className="text-gray-500 font-mono text-[10px] italic text-center leading-relaxed">
         Run a simulation<br />to see live stats
       </span>
     </div>

@@ -103,8 +103,10 @@ export function createSimState(config) {
   const baseSpeed   = computeBaseSpeed(canvasW, canvasH, N, config.temperature)
   const infectTicks = Math.round(infectiousDays * TICKS_PER_DAY)
 
-  const numVax      = Math.round(N * initialVaxPct)
-  const numInfected = Math.min(initialInfected, N - numVax)
+  // Vaccinated is capped so initial infected always get their slots.
+  // At 100% vax with 3 infected and N=600: 597 vaccinated, 3 infected, 0 susceptible.
+  const numVax      = Math.min(Math.round(N * initialVaxPct), N - initialInfected)
+  const numInfected = initialInfected
 
   const dots = []
   for (let i = 0; i < N; i++) {

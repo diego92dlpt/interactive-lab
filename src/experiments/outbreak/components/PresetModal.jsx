@@ -36,13 +36,13 @@ export default function PresetModal({ presetId, onClose }) {
             <div className="font-bold text-base leading-tight" style={{ color: preset.color }}>
               {preset.name}
             </div>
-            <div className="text-gray-500 font-mono text-[10px] mt-0.5">
+            <div className="text-gray-500 font-mono text-[12px] mt-0.5">
               {preset.subtitle}
             </div>
           </div>
           <button
             onClick={onClose}
-            className="shrink-0 ml-4 text-gray-600 hover:text-gray-200 font-mono text-xl leading-none transition-colors"
+            className="shrink-0 ml-4 text-gray-400 hover:text-gray-200 font-mono text-xl leading-none transition-colors"
             aria-label="Close"
           >
             ×
@@ -59,7 +59,7 @@ export default function PresetModal({ presetId, onClose }) {
                 <div className="font-mono font-bold text-sm tabular-nums" style={{ color: preset.color }}>
                   {value}
                 </div>
-                <div className="text-gray-600 font-mono text-[9px] mt-0.5 leading-tight">
+                <div className="text-gray-400 font-mono text-[11px] mt-0.5 leading-tight">
                   {label}
                 </div>
               </div>
@@ -68,27 +68,27 @@ export default function PresetModal({ presetId, onClose }) {
 
           {/* Overview */}
           <Section title="Overview" color={preset.color}>
-            <p className="text-gray-300 text-[13px] leading-relaxed">
+            <p className="text-gray-300 text-sm leading-relaxed">
               {preset.learn.overview}
             </p>
           </Section>
 
           {/* Transmission */}
           <Section title="How it spreads" color={preset.color}>
-            <p className="text-gray-300 text-[13px] leading-relaxed">
+            <p className="text-gray-300 text-sm leading-relaxed">
               {preset.learn.transmission}
             </p>
           </Section>
 
           {/* Sim assumptions */}
           <Section title="Simulation assumptions" color={preset.color}>
-            <p className="text-gray-500 font-mono text-[10px] mb-2 leading-relaxed">
+            <p className="text-gray-500 font-mono text-[12px] mb-2 leading-relaxed">
               Parameters were calibrated at N=300, temperature=0.30, dotRadiusMult=0.25.
               Emergent R₀ will shift if you change dot count or speed.
             </p>
             <ul className="space-y-1.5">
               {preset.learn.assumptions.map((a, i) => (
-                <li key={i} className="flex gap-2 text-gray-500 font-mono text-[10px] leading-relaxed">
+                <li key={i} className="flex gap-2 text-gray-500 font-mono text-[12px] leading-relaxed">
                   <span className="shrink-0 mt-px" style={{ color: preset.color }}>·</span>
                   <span>{a}</span>
                 </li>
@@ -101,10 +101,10 @@ export default function PresetModal({ presetId, onClose }) {
             <div className="space-y-2">
               {preset.learn.tryThis.map((t, i) => (
                 <div key={i} className="bg-gray-900 rounded-lg p-3">
-                  <div className="font-mono text-[11px] font-bold mb-0.5" style={{ color: preset.color }}>
+                  <div className="font-mono text-[13px] font-bold mb-0.5" style={{ color: preset.color }}>
                     → {t.prompt}
                   </div>
-                  <div className="text-gray-500 font-mono text-[10px] leading-relaxed">
+                  <div className="text-gray-500 font-mono text-[12px] leading-relaxed">
                     {t.description}
                   </div>
                 </div>
@@ -124,7 +124,7 @@ function Section({ title, color, children }) {
   return (
     <div>
       <div
-        className="font-mono text-[10px] tracking-widest uppercase mb-2 pb-1 border-b"
+        className="font-mono text-[12px] tracking-widest uppercase mb-2 pb-1 border-b"
         style={{ color, borderColor: color + '30' }}
       >
         {title}

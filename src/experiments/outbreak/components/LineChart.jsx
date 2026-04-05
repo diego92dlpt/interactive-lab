@@ -535,7 +535,7 @@ export default function LineChart({
         {lineItem(C_REINF, 'Incl. reinfections', true)}
         {baseline && (
           <div className="mt-1 pt-1 border-t border-gray-800">
-            <span className="font-mono text-[9px] text-gray-600">Dashed = baseline</span>
+            <span className="font-mono text-[9px] text-gray-400">Dashed = baseline</span>
           </div>
         )}
       </div>
@@ -550,7 +550,7 @@ export default function LineChart({
         ))}
         {baseline && (
           <div className="mt-1 pt-1 border-t border-gray-800">
-            <span className="font-mono text-[9px] text-gray-600">Hover to split Now / BL</span>
+            <span className="font-mono text-[9px] text-gray-400">Hover to split Now / BL</span>
           </div>
         )}
       </div>
@@ -559,13 +559,13 @@ export default function LineChart({
   }
 
   return (
-    <div className="flex-1 flex flex-col border-r border-gray-800 min-w-0 overflow-hidden">
+    <div data-tour="line-chart" className="flex-1 flex flex-col border-r border-gray-800 min-w-0 overflow-hidden">
 
       {/* Header */}
       <div className="shrink-0 flex items-center justify-between px-3 pt-2 pb-1.5 border-b border-green-900 gap-2">
 
         {/* Left: label + baseline buttons */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div data-tour="baseline-controls" className="flex items-center gap-2 shrink-0">
           <div className="text-green-500 font-mono text-[10px] tracking-widest uppercase">
             Trend
           </div>
@@ -578,7 +578,7 @@ export default function LineChart({
                 ? baseline
                   ? 'bg-amber-700 hover:bg-amber-600 text-white'
                   : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                : 'bg-gray-900 text-gray-700 cursor-not-allowed'
+                : 'bg-gray-900 text-gray-500 cursor-not-allowed'
             }`}
           >
             {baseline ? 'Update BL' : 'Set BL'}
@@ -616,7 +616,7 @@ export default function LineChart({
         <div ref={containerRef} className="flex-1 relative min-h-0 overflow-hidden">
           {!hasData ? (
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-gray-700 font-mono text-xs italic">Run a simulation to see data</span>
+              <span className="text-gray-500 font-mono text-xs italic">Run a simulation to see data</span>
             </div>
           ) : (
             <svg width={W} height={H}
