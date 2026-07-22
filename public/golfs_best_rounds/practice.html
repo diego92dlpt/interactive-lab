@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Practice Ground — Three 62s</title>
+<meta name="description" content="Two sandboxes over every major round at Augusta National and Royal Birkdale — replay any leaderboard under four scoring lenses in the Scoring Tent, or pivot the whole dataset in the Range.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="The Practice Ground — Three 62s">
+<meta property="og:description" content="Replay any major leaderboard under four scoring lenses, or pivot the whole dataset yourself.">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛳</text></svg>">
+<!-- The hub for the two sandboxes; they open full-screen in lazy overlay iframes.
+     Figures come from story_data.js at load — never hand-typed. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ground:#0A1311;
+  --surface:#101E1A;
+  --surface-2:#152722;
+  --bone:#EAEFE7;
+  --muted:#8CA096;
+  --dim:#5E7268;
+  --gorse:#E3A93B;
+  --flag:#E0503C;
+  --line:rgba(234,239,231,.13);
+  --augusta:#4FB477;
+  --birkdale:#6FA3C4;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--ground);color:var(--bone);
+  font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.65;
+  -webkit-font-smoothing:antialiased;min-height:100svh;display:flex;flex-direction:column}
+.mono{font-family:'IBM Plex Mono',monospace}
+
+.top{display:flex;justify-content:space-between;align-items:center;padding:18px 28px}
+.back-story{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--dim);text-decoration:none;transition:color .2s}
+.back-story:hover{color:var(--muted)}
+
+main{flex:1;display:flex;flex-direction:column;justify-content:center;
+  max-width:1060px;width:100%;margin:0 auto;padding:16px 28px 56px}
+.head{text-align:center;margin-bottom:38px}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--dim)}
+.eyebrow b{color:var(--gorse);font-weight:500}
+h1{font-family:'Bricolage Grotesque',sans-serif;font-weight:600;
+  font-size:clamp(30px,4.4vw,52px);letter-spacing:-.02em;line-height:1.05;margin:14px 0 12px}
+.head p{color:var(--muted);font-weight:300;max-width:52ch;margin:0 auto}
+.head p b{color:var(--bone);font-weight:500}
+#nudge{margin-top:14px;font-family:'IBM Plex Mono',monospace;font-size:11px;
+  letter-spacing:.1em;color:var(--gorse);min-height:18px}
+
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+@media(max-width:840px){.cards{grid-template-columns:1fr}}
+.card{position:relative;text-align:left;border:1px solid var(--line);border-radius:14px;
+  background:var(--surface);padding:24px 26px;cursor:pointer;color:var(--bone);
+  font:inherit;transition:border-color .25s,transform .25s,background .25s;display:block;width:100%}
+.card:hover{border-color:rgba(227,169,59,.5);background:var(--surface-2);transform:translateY(-2px)}
+.card.nudged{border-color:rgba(227,169,59,.65)}
+.card h2{font-family:'Bricolage Grotesque',sans-serif;font-weight:600;font-size:26px;
+  letter-spacing:-.015em;margin-bottom:2px}
+.card .sub{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--gorse);display:block;margin-bottom:16px}
+.card .thumb{border:1px solid var(--line);border-radius:8px;background:var(--ground);
+  margin-bottom:16px;overflow:hidden}
+.card .thumb svg{display:block;width:100%;height:auto}
+.card p{color:var(--muted);font-size:14px;font-weight:300;line-height:1.6}
+.card p b{color:var(--bone);font-weight:500}
+.card .open{display:block;margin-top:16px;font-family:'IBM Plex Mono',monospace;font-size:11px;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--gorse)}
+.visited{position:absolute;top:14px;right:14px;font-family:'IBM Plex Mono',monospace;
+  font-size:9px;letter-spacing:.14em;text-transform:uppercase;padding:3px 9px;
+  border-radius:99px;border:1px solid var(--augusta);color:var(--augusta);display:none}
+.card.seen .visited{display:block}
+
+/* -------- full-screen overlay -------- */
+.overlay{position:fixed;inset:0;z-index:60;background:var(--ground);display:none;
+  flex-direction:column}
+.overlay.on{display:flex}
+.obar{display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:10px 16px;border-bottom:1px solid var(--line);background:var(--surface)}
+.obar .close{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--gorse);background:none;border:none;cursor:pointer;
+  padding:6px 8px}
+.obar .close:hover{color:var(--bone)}
+.obar .otitle{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--dim)}
+.obar .hint{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.1em;
+  color:var(--dim);opacity:.7}
+@media(max-width:640px){.obar .hint{display:none}}
+.overlay iframe{flex:1;width:100%;border:none;background:var(--ground)}
+
+footer{padding:14px 28px;text-align:center;font-family:'IBM Plex Mono',monospace;
+  font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+</style>
+<script src="story_data.js"></script>
+</head>
+<body>
+
+<div class="top">
+  <a class="back-story" href="index.html">&larr; The story</a>
+  <span class="eyebrow">Royal Birkdale &middot; Augusta National &middot; 1983&ndash;<span data-fig="yr.hi"></span></span>
+</div>
+
+<main>
+  <div class="head">
+    <div class="eyebrow"><b>The Practice Ground</b></div>
+    <h1>Two sandboxes. Every round.</h1>
+    <p>All <b><span data-fig="rounds"></span> rounds</b> from <b><span data-fig="events"></span> majors</b> are in here. Open one sandbox; dismiss it to try the other.</p>
+    <div id="nudge"></div>
+  </div>
+
+  <div class="cards">
+    <button class="card" id="card-tent" data-key="tent">
+      <span class="visited">Visited &#10003;</span>
+      <h2>The Scoring Tent</h2>
+      <span class="sub">Replay the leaderboards</span>
+      <div class="thumb"><svg viewBox="0 0 320 120" aria-hidden="true">
+        <rect x="10" y="10" width="46" height="14" rx="2" fill="#E3A93B"/>
+        <rect x="60" y="10" width="46" height="14" rx="2" fill="none" stroke="rgba(234,239,231,.25)"/>
+        <rect x="110" y="10" width="46" height="14" rx="2" fill="none" stroke="rgba(234,239,231,.25)"/>
+        <rect x="160" y="10" width="46" height="14" rx="2" fill="none" stroke="rgba(234,239,231,.25)"/>
+        <g>
+          <rect x="10" y="34" width="300" height="11" rx="2" fill="rgba(111,163,196,.45)"/>
+          <rect x="10" y="49" width="300" height="11" rx="2" fill="rgba(111,163,196,.45)"/>
+          <rect x="10" y="64" width="300" height="11" rx="2" fill="rgba(79,180,119,.45)"/>
+          <rect x="10" y="79" width="300" height="11" rx="2" fill="rgba(111,163,196,.45)"/>
+          <rect x="10" y="94" width="300" height="11" rx="2" fill="rgba(79,180,119,.45)"/>
+        </g>
+        <g fill="#0A1311" font-family="monospace" font-size="8">
+          <rect x="14" y="36" width="14" height="7" rx="1" fill="rgba(234,239,231,.7)"/>
+          <rect x="14" y="51" width="14" height="7" rx="1" fill="rgba(234,239,231,.7)"/>
+          <rect x="14" y="66" width="14" height="7" rx="1" fill="rgba(234,239,231,.55)"/>
+          <rect x="14" y="81" width="14" height="7" rx="1" fill="rgba(234,239,231,.55)"/>
+          <rect x="14" y="96" width="14" height="7" rx="1" fill="rgba(234,239,231,.55)"/>
+        </g>
+        <path d="M262,37 L262,100" stroke="#E3A93B" stroke-width="1.5" stroke-dasharray="3 3"/>
+        <path d="M262,37 l-5,7 M262,37 l5,7" stroke="#E3A93B" stroke-width="1.5" fill="none"/>
+      </svg></div>
+      <p>Pick any venue, any depth, and <b>watch the board re-sort under four scoring lenses &mdash; raw, to par, vs the field, vs the field <span class="sig">σ</span></b>.</p>
+      <span class="open">Open the Tent &nbsp;&rarr;</span>
+    </button>
+
+    <button class="card" id="card-range" data-key="range">
+      <span class="visited">Visited &#10003;</span>
+      <h2>The Range</h2>
+      <span class="sub">Pivot the whole dataset</span>
+      <div class="thumb"><svg viewBox="0 0 320 120" aria-hidden="true">
+        <line x1="24" y1="104" x2="308" y2="104" stroke="rgba(234,239,231,.25)"/>
+        <g fill="#E3A93B">
+          <rect x="34"  y="76" width="20" height="28" rx="2"/>
+          <rect x="62"  y="60" width="20" height="44" rx="2"/>
+          <rect x="90"  y="38" width="20" height="66" rx="2"/>
+          <rect x="118" y="50" width="20" height="54" rx="2"/>
+          <rect x="146" y="68" width="20" height="36" rx="2"/>
+        </g>
+        <g fill="none" stroke="#E3A93B" stroke-width="1.5">
+          <rect x="174" y="82" width="20" height="22" rx="2"/>
+          <rect x="202" y="90" width="20" height="14" rx="2"/>
+        </g>
+        <g>
+          <rect x="238" y="30" width="16" height="16" rx="2" fill="rgba(79,180,119,.75)"/>
+          <rect x="258" y="30" width="16" height="16" rx="2" fill="rgba(79,180,119,.4)"/>
+          <rect x="278" y="30" width="16" height="16" rx="2" fill="rgba(111,163,196,.4)"/>
+          <rect x="238" y="50" width="16" height="16" rx="2" fill="rgba(79,180,119,.35)"/>
+          <rect x="258" y="50" width="16" height="16" rx="2" fill="rgba(111,163,196,.7)"/>
+          <rect x="278" y="50" width="16" height="16" rx="2" fill="rgba(111,163,196,.45)"/>
+        </g>
+        <path d="M24,26 C70,20 120,30 165,24" stroke="rgba(111,163,196,.8)" stroke-width="1.5" fill="none"/>
+      </svg></div>
+      <p>Three short stories, then the controls are yours: slice all <b><span data-fig="rounds"></span> rounds</b> by course, era, round, cut, country &mdash; any lens, any metric. Honesty rails included.</p>
+      <span class="open">Open the Range &nbsp;&rarr;</span>
+    </button>
+  </div>
+</main>
+
+<footer>Both sandboxes carry the complete dataset &mdash; nothing is summarised away.</footer>
+
+<div class="overlay" id="ov-tent" role="dialog" aria-modal="true" aria-label="The Scoring Tent">
+  <div class="obar">
+    <button class="close" data-close>&larr; Practice Ground</button>
+    <span class="otitle">The Scoring Tent</span>
+    <span class="hint">esc closes</span>
+  </div>
+  <iframe data-src="scoring-tent.html" title="The Scoring Tent"></iframe>
+</div>
+
+<div class="overlay" id="ov-range" role="dialog" aria-modal="true" aria-label="The Range">
+  <div class="obar">
+    <button class="close" data-close>&larr; Practice Ground</button>
+    <span class="otitle">The Range</span>
+    <span class="hint">esc closes</span>
+  </div>
+  <iframe data-src="range.html" title="The Range"></iframe>
+</div>
+
+<script>
+/* figures — derived from story_data.js (window.STORY), never hand-typed */
+(function(){
+  const FIG={rounds:STORY.figures.total_rounds.toLocaleString(),
+             events:STORY.figures.total_events,
+             'yr.hi':Math.max(...STORY.events.map(e=>e.year))};
+  document.querySelectorAll('[data-fig]').forEach(el=>{
+    const v=FIG[el.dataset.fig]; if(v!==undefined) el.textContent=v;
+  });
+})();
+
+/* hub machinery: lazy overlay iframes, esc/back close, visited nudge */
+(function(){
+  const NAMES={tent:'the Tent',range:'the Range'};
+  let mem={};
+  const store={
+    get(){try{return JSON.parse(localStorage.getItem('pg-visited'))||{}}catch(e){return mem}},
+    set(v){mem=v;try{localStorage.setItem('pg-visited',JSON.stringify(v))}catch(e){}}
+  };
+
+  function paint(){
+    const v=store.get();
+    const keys=['tent','range'];
+    keys.forEach(k=>document.getElementById('card-'+k).classList.toggle('seen',!!v[k]));
+    const todo=keys.filter(k=>!v[k]);
+    const nudge=document.getElementById('nudge');
+    document.querySelectorAll('.card').forEach(c=>c.classList.remove('nudged'));
+    if(todo.length===1){
+      const done=keys.find(k=>v[k]);
+      nudge.textContent='You’ve explored '+NAMES[done]+' — '+NAMES[todo[0]]+' is next.';
+      document.getElementById('card-'+todo[0]).classList.add('nudged');
+    }else if(todo.length===0){
+      nudge.textContent='Both visited — they’ll keep your place while you switch.';
+    }else nudge.textContent='';
+  }
+
+  function show(key){
+    const ov=document.getElementById('ov-'+key); if(!ov)return;
+    const fr=ov.querySelector('iframe');
+    if(!fr.src)fr.src=fr.dataset.src;          /* lazy: 380KB apps load on first open */
+    ov.classList.add('on');
+    document.body.style.overflow='hidden';
+  }
+  function hideAll(){
+    document.querySelectorAll('.overlay.on').forEach(o=>o.classList.remove('on'));
+    document.body.style.overflow='';
+    paint();
+  }
+  function open(key){
+    const v=store.get(); v[key]=1; store.set(v);
+    show(key);
+    try{history.pushState({pg:key},'','#'+key)}catch(e){}
+  }
+  function close(){
+    if(history.state&&history.state.pg){try{history.back();return}catch(e){}}
+    hideAll();
+    try{history.replaceState(null,'',location.pathname)}catch(e){}
+  }
+
+  document.querySelectorAll('.card').forEach(c=>
+    c.addEventListener('click',()=>open(c.dataset.key)));
+  document.querySelectorAll('[data-close]').forEach(b=>
+    b.addEventListener('click',close));
+  addEventListener('keydown',e=>{if(e.key==='Escape')close();});
+  addEventListener('popstate',()=>{
+    if(history.state&&history.state.pg)show(history.state.pg);else hideAll();
+  });
+
+  /* deep link: practice.html#tent opens straight into the Tent */
+  const h=location.hash.replace('#','');
+  if(h==='tent'||h==='range'){
+    const v=store.get(); v[h]=1; store.set(v);
+    try{history.replaceState({pg:h},'','#'+h)}catch(e){}
+    show(h);
+  }
+  paint();
+})();
+</script>
+</body>
+</html>
