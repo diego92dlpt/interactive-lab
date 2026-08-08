@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Practice Ground — Three 62s</title>
-<meta name="description" content="Two sandboxes over every major round at Augusta National and Royal Birkdale — replay any leaderboard under four scoring lenses in the Scoring Tent, or pivot the whole dataset in the Range.">
+<meta name="description" content="Two sandboxes over every round of every men's major championship since 1983 — replay any leaderboard under four scoring lenses in the Scoring Tent, or pivot the whole record by major, venue and era in the Range.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="The Practice Ground — Three 62s">
-<meta property="og:description" content="Replay any major leaderboard under four scoring lenses, or pivot the whole dataset yourself.">
+<meta property="og:description" content="Replay any major leaderboard under four scoring lenses, or pivot every major championship round since 1983 yourself.">
 <meta property="og:image" content="https://interactive-lab.vercel.app/golfs_best_rounds/og-practice.png">
 <meta property="og:image:alt" content="The Practice Ground — two sandboxes, every round">
 <meta property="og:image:width" content="1200">
@@ -108,14 +108,14 @@ footer{padding:14px 28px;text-align:center;font-family:'IBM Plex Mono',monospace
 
 <div class="top">
   <a class="back-story" href="index.html">&larr; The story</a>
-  <span class="eyebrow">Royal Birkdale &middot; Augusta National &middot; 1983&ndash;<span data-fig="yr.hi"></span></span>
+  <span class="eyebrow">All four majors &middot; <span data-fig="db.courses"></span> venues &middot; <span data-fig="db.yr_lo"></span>&ndash;<span data-fig="db.yr_hi"></span></span>
 </div>
 
 <main>
   <div class="head">
     <div class="eyebrow"><b>The Practice Ground</b></div>
     <h1>Two sandboxes. Every round.</h1>
-    <p>All <b><span data-fig="rounds"></span> rounds</b> from <b><span data-fig="events"></span> majors</b> are in here. Open one sandbox; dismiss it to try the other.</p>
+    <p>All <b><span data-fig="db.rounds"></span> rounds</b> from <b><span data-fig="db.events"></span> major championships</b> are in here &mdash; all four majors, <span data-fig="db.courses"></span> venues, since <span data-fig="db.yr_lo"></span>. The story studied two courses; these go wider. Open one sandbox; dismiss it to try the other.</p>
     <div id="nudge"></div>
   </div>
 
@@ -177,7 +177,7 @@ footer{padding:14px 28px;text-align:center;font-family:'IBM Plex Mono',monospace
         </g>
         <path d="M24,26 C70,20 120,30 165,24" stroke="rgba(111,163,196,.8)" stroke-width="1.5" fill="none"/>
       </svg></div>
-      <p>Three short stories, then the controls are yours: slice all <b><span data-fig="rounds"></span> rounds</b> by course, era, round, cut, country &mdash; any lens, any metric. Honesty rails included.</p>
+      <p>Three short stories, then the controls are yours: slice all <b><span data-fig="db.rounds"></span> rounds</b> by major, venue, era, round, cut, country &mdash; any lens, any metric. Honesty rails included.</p>
       <span class="open">Open the Range &nbsp;&rarr;</span>
     </button>
   </div>
@@ -206,9 +206,18 @@ footer{padding:14px 28px;text-align:center;font-family:'IBM Plex Mono',monospace
 <script>
 /* figures — derived from story_data.js (window.STORY), never hand-typed */
 (function(){
+  /* db.* = the FULL four-major database the sandboxes hold. The bare keys are
+     story scope (two courses) — this page describes the sandboxes, so it quotes
+     db.*; the story pages keep quoting their own. Never mix the two. */
   const FIG={rounds:STORY.figures.total_rounds.toLocaleString(),
              events:STORY.figures.total_events,
-             'yr.hi':Math.max(...STORY.events.map(e=>e.year))};
+             'yr.hi':Math.max(...STORY.events.map(e=>e.year)),
+             'db.rounds':STORY.db.rounds.toLocaleString(),
+             'db.events':STORY.db.events,
+             'db.courses':STORY.db.courses,
+             'db.majors':STORY.db.majors,
+             'db.yr_lo':STORY.db.yr_lo,
+             'db.yr_hi':STORY.db.yr_hi};
   document.querySelectorAll('[data-fig]').forEach(el=>{
     const v=FIG[el.dataset.fig]; if(v!==undefined) el.textContent=v;
   });
