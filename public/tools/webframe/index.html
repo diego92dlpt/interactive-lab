@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Web Frame</title>
+<style>
+  html,body{margin:0;height:100%;overflow:hidden;background:#fff;color:#1a1a1a;
+    font:13px/1.45 "Segoe UI",system-ui,-apple-system,sans-serif}
+
+  #stage{position:absolute;inset:0;overflow:hidden;background:#fff}
+  #frame{position:absolute;border:0;display:block;transform-origin:0 0}
+
+  #empty{position:absolute;inset:0;display:flex;flex-direction:column;gap:10px;
+    align-items:center;justify-content:center;padding:20px;text-align:center}
+  #empty[hidden]{display:none}
+  #empty h1{margin:0;font-size:15px}
+  #empty p{margin:0;color:#666;max-width:32em}
+
+  /* Handle and toolbar are invisible while presenting. */
+  #handle{position:absolute;top:4px;right:4px;z-index:3;width:22px;height:22px;
+    padding:0;border:1px solid #ccc;background:#f7f7f7;color:#666;cursor:pointer;
+    font-size:12px;line-height:1;opacity:.15;transition:opacity .15s}
+  #handle:hover{opacity:1}
+  #handle[hidden]{display:none}
+
+  #bar{position:absolute;top:0;left:0;right:0;z-index:2;background:#f7f7f7;
+    border-bottom:1px solid #ccc;padding:6px 30px 6px 6px;
+    display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+  #bar[hidden]{display:none}
+  .grp{display:flex;gap:4px;align-items:center}
+  .grp[hidden]{display:none}
+  label{color:#666;font-size:11px}
+  input,select,button{font:inherit}
+  .url{flex:1 1 240px;min-width:130px;font:12px ui-monospace,Consolas,monospace;
+    padding:4px 6px;border:1px solid #ccc;background:#fff;color:#1a1a1a}
+  .num{width:5em;font:12px ui-monospace,Consolas,monospace;padding:4px 5px;border:1px solid #ccc;background:#fff}
+  select{padding:3px 4px;border:1px solid #ccc;background:#fff;font-size:12px;max-width:11em}
+  .b{padding:4px 9px;border:1px solid #1a1a1a;background:#fff;color:#1a1a1a;cursor:pointer;font-size:12px}
+  .b:hover{background:#1a1a1a;color:#fff}
+  .b.q{border-color:#ccc;color:#555}
+  .b.q:hover{background:#eaeaea;color:#1a1a1a}
+  .row{flex-basis:100%;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .hint{color:#888;font-size:11px;margin:0;flex-basis:100%}
+
+  .anchor{display:grid;grid-template-columns:repeat(3,12px);grid-template-rows:repeat(3,12px);gap:2px}
+  .anchor button{width:12px;height:12px;padding:0;border:1px solid #ccc;background:#fff;cursor:pointer}
+  .anchor button[aria-pressed=true]{background:#1a1a1a;border-color:#1a1a1a}
+</style>
+</head>
+<body>
+
+<div id="stage"><iframe id="frame" title="Embedded page" allowfullscreen></iframe></div>
+
+<div id="empty">
+  <h1>Web Frame</h1>
+  <p>Paste the address of a page to show on this slide.</p>
+  <div class="grp">
+    <input class="url" id="url0" type="url" spellcheck="false" placeholder="https://example.com" aria-label="Address">
+    <button class="b" id="go0" type="button">Show</button>
+  </div>
+</div>
+
+<button id="handle" type="button" title="Settings (Esc)">&#9881;</button>
+
+<div id="bar" hidden>
+  <input class="url" id="url" type="url" spellcheck="false" placeholder="https://example.com" aria-label="Address">
+  <select id="recent" aria-label="Recent addresses"><option value="">Recent…</option></select>
+  <button class="b" id="go" type="button">Show</button>
+
+  <div class="row">
+    <span class="grp"><label for="rw">Zoom</label>
+      <button class="b q" id="zin" type="button" title="Zoom in">+</button>
+      <button class="b q" id="zout" type="button" title="Zoom out">&minus;</button>
+      <input class="num" id="rw" type="number" min="200" max="6000" step="20" aria-label="Layout width in pixels">
+      <span id="pct" style="color:#888;font-size:11px"></span>
+    </span>
+
+    <span class="grp"><label for="rh">Height</label>
+      <input class="num" id="rh" type="number" min="0" max="6000" step="20" placeholder="auto" aria-label="Layout height in pixels">
+    </span>
+
+    <span class="grp" id="fit-grp" hidden><label for="fit">Extra</label>
+      <select id="fit">
+        <option value="contain">Show all</option>
+        <option value="cover">Crop</option>
+      </select>
+      <span class="anchor" id="anchor"></span>
+    </span>
+
+    <button class="b q" id="reset" type="button">Reset</button>
+    <button class="b q" id="reload" type="button">Reload</button>
+    <button class="b q" id="pop" type="button">Open in browser</button>
+    <button class="b q" id="clear" type="button">Clear</button>
+    <button class="b q" id="close" type="button">Close</button>
+  </div>
+  <p class="hint" id="hint"></p>
+</div>
+
+<script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var stage = $("stage"), frame = $("frame"), bar = $("bar"), empty = $("empty"), handle = $("handle");
+
+  /* rw / rh are the size of the box the page is laid out in.
+     0 means "match the widget", which is ordinary unzoomed behaviour. */
+  var S = { url: "", rw: 0, rh: 0, fit: "contain", ax: 1, ay: 1 };
+  var KEY = "webframe", RECENT_KEY = "webframe:recent";
+
+  /* --------------------------------------------------------------- saving */
+  function inOffice() {
+    try { return !!(window.Office && Office.context && Office.context.document); }
+    catch (e) { return false; }
+  }
+  function load() {
+    if (inOffice()) {
+      var raw = Office.context.document.settings.get(KEY);
+      if (raw) { try { return JSON.parse(raw); } catch (e) { /* ignore */ } }
+    }
+    var q = new URLSearchParams(location.search);
+    if (q.get("url")) return { url: q.get("url"), rw: +q.get("rw") || 0 };
+    return null;
+  }
+  function save() {
+    if (!inOffice()) return;
+    Office.context.document.settings.set(KEY, JSON.stringify(S));
+    Office.context.document.settings.saveAsync();
+  }
+  function recent() {
+    if (!inOffice()) return [];
+    try { return JSON.parse(Office.context.document.settings.get(RECENT_KEY) || "[]"); }
+    catch (e) { return []; }
+  }
+  function remember(u) {
+    if (!inOffice()) return;
+    var list = recent().filter(function (x) { return x !== u; });
+    list.unshift(u);
+    Office.context.document.settings.set(RECENT_KEY, JSON.stringify(list.slice(0, 8)));
+    Office.context.document.settings.saveAsync();
+    fillRecent();
+  }
+  function fillRecent() {
+    var sel = $("recent");
+    sel.innerHTML = '<option value="">Recent…</option>';
+    recent().forEach(function (u) {
+      var o = document.createElement("option");
+      o.value = u;
+      o.textContent = u.replace(/^https?:\/\//, "").slice(0, 50);
+      sel.appendChild(o);
+    });
+  }
+
+  /* --------------------------------------------------------------- layout
+     Zoom works by choosing how big a box the page thinks it is being laid out
+     in, then scaling that box to the widget. A wide box shrunk down shows more
+     of the page smaller; a narrow box blown up shows less of it bigger.
+
+     With no height given, the box is stretched to match the widget exactly, so
+     nothing is cropped and there are no blank edges. Give a height and the
+     box has its own proportions, so it either letterboxes or crops. */
+  function apply() {
+    var W = stage.clientWidth, H = stage.clientHeight;
+    if (!W || !H) return;
+    var rw = S.rw > 0 ? S.rw : W, rh, scale;
+
+    if (!S.rh) {
+      scale = W / rw;
+      rh = H / scale;
+    } else {
+      rh = S.rh;
+      scale = (S.fit === "cover") ? Math.max(W / rw, H / rh) : Math.min(W / rw, H / rh);
+    }
+
+    frame.style.width = rw + "px";
+    frame.style.height = rh + "px";
+    frame.style.transform = "scale(" + scale + ")";
+    frame.style.left = Math.round((W - rw * scale) * [0, 0.5, 1][S.ax]) + "px";
+    frame.style.top = Math.round((H - rh * scale) * [0, 0.5, 1][S.ay]) + "px";
+
+    $("rw").value = Math.round(rw);
+    $("rh").value = S.rh ? Math.round(S.rh) : "";
+    $("fit").value = S.fit;
+    $("fit-grp").hidden = !S.rh;
+    $("pct").textContent = Math.round(scale * 100) + "%";
+    $("hint").textContent = "Page laid out at " + Math.round(rw) + " × " + Math.round(rh) +
+      ", shown at " + Math.round(scale * 100) + "%." +
+      (S.rh ? "" : " Leave Height blank to fill the box exactly.") +
+      " A frame that stays blank means that site refuses to be embedded.";
+  }
+
+  function show(url) {
+    S.url = url || "";
+    if (S.url) {
+      frame.src = S.url;
+      $("url").value = S.url; $("url0").value = S.url;
+      empty.hidden = true; handle.hidden = false;
+      apply();
+    } else {
+      frame.removeAttribute("src");
+      empty.hidden = false; handle.hidden = true; bar.hidden = true;
+    }
+  }
+
+  function tidy(v) {
+    v = (v || "").trim();
+    if (!v) return "";
+    if (!/^https?:\/\//i.test(v)) v = "https://" + v;
+    return v;
+  }
+  function commit(v) {
+    var u = tidy(v);
+    if (!u) return;
+    show(u); remember(u); save(); bar.hidden = true;
+  }
+
+  /* ----------------------------------------------------------------- wire */
+  $("go").addEventListener("click", function () { commit($("url").value); });
+  $("go0").addEventListener("click", function () { commit($("url0").value); });
+  [$("url"), $("url0")].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); commit(el.value); }
+    });
+  });
+  $("recent").addEventListener("change", function () { if (this.value) commit(this.value); });
+
+  function zoom(rw) { S.rw = Math.max(200, Math.min(6000, Math.round(rw))); apply(); save(); }
+  $("zin").addEventListener("click", function () { zoom((S.rw || stage.clientWidth) / 1.25); });
+  $("zout").addEventListener("click", function () { zoom((S.rw || stage.clientWidth) * 1.25); });
+  $("rw").addEventListener("change", function () { zoom(+this.value || stage.clientWidth); });
+  $("rh").addEventListener("change", function () {
+    S.rh = Math.max(0, Math.min(6000, Math.round(+this.value || 0))); apply(); save();
+  });
+  $("fit").addEventListener("change", function () { S.fit = this.value; apply(); save(); });
+  $("reset").addEventListener("click", function () {
+    S.rw = 0; S.rh = 0; S.fit = "contain"; S.ax = 1; S.ay = 1;
+    paintAnchor(); apply(); save();
+  });
+
+  (function () {
+    var box = $("anchor");
+    for (var y = 0; y < 3; y++) for (var x = 0; x < 3; x++) {
+      (function (x, y) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.setAttribute("aria-label", "Align " + x + "," + y);
+        b.addEventListener("click", function () { S.ax = x; S.ay = y; paintAnchor(); apply(); save(); });
+        box.appendChild(b);
+      })(x, y);
+    }
+  })();
+  function paintAnchor() {
+    var bs = $("anchor").children;
+    for (var i = 0; i < bs.length; i++) bs[i].setAttribute("aria-pressed", String(i === S.ay * 3 + S.ax));
+  }
+
+  $("reload").addEventListener("click", function () { if (S.url) frame.src = S.url; });
+  $("pop").addEventListener("click", function () { if (S.url) window.open(S.url, "_blank"); });
+  $("clear").addEventListener("click", function () { show(""); save(); });
+  $("close").addEventListener("click", function () { bar.hidden = true; });
+  handle.addEventListener("click", function () { bar.hidden = !bar.hidden; });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && !empty.hidden) return;      // nothing to configure yet
+    if (e.key === "Escape") { e.preventDefault(); bar.hidden = !bar.hidden; }
+  });
+  window.addEventListener("resize", apply);
+
+  /* ---------------------------------------------------------------- start */
+  var started = false;
+  function start() {
+    if (started) return; started = true;
+    var saved = load();
+    if (saved) Object.keys(saved).forEach(function (k) { S[k] = saved[k]; });
+    fillRecent(); paintAnchor(); show(S.url);
+  }
+  if (window.Office && Office.onReady) Office.onReady(start);
+  setTimeout(start, 2500);
+})();
+</script>
+</body>
+</html>
