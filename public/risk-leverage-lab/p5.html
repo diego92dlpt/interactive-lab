@@ -1,0 +1,2217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Risk &amp; Leverage Lab — dev</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ---- src/tokens.css ---- */
+/* =========================================================================
+   TOKENS — the single source of every value used anywhere in this project.
+
+   The rule that makes this work: **nothing outside this file invents a
+   number.** Component CSS composes tokens; content HTML carries classes and
+   never a style attribute. If a new size is genuinely needed, it is added
+   here as a named token and then used — it is never written inline, because
+   that is how page nine ends up disagreeing with page one.
+
+   check.js enforces it: any font-size in the CSS that is not a var(), and
+   any style attribute in a content page, fails the run.
+
+   See styles.dev.html for a rendered specimen of every component, and
+   STYLE.md for which component to use when.
+   ========================================================================= */
+
+:root{
+  /* ---------------------------------------------------------- palette --
+     Colour meanings are load-bearing, not decorative:
+       gain / loss   above and below where you started
+       mean          the theoretical ensemble average — always dashed
+       ink           the median, the typical case — always solid
+       sel           anything the reader selected or is pointing at        */
+  --paper:#E7E9E4; --panel:#EDEFEA; --sunk:#DDE0DA;
+  --ink:#191C1A; --muted:#5C635C; --rule:#C0C5BC;
+  --gain:#2E5D4B; --loss:#7B3B4C; --mean:#A97A00; --sel:#1F4B8E;
+  --loss-wash:#F5E9EC;              /* an input the reader has got wrong     */
+  --scrim:rgba(25,28,26,.42);       /* behind any modal                      */
+  --blackout:#000;                  /* the lecturer's blank-screen key       */
+
+  /* ------------------------------------------------------------ type --
+     Three families, each with one job. Display for headings and questions,
+     body for prose and controls, mono for anything numeric or labelled.   */
+  --display:"Fraunces",Georgia,serif;
+  --body:"Work Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+
+  /* -- reader scale. The document is read at arm's length on a laptop.   */
+  --fs-2xs:9.5px;    /* dense tool values, the smallest thing we ever set  */
+  --fs-xs:10px;      /* eyebrows, mono chrome labels, uppercase tracking   */
+  --fs-sm:11px;      /* captions, figure strips, hints                     */
+  --fs-md:12px;      /* tool control readouts                              */
+  --fs-base:13px;    /* buttons, tool labels                               */
+  --fs-lg:15px;      /* tool body                                          */
+  --fs-doc:17px;     /* document body — the default reading size           */
+  --fs-lede:19px;    /* opening paragraph of a page                        */
+  --fs-h2:22px;      /* section heading within a page                      */
+  --fs-h1:clamp(26px,3.4vw,40px);
+
+  /* -- lecture scale. A slide is read from the back of a room, so it has
+        its own scale authored against the fixed 1280x720 canvas in
+        slides.css. Do not reuse reader sizes on a slide.                  */
+  --sl-fs-eyebrow:19px;
+  --sl-fs-note:21px;
+  --sl-fs-body:30px;
+  --sl-fs-lead:38px;
+  --sl-fs-h:52px;
+  --sl-fs-huge:88px;   /* a single number that is the whole slide          */
+
+  /* ---------------------------------------------------------- rhythm --
+     One spacing scale for both modes. Slides multiply it via --sl-gap.    */
+  --sp-1:4px; --sp-2:7px; --sp-3:11px; --sp-4:16px;
+  --sp-5:24px; --sp-6:34px; --sp-7:56px; --sp-8:80px;
+
+  --lh-tight:1.06;   /* display headings                                   */
+  --lh-snug:1.3;     /* slide text, ledes                                  */
+  --lh-body:1.62;    /* running prose                                      */
+  --lh-ui:1.45;      /* controls and chrome                                */
+
+  --track-caps:.14em;  /* letter-spacing for uppercase mono labels         */
+  --track-tight:-.02em;/* display headings                                 */
+
+  /* ----------------------------------------------------------- lines --
+     Three weights only: hairline for structure, strong for anything the
+     reader is meant to treat as a unit, heavy for the masthead rule.      */
+  --bd:1px solid var(--rule);
+  --bd-strong:1.5px solid var(--ink);
+  --bd-heavy:2px solid var(--ink);
+
+  /* ---------------------------------------------------------- measure */
+  --measure:41rem;      /* the reading column — never wider                */
+  --measure-wide:58rem; /* figures that break out of it                    */
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+[hidden]{display:none !important}
+</style>
+
+<style>
+  /* Stylesheet carried over from scene-p5-leverage-v2.html unchanged, except
+     where the shell now generates markup that used to be hand-written:
+       #fig3         -> [data-slot="wide"]
+       #jumps        -> [data-jumps]
+       .main         -> .main[data-layout=...], because a scene with no wide
+                        figure (P3) has three grid rows, not five.
+     The palette and the reset moved to src/tokens.css so the tool and the
+     teaching document cannot drift apart; src/theme.js reads the same custom
+     properties for the canvas.
+     Layout, spacing and type are deliberate — see TRANSFER §4.1/§4.2. */
+  body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased;overflow:hidden}
+
+  .app{display:grid;grid-template-columns:minmax(0,1fr) 268px;gap:18px;height:100vh;padding:12px 18px 10px}
+  .main{display:grid;gap:9px;min-height:0}
+  .main[data-layout=duo-wide]{grid-template-rows:auto minmax(0,1.02fr) auto minmax(0,1fr) auto}
+  .main[data-layout=duo-wide].collapsed{grid-template-rows:auto minmax(0,1fr) auto auto}
+  .main[data-layout=duo]{grid-template-rows:auto minmax(0,1fr) auto}
+  .duo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;min-height:0}
+
+  /* masthead ------------------------------------------------------------ */
+  .head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;
+    border-bottom:2px solid var(--ink);padding-bottom:8px}
+  .head h1{font-family:var(--display);font-weight:600;font-size:clamp(20px,2.1vw,29px);
+    line-height:1;letter-spacing:-.015em;margin:0;font-variation-settings:"SOFT" 20,"WONK" 1}
+  .eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--muted);margin:0 0 4px}
+  .verdict{display:flex;gap:22px;align-items:flex-end;flex:none}
+  .verdict .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--muted);display:block}
+  .verdict .v{font-family:var(--display);font-weight:600;font-size:clamp(19px,2vw,28px);line-height:1.05;
+    letter-spacing:-.02em;font-variant-numeric:tabular-nums;display:block}
+  .verdict .v.mean{color:var(--mean)} .verdict .v.med{color:var(--loss)}
+  /* the theoretical average, alongside the measured one — see Copy.VERDICT */
+  .verdict .v .theory{font-family:var(--mono);font-size:11.5px;font-weight:400;
+    letter-spacing:0;color:var(--muted);white-space:nowrap}
+  .verdict .cell{text-align:right}
+
+  /* figures -------------------------------------------------------------- */
+  figure{margin:0;display:flex;flex-direction:column;min-height:0}
+  .figtop{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:4px;flex:none}
+  .figtitle{font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:-.01em}
+  .fignum{font-family:var(--mono);font-size:9.5px;color:var(--muted);letter-spacing:.11em;text-transform:uppercase}
+  .canvasbox{background:var(--panel);border:1px solid var(--rule);flex:1;min-height:0}
+  canvas{display:block;width:100%;height:100%}
+  .strip{border:1px solid var(--rule);border-top:none;background:var(--sunk);
+    padding:0 10px;font-family:var(--mono);font-size:11px;color:var(--muted);
+    display:flex;gap:16px;flex:none;height:26px;align-items:center;
+    white-space:nowrap;overflow:hidden}
+  .strip b{color:var(--ink);font-weight:500}
+  .strip .sw{display:inline-block;width:14px;height:2px;vertical-align:middle;margin-right:5px}
+  .strip .sw.dash{background:repeating-linear-gradient(90deg,currentColor 0 4px,transparent 4px 8px)}
+
+  .qband{flex:none;margin:0}
+  .disclose{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;
+    font-family:var(--display);font-size:15px;font-style:italic;color:var(--muted);
+    background:transparent;border:0;border-left:2px solid var(--ink);border-radius:0;
+    padding:3px 8px 3px 12px;text-align:left;cursor:pointer}
+  .disclose:hover{background:var(--panel);color:var(--ink)}
+  .disclose .cue{font-family:var(--mono);font-style:normal;font-size:10px;letter-spacing:.14em;
+    text-transform:uppercase;border:1px solid var(--rule);padding:2px 7px;flex:none}
+  .disclose:hover .cue{border-color:var(--ink)}
+  .main.collapsed [data-slot=wide]{display:none}
+  /* Specificity matters here: the prototype used #jumps, which outranked .row.
+     An attribute selector ties with .row and loses on source order, which put
+     the answer buttons on screen before the reveal. Keep .row in both. */
+  .row[data-jumps]{display:none}
+  body.revealed .row[data-jumps]{display:flex}
+  .punch{font-size:13px;border-top:1px solid var(--rule);padding-top:7px;flex:none;min-height:34px}
+  .punch b{font-weight:600}
+
+  /* rail ----------------------------------------------------------------- */
+  .rail{min-height:0;overflow-y:auto;padding-right:4px}
+  .rail::-webkit-scrollbar{width:6px}
+  .rail::-webkit-scrollbar-thumb{background:var(--rule)}
+  .group{border:1px solid var(--rule);background:var(--panel);margin:0 0 10px;padding:6px 12px 10px}
+  .group.star{border-color:var(--ink);border-width:1.5px}
+  .group > legend{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted);padding:0 5px;margin-left:-5px}
+  .group.star > legend{color:var(--ink)}
+  .ctl{margin-bottom:8px}
+  .ctl:last-of-type{margin-bottom:0}
+  .ctl label{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;margin-bottom:1px}
+  .valwrap{font-family:var(--mono);font-size:11.5px;color:var(--muted);white-space:nowrap}
+  .val{font-family:var(--mono);font-size:12px;font-variant-numeric:tabular-nums;width:52px;text-align:right;
+    padding:1px 4px;background:var(--paper);border:1px solid var(--rule);color:var(--ink)}
+  .val:focus{outline:2px solid var(--sel);outline-offset:1px}
+  .val.bad{border-color:var(--loss);color:var(--loss);background:var(--loss-wash)}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:16px;background:transparent;cursor:pointer;margin:0}
+  input[type=range]::-webkit-slider-runnable-track{height:3px;background:var(--sunk);border:1px solid var(--rule)}
+  input[type=range]::-moz-range-track{height:3px;background:var(--sunk);border:1px solid var(--rule)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;background:var(--ink);border-radius:50%;margin-top:-6px}
+  input[type=range]::-moz-range-thumb{width:13px;height:13px;background:var(--ink);border:none;border-radius:50%}
+  input[type=range]:focus-visible{outline:2px solid var(--sel);outline-offset:3px}
+  .hint{font-family:var(--mono);font-size:10px;color:var(--muted);margin:1px 0 7px}
+  .row{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-top:7px}
+  button{font-family:var(--body);font-size:12px;font-weight:500;padding:4px 9px;background:var(--paper);
+    color:var(--ink);border:1px solid var(--ink);cursor:pointer}
+  button:hover{background:var(--ink);color:var(--paper)}
+  button:focus-visible{outline:2px solid var(--sel);outline-offset:2px}
+  .jump{font-size:10.5px;padding:3px 6px;border-color:var(--rule)}
+  .jump b{font-family:var(--mono);font-weight:500}
+  input[type=number]{font-family:var(--mono);font-size:11.5px;width:62px;padding:3px 5px;background:var(--paper);
+    border:1px solid var(--rule);color:var(--ink)}
+  .pill{display:inline-flex;border:1px solid var(--ink);background:var(--paper);padding:2px;gap:2px}
+  .pill button{border:none;padding:3px 9px;background:transparent;color:var(--muted);font-size:11.5px}
+  .pill button:hover{background:var(--sunk);color:var(--ink)}
+  .pill button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+  .stat{display:flex;justify-content:space-between;gap:8px;font-size:12px;padding:1.5px 0;align-items:baseline}
+  .stat dt{color:var(--muted);flex:1 1 auto;min-width:0}
+  .stat dd{margin:0;font-family:var(--mono);font-size:11.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  dl{margin:0}
+  .statnote{font-family:var(--mono);font-size:9.5px;line-height:1.4;color:var(--muted);margin:6px 0 0}
+
+  /* Fall back to ordinary scrolling when the screen is too small.
+
+     Scoped to :not(.embed) deliberately. An embedded copy is measured against
+     the iframe's own viewport, so a 900x506 rectangle on a slide matches both
+     conditions and would collapse to the stacked layout — which is the one
+     thing an embed must never do, because the whole point is that it holds
+     the single-screen composition and scales it. */
+  @media (max-width:1080px),(max-height:640px){
+    body:not(.embed){overflow:auto}
+    body:not(.embed) .app{display:block;height:auto;padding:16px}
+    body:not(.embed) .main{display:block}
+    body:not(.embed) .duo{display:block}
+    body:not(.embed) .rail{overflow:visible;margin-top:16px}
+    body:not(.embed) figure{margin-bottom:14px}
+    body:not(.embed) .canvasbox{height:300px}
+    body:not(.embed) .head{flex-wrap:wrap}
+  }
+
+  /* ---- embed: a fixed design frame, scaled to fit whatever rectangle it is
+     dropped into. Without this the tool falls into its small-screen scrolling
+     layout inside a PowerPoint or iframe box, which is not what anyone wants
+     on a slide. Same trick as the slide stage. ---------------------------- */
+  body.embed{overflow:hidden;display:flex;align-items:center;justify-content:center}
+  body.embed .app{flex:none;transform-origin:center center}   /* size set by JS */
+
+  /* ---- dev only: scene picker. Not part of the teaching document. ------- */
+  #devbar{position:fixed;left:8px;bottom:6px;z-index:9;display:flex;gap:4px;align-items:center;
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--muted);background:var(--paper);border:1px solid var(--rule);padding:2px 6px;opacity:.55}
+  #devbar:hover{opacity:1}
+  #devbar button{font-family:var(--mono);font-size:9.5px;padding:1px 6px;border-color:var(--rule)}
+  #devbar button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+</style>
+</head>
+<body>
+<div id="host"></div>
+
+
+
+<script>
+/* ---- src/engine.js ---- */
+/* =========================================================================
+   RLL.Engine — the simulation. No DOM, no canvas, no globals, no copy.
+
+   Lifted verbatim in behaviour from scene-p5-leverage-v2.html. The only
+   change is that state which used to be read from the module-level `S`
+   object is now passed in as an explicit `P` (params) argument. Every float
+   this module produces is asserted bit-for-bit against the original in
+   check.js — see tools/baseline.json.
+
+   PARAMS (P)
+     pWin     chance of a win, 0..1
+     gain     return on a win, e.g. 0.50 for +50%
+     loss     return on a loss, positive number, e.g. 0.40 for -40%
+     spread   width of the outcome cloud around each point; 0 = two-point coin
+     f        bet fraction / leverage
+     managers cohort size
+     rounds   flips per manager
+     start    starting wealth
+     seed     RNG seed
+
+   SWITCHES (SW) — see §2.5. These change the update rule, not what is shown.
+     additive  outcomes are dollars, not multipliers          [NOT IMPLEMENTED]
+     pooling   managers pool and split after every flip       [NOT IMPLEMENTED]
+     fees      manager takes 20% of gains, shares no losses   [NOT IMPLEMENTED]
+     (spread is a param, not a switch — it is fully implemented and merely
+      pinned at 0 by scene config.)
+   ========================================================================= */
+(function (root, factory) {
+  const api = factory();
+  if (typeof module === "object" && module && module.exports) module.exports = api;
+  else (root.RLL = root.RLL || {}).Engine = api;
+})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+  "use strict";
+
+  const LOG_FLOOR = Math.log(1e-14);
+
+  /* ------------------------------------------------------------- switches */
+  /* Declared here so a scene config can be validated against the engine
+     rather than silently producing wrong numbers. §8 records that one fork
+     already caused a silent inconsistency; a switch that quietly does nothing
+     is the same failure wearing a different hat. Enabling an unimplemented
+     switch throws. All three are off in every scene that exists today, so
+     this is a no-op in practice. */
+  /* NOT every teaching point belongs in this tool (Mutter, 2026-08-11). Some
+     land better as a standalone widget or a rabbit hole beside the prose than
+     as a mode bolted onto a compounding simulator. `home` records where each
+     one is currently expected to live; only `tool` ones need an engine switch.
+     None of this is final, and nothing is removed until it is. */
+  const SWITCHES = {
+    additive: { section: "§1 / P1", implemented: false, home: "probably-standalone",
+                note: "wealth += f*r*start. Needs a linear wealth store: additive wealth " +
+                      "can be zero or negative, which the log store cannot represent. " +
+                      "Leaning toward a small separate +$50/-$40 widget instead — forcing " +
+                      "a non-compounding world into a compounding tool is bending over " +
+                      "backwards for one lesson." },
+    pooling:  { section: "§6 / P6", implemented: false, home: "undecided",
+                note: "after each flip, sum all wealth and split equally. Transposes the " +
+                      "run loop from per-manager to per-round." },
+    fees:     { section: "§7 / P7", implemented: false, home: "undecided",
+                note: "second wealth series; manager skims 20% of each gain, shares no loss." }
+  };
+  /* `spread` is not in this list because it is a param, not a switch: it is
+     built, tested, and merely pinned at 0 by scene config. It is also the one
+     §2.5 item confirmed as belonging in the tool — "likely outcome itself
+     being a distribution very much feels like it needs to be a feature in the
+     tool which can be turned on/off". Unpinning it is a config change only. */
+  const NO_SWITCHES = { additive: false, pooling: false, fees: false };
+
+  function normalizeSwitches(sw) {
+    const out = Object.assign({}, NO_SWITCHES, sw || {});
+    for (const k of Object.keys(SWITCHES)) {
+      if (out[k] && !SWITCHES[k].implemented) {
+        throw new Error(
+          "Engine switch '" + k + "' (" + SWITCHES[k].section + ") is declared but not " +
+          "implemented yet. " + SWITCHES[k].note);
+      }
+    }
+    return out;
+  }
+
+  /* ------------------------------------------------------------------ rng */
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  /* ------------------------------------------------------------- outcomes */
+  /* The coin is a list of nodes, never two hardcoded branches (§2.1). With
+     spread = 0 this returns exactly two nodes and reproduces the original
+     two-point coin to the decimal. Nothing downstream may special-case it. */
+  function nodes(P) {
+    const base = [{ p: P.pWin, r: P.gain }, { p: 1 - P.pWin, r: -P.loss }];
+    if (P.spread <= 0) return base;
+    const off = [-2.5, -1.5, -0.75, 0, 0.75, 1.5, 2.5];
+    const wt = [0.02, 0.10, 0.20, 0.36, 0.20, 0.10, 0.02];
+    const out = [];
+    base.forEach(b => off.forEach((z, k) =>
+      out.push({ p: b.p * wt[k], r: Math.max(-1, b.r + P.spread * z) })));
+    return out;
+  }
+
+  /* ---------------------------------------------------------- closed form */
+  function rates(P, f) {
+    /* INSERTION POINT — switch `additive` (§2.5).
+       In an additive world m is not a multiplier and geo is not a compounding
+       rate: arith becomes sum(p * f * r * start) in dollars, and the geometric
+       branch does not apply at all. Both must be reported in the additive
+       unit, not as percentages, so the caller's formatting changes too. */
+    let arith = 0, sumLog = 0, ruinable = false;
+    for (const n of nodes(P)) {
+      const m = 1 + f * n.r;
+      arith += n.p * m;
+      if (m <= 0) ruinable = true; else sumLog += n.p * Math.log(m);
+    }
+    return { arith: arith - 1, geo: ruinable ? -1 : Math.exp(sumLog) - 1 };
+  }
+
+  function ruinF(P) {
+    let worst = 0;
+    for (const n of nodes(P)) if (n.r < 0) worst = Math.max(worst, -n.r);
+    return worst > 0 ? 1 / worst : Infinity;
+  }
+
+  function bestF(P) {
+    const cap = Math.min(ruinF(P), 3);
+    let bf = 0, bg = -1;
+    for (let i = 0; i <= 1200; i++) {
+      const f = cap * i / 1200, g = rates(P, f).geo;
+      if (g > bg) { bg = g; bf = f; }
+    }
+    return { f: bf, geo: bg };
+  }
+
+  function zeroF(P) {
+    const b = bestF(P), cap = Math.min(ruinF(P), 3);
+    if (b.geo <= 0) return null;
+    let lo = b.f, hi = cap;
+    for (let i = 0; i < 60; i++) { const m = (lo + hi) / 2; if (rates(P, m).geo > 0) lo = m; else hi = m; }
+    return (lo + hi) / 2;
+  }
+
+  /* ------------------------------------------------------------------ sim */
+  /* Frozen randomness (§2.3) is the single most important decision in the
+     tool: a Sim owns one managers x rounds matrix of uniforms and one of
+     standard normals, regenerated ONLY when managers, rounds or seed change.
+     Every other slider re-derives paths from the same flips. Without this,
+     every parameter nudge reshuffles the world and cause and effect become
+     invisible. Do not move this cache into run(). */
+  function createSim() {
+    let U = null, Z = null, uM = 0, uR = 0, uS = 0;
+
+    function ensureRandom(P) {
+      if (U && uM === P.managers && uR === P.rounds && uS === P.seed) return;
+      const rnd = mulberry32(P.seed >>> 0), n = P.managers * P.rounds;
+      const nU = new Float32Array(n), nZ = new Float32Array(n);
+      for (let i = 0; i < n; i++) nU[i] = rnd();
+      for (let i = 0; i < n; i++) {
+        const a = Math.max(1e-9, rnd()), b = rnd();
+        nZ[i] = Math.sqrt(-2 * Math.log(a)) * Math.cos(2 * Math.PI * b);
+      }
+      U = nU; Z = nZ; uM = P.managers; uR = P.rounds; uS = P.seed;
+    }
+
+    function run(P, sw) {
+      const SW = normalizeSwitches(sw);
+      ensureRandom(P);
+      const M = P.managers, R = P.rounds, W = R + 1, base = Math.log(P.start);
+      const logs = new Float32Array(M * W);
+      const ruinAt = new Int32Array(M).fill(W);
+      const debt = new Float64Array(M);
+      let lo = Infinity, hi = -Infinity;
+
+      /* INSERTION POINT — switch `pooling` (§2.5).
+         Pooling is the one switch that cannot be expressed inside this loop:
+         it couples managers, so the loop has to be transposed to round-outer /
+         manager-inner, with a pool-and-split pass between rounds. Branch to a
+         separate runPooled() here rather than complicating the hot path;
+         1,000 x 300 paths is the reason this loop is written the way it is. */
+
+      for (let i = 0; i < M; i++) {
+        const o = i * W, ru = i * R;
+        let acc = base; logs[o] = acc;
+        for (let r = 0; r < R; r++) {
+          let ret = (U[ru + r] < P.pWin) ? P.gain : -P.loss;
+          if (P.spread > 0) ret = Math.max(-1, ret + P.spread * Z[ru + r]);
+
+          /* INSERTION POINT — switch `additive` (§2.5).
+             Multiplicative: m = 1 + f*ret, wealth *= m.
+             Additive:       wealth += f*ret*start, with no log store at all. */
+          const m = 1 + P.f * ret;
+
+          if (m <= 0) {
+            /* Ruin is absorbing (§2.2). The path terminates; it is never
+               plotted into negative territory. A log axis cannot show zero,
+               and f is a fraction of your own money — there is no fraction
+               of nothing. The debt is recorded but not drawn. */
+            ruinAt[i] = r + 1; debt[i] = -Math.exp(acc) * m;
+            for (let t = r + 1; t < W; t++) logs[o + t] = -Infinity;
+            break;
+          }
+          acc += Math.log(m);
+          if (acc < LOG_FLOOR) acc = LOG_FLOOR;
+          logs[o + r + 1] = acc;
+          if (acc < lo) lo = acc;
+          if (acc > hi) hi = acc;
+
+          /* INSERTION POINT — switch `fees` (§2.5).
+             A second Float32Array of investor logs, updated here: on a gain
+             the manager skims 20% so the investor's multiplier is
+             1 + 0.8*f*ret; on a loss the investor takes all of it. */
+        }
+      }
+
+      const med = new Float32Array(W), mean = new Float32Array(W), col = new Float64Array(M);
+      const rt = rates(P, P.f);
+      for (let t = 0; t < W; t++) {
+        for (let i = 0; i < M; i++) col[i] = (ruinAt[i] <= t) ? -1e9 : logs[i * W + t];
+        col.sort();
+        med[t] = Math.max(col[Math.floor(M / 2)], LOG_FLOOR);
+        /* The average line is theoretical, not measured: at 5,000 x 300 the
+           simulated mean still reads 0.5-2.3% against a theoretical 5%. That
+           gap is itself a lesson (§6, §8) and both numbers stay on screen. */
+        mean[t] = base + t * Math.log(Math.max(1e-14, 1 + rt.arith));
+      }
+      if (!isFinite(lo)) { lo = base - 1; hi = base + 1; }
+
+      return {
+        logs, ruinAt, debt, medLine: med, meanLine: mean,
+        yMin: Math.min(lo, med[W - 1]), yMax: Math.max(hi, mean[W - 1]),
+        M, R, W, start: P.start, switches: SW
+      };
+    }
+
+    return { run, ensureRandom: P => ensureRandom(P) };
+  }
+
+  /* Wealth of every manager at flip t, plus the cohort statistics drawn from
+     it. `t` is the round scrubber, so this is called on every frame of Play. */
+  function statsAt(res, P, t) {
+    const M = P.managers, W = P.rounds + 1;
+    const vals = new Float64Array(M);
+    let sum = 0, ruined = 0;
+    for (let i = 0; i < M; i++) {
+      const dead = res.ruinAt[i] <= t;
+      const v = dead ? 0 : Math.exp(res.logs[i * W + t]);
+      vals[i] = v; sum += v; if (dead) ruined++;
+    }
+    const sorted = Float64Array.from(vals).sort();
+    const mean = sum / M, median = sorted[Math.floor(M / 2)];
+    let above = 0, beat = 0;
+    for (let i = 0; i < M; i++) { if (vals[i] > P.start) above++; if (vals[i] > mean) beat++; }
+    return {
+      t, vals, sorted, mean, median, above: above / M, beat: beat / M, ruined: ruined / M,
+      best: sorted[M - 1], worst: sorted[0],
+      /* "Typical" is the median manager, not the geometric mean of wealth
+         (§7 drift list): a geometric mean is annihilated by a single zero the
+         moment ruin is reachable, and median is what a lay reader means. */
+      realArith: Math.pow(Math.max(1e-14, mean / P.start), 1 / Math.max(1, t)) - 1,
+      realGeo: median <= 0 ? -1 : Math.pow(median / P.start, 1 / Math.max(1, t)) - 1
+    };
+  }
+
+  /* ------------------------------------------------------------ histogram */
+  /* Binning is engine work, not figure work: the paths figure needs the bin
+     bounds to trace a selected column, and the ghost snapshot needs the bin
+     counts. The hist renderer draws this; it does not compute it. */
+  function histogram(stats, P, opts) {
+    const logScale = !!(opts && opts.logScale);
+    const nb = (opts && opts.nb) || 48;
+    const M = P.managers;
+    let dom;
+    const pos = i => logScale
+      ? Math.log10(Math.max(1e-12, stats.vals[i] / P.start))
+      : Math.max(0, stats.vals[i]);
+    if (logScale) {
+      let lo = Math.log10(Math.max(1e-12, Math.max(stats.sorted[0], 1e-12) / P.start));
+      let hi = Math.log10(Math.max(1e-12, stats.sorted[M - 1] / P.start));
+      lo = Math.min(lo, -0.3); hi = Math.max(hi, 0.3);
+      const pad = (hi - lo) * 0.04; dom = [lo - pad, hi + pad];
+    } else dom = [0, Math.max(stats.sorted[M - 1], P.start * 2)];
+
+    const bins = new Int32Array(nb);
+    const bsum = new Float64Array(nb);
+    const bmin = new Float64Array(nb).fill(Infinity), bmax = new Float64Array(nb).fill(-Infinity);
+    for (let i = 0; i < M; i++) {
+      let b = Math.floor(((pos(i) - dom[0]) / (dom[1] - dom[0])) * nb);
+      if (b < 0) b = 0; if (b >= nb) b = nb - 1;
+      bins[b]++; bsum[b] += stats.vals[i];
+      if (stats.vals[i] < bmin[b]) bmin[b] = stats.vals[i];
+      if (stats.vals[i] > bmax[b]) bmax[b] = stats.vals[i];
+    }
+    return { nb, dom, bins, bsum, bmin, bmax, max: Math.max(...bins), pos,
+             logScale, start: P.start, managers: M };
+  }
+
+  /* Lower log-wealth edge of bin b. Carries its own logScale/start so callers
+     never have to re-supply the context the histogram was built in. */
+  function binToLog(H, b) {
+    return H.logScale
+      ? Math.log(H.start) + (H.dom[0] + (b / H.nb) * (H.dom[1] - H.dom[0])) * Math.LN10
+      : Math.log(Math.max(1e-12, H.dom[0] + (b / H.nb) * (H.dom[1] - H.dom[0])));
+  }
+
+  /* [loLog, hiLog] of the traced column, or null. This is what the paths
+     figure hit-tests against; it never sees the histogram itself. */
+  function selectedRange(H, selBin) {
+    if (selBin === null || selBin === undefined || !H) return null;
+    return [binToLog(H, selBin), binToLog(H, selBin + 1)];
+  }
+
+  /* Exact percentile by binary search on the sorted cohort, never by bin
+     counts (§8): a readout that disagrees with its own label is corrosive. */
+  function shareBelow(sorted, v) {
+    let lo = 0, hi = sorted.length;
+    while (lo < hi) { const m = (lo + hi) >> 1; if (sorted[m] < v) lo = m + 1; else hi = m; }
+    return lo / sorted.length;
+  }
+
+  return {
+    LOG_FLOOR, SWITCHES, NO_SWITCHES, normalizeSwitches,
+    mulberry32, nodes, rates, ruinF, bestF, zeroF,
+    createSim, statsAt,
+    histogram, binToLog, selectedRange, shareBelow
+  };
+});
+</script>
+
+<script>
+/* ---- src/format.js ---- */
+/* =========================================================================
+   RLL.Format — number to string. No DOM, no state.
+
+   Split out of the prototype's inline helpers unchanged. The one change is
+   that retShort() now takes `start` explicitly instead of reading it off the
+   module-level S. These live outside the renderers because axis labels, strip
+   readouts and the stats rail must all say a number the same way; a figure
+   that formats its own money would drift from the rail beside it.
+   ========================================================================= */
+(function (root, factory) {
+  const api = factory();
+  if (typeof module === "object" && module && module.exports) module.exports = api;
+  else (root.RLL = root.RLL || {}).Format = api;
+})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+  "use strict";
+
+  const money = v => {
+    if (!isFinite(v)) return "—";
+    if (v <= 0) return "$0";
+    if (v >= 1e12) return "$" + (v / 1e12).toFixed(1) + "T";
+    if (v >= 1e9) return "$" + (v / 1e9).toFixed(1) + "B";
+    if (v >= 1e6) return "$" + (v / 1e6).toFixed(1) + "M";
+    if (v >= 1e3) return "$" + Math.round(v).toLocaleString();
+    if (v >= 1) return "$" + v.toFixed(2);
+    if (v >= 1e-6) return "$" + v.toExponential(1);
+    return "≈$0";
+  };
+
+  const pct = x => (x * 100).toFixed(1) + "%";
+
+  /* Signed growth rate. -1 is clamped to "−100%" because a ruinable coin
+     reports geo = -1 exactly and "−100.00%" reads like a rounding artefact. */
+  const sgn = x => (x <= -1 ? "−100%" : (x >= 0 ? "+" : "") + (x * 100).toFixed(2) + "%");
+
+  /* Terminal wealth as a return against the starting stake, short enough to
+     sit under an axis label without wrapping. */
+  const retShort = (v, start) => {
+    if (v <= 0) return "−100%";
+    const r = v / start - 1, a = Math.abs(r) * 100, s = r >= 0 ? "+" : "−";
+    if (a >= 1e6) return s + a.toExponential(0).replace("e+", "e") + "%";
+    if (a >= 1000) return s + Math.round(a).toLocaleString() + "%";
+    if (a >= 10) return s + Math.round(a) + "%";
+    return s + a.toFixed(1) + "%";
+  };
+
+  /* The starting stake as it appears in labels — "$100", not "$100.00".
+     money() is for results, where the cents carry information; a stake of a
+     round hundred dollars showing two decimals just looks like a bug. */
+  const stake = v => "$" + (Number.isInteger(v) ? v.toLocaleString() : v.toFixed(2));
+
+  const times = f => f.toFixed(2) + "×";
+  const count = n => n.toLocaleString();
+
+  return { money, pct, sgn, retShort, stake, times, count };
+});
+</script>
+
+<script>
+/* ---- src/theme.js ---- */
+/* =========================================================================
+   RLL.Theme — the palette and the canvas font strings, as plain data.
+
+   The prototype called getComputedStyle on every fill: `css("--panel")` ran
+   hundreds of times per frame and, more to the point, made every renderer a
+   DOM consumer. Renderers now receive a resolved theme object and never look
+   anything up.
+
+   readFromCSS() is the ONLY function here that touches the DOM. The shell
+   calls it once per render; renderers never call it. The values in DEFAULT
+   mirror the :root custom properties, so headless callers (check.js, the
+   figure smoke test) get a real palette without a document.
+
+   Colour meanings are load-bearing, not decorative:
+     gain / loss   above and below the starting stake
+     mean          the theoretical ensemble average, always dashed
+     ink           the median manager — the "typical" line, always solid
+     sel           user selection: traced column, crosshair, current bet
+   ========================================================================= */
+(function (root, factory) {
+  const api = factory();
+  if (typeof module === "object" && module && module.exports) module.exports = api;
+  else (root.RLL = root.RLL || {}).Theme = api;
+})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+  "use strict";
+
+  const COLOR_VARS = ["paper", "panel", "sunk", "ink", "muted", "rule", "gain", "loss", "mean", "sel"];
+
+  const DEFAULT = {
+    paper: "#E7E9E4", panel: "#EDEFEA", sunk: "#DDE0DA",
+    ink: "#191C1A", muted: "#5C635C", rule: "#C0C5BC",
+    gain: "#2E5D4B", loss: "#7B3B4C", mean: "#A97A00", sel: "#1F4B8E",
+    fonts: {
+      axis: '10.5px "IBM Plex Mono", monospace',        // every numeric axis
+      marker: '600 10.5px "Work Sans", sans-serif',     // mean / median flags
+      legend: '600 11px "Work Sans", sans-serif'        // end-of-line labels
+    }
+  };
+
+  /* Reads the same custom properties the stylesheet defines, so changing a
+     colour in one place changes it on canvas too. Falls back to DEFAULT for
+     anything missing. */
+  function readFromCSS(el) {
+    const cs = getComputedStyle(el || document.documentElement);
+    const get = n => (cs.getPropertyValue(n) || "").trim();
+    const t = {};
+    COLOR_VARS.forEach(k => { t[k] = get("--" + k) || DEFAULT[k]; });
+    const family = n => { const v = get(n); return v ? v.split(",")[0] : null; };
+    const mono = family("--mono"), body = family("--body");
+    t.fonts = {
+      axis: mono ? "10.5px " + mono + ", monospace" : DEFAULT.fonts.axis,
+      marker: body ? "600 10.5px " + body + ", sans-serif" : DEFAULT.fonts.marker,
+      legend: body ? "600 11px " + body + ", sans-serif" : DEFAULT.fonts.legend
+    };
+    return t;
+  }
+
+  return { DEFAULT, COLOR_VARS, readFromCSS };
+});
+</script>
+
+<script>
+/* ---- src/scene.js ---- */
+/* =========================================================================
+   RLL.Scene — the scene config schema, its control registry, and validation.
+
+   A scene is a parameter set + which params are locked + which controls render
+   + which figures render + which stats show + the copy. Nine teaching stages
+   are nine of these, not nine tools (§8, binding).
+
+   Locking IS the teaching device (§3): a locked param is one the engine uses
+   and the room cannot see. It is not a hidden control — no control is created
+   for it at all, which is why declaring both is an error rather than a
+   precedence rule.
+
+   No DOM. The registry describes controls; it does not build them.
+   ========================================================================= */
+(function (root, factory) {
+  const dep = (typeof module === "object" && module && module.exports)
+    ? { Engine: require("./engine.js") } : { Engine: root.RLL.Engine };
+  const api = factory(dep);
+  if (typeof module === "object" && module && module.exports) module.exports = api;
+  else (root.RLL = root.RLL || {}).Scene = api;
+})(typeof globalThis !== "undefined" ? globalThis : this, function (dep) {
+  "use strict";
+  const Engine = dep.Engine;
+
+  const PARAM_KEYS = ["pWin", "gain", "loss", "spread", "f", "managers", "rounds", "start", "seed"];
+  const FIGURE_TYPES = ["paths", "hist", "sensitivity"];
+  const STAT_KEYS = ["above", "beatMean", "ruined", "best", "worst", "arith", "geo"];
+  const AFFORDANCES = ["jumps", "markers"];
+
+  /* ------------------------------------------------------------- controls */
+  /* Steps come from §7's drift list and are load-bearing: bet 0.05, all
+     percentages 5, managers 100, flips 10, chosen so every landmark
+     (0.25 / 0.50 / 1.00 / 2.50, 50% / +50% / -40%) is reachable by dragging.
+     0.1 on the bet slider cannot land on Kelly. Typing bypasses the step.
+
+     `min`/`max` are the typed bounds; `sliderMin`/`sliderMax` are the drag
+     bounds, which are deliberately narrower in places — the prototype lets you
+     type a 1% win chance but not drag below 5%. Preserved as found. */
+  const CONTROLS = {
+    f: {
+      kind: "slider", param: "f", group: "Your bet", star: true,
+      label: "Fraction of your money", suffix: "×",
+      min: 0, max: 3, sliderMin: 0, sliderMax: 3, step: 0.05, dec: 2, recompute: true,
+      get: P => +P.f.toFixed(2), set: (P, v) => { P.f = v; },
+      hint: P => P.f > 1
+        ? "borrowing " + ((P.f - 1) * 100).toFixed(0) + "% on top of your own money"
+        : (P.f >= 0.995 ? "everything you have, every flip" : "the rest stays in cash")
+    },
+    pWin: {
+      kind: "slider", param: "pWin", group: "The coin",
+      label: "Chance of a win", suffix: "%",
+      min: 1, max: 99, sliderMin: 5, sliderMax: 95, step: 5, recompute: true,
+      get: P => Math.round(P.pWin * 100), set: (P, v) => { P.pWin = v / 100; },
+      hint: P => "so the chance of a loss is " + Math.round((1 - P.pWin) * 100) + "%"
+    },
+    gain: {
+      kind: "slider", param: "gain", group: "The coin",
+      label: "You win", prefix: "+", suffix: "%",
+      min: 0, max: 200, sliderMin: 0, sliderMax: 200, step: 5, recompute: true,
+      get: P => Math.round(P.gain * 100), set: (P, v) => { P.gain = v / 100; }
+    },
+    loss: {
+      kind: "slider", param: "loss", group: "The coin",
+      label: "You lose", prefix: "−", suffix: "%",
+      min: 1, max: 100, sliderMin: 5, sliderMax: 100, step: 5, recompute: true,
+      get: P => Math.round(P.loss * 100), set: (P, v) => { P.loss = v / 100; }
+    },
+    spread: {
+      kind: "slider", param: "spread", group: "The coin",
+      label: "How unsure the payoff is", suffix: "%",
+      min: 0, max: 60, sliderMin: 0, sliderMax: 60, step: 5, recompute: true,
+      get: P => Math.round(P.spread * 100), set: (P, v) => { P.spread = v / 100; }
+    },
+    managers: {
+      kind: "slider", param: "managers", group: "The cohort",
+      label: "Managers",
+      min: 50, max: 5000, sliderMin: 100, sliderMax: 5000, step: 100, recompute: true,
+      get: P => P.managers, set: (P, v) => { P.managers = Math.round(v); }
+    },
+    rounds: {
+      kind: "slider", param: "rounds", group: "The cohort",
+      label: "Flips each",
+      min: 10, max: 300, sliderMin: 10, sliderMax: 300, step: 10, recompute: true,
+      get: P => P.rounds, set: (P, v) => { P.rounds = Math.round(v); }
+    },
+    /* tick is view state, not a param: it scrubs which flip is on screen and
+       never re-derives the paths. */
+    tick: {
+      kind: "slider", state: "tick", group: "Run",
+      label: "Flips completed",
+      min: 1, max: P => P.rounds, sliderMin: 1, sliderMax: P => P.rounds,
+      step: 1, recompute: false
+    },
+    scale: { kind: "toggle", state: "logScale", group: "Run", label: "Chart scale",
+             options: [["Log", true], ["Linear", false]] },
+    seed: { kind: "number", param: "seed", group: "Run", label: "Random seed",
+            min: 1, step: 1, recompute: true },
+    ghost: { kind: "action", group: "Compare", label: "Compare",
+             actions: ["set", "clear"], keys: { set: "g", clear: "G" },
+             hint: () => "Freeze the current run, then change a dial to see what moved." }
+  };
+
+  /* Rail order is fixed, not derived from the controls list: the bet comes
+     first because it is what the scene is about, and stats sit above every
+     control (§4.1). Deriving it from first appearance would put Compare last. */
+  const GROUP_ORDER = ["Your bet", "Compare", "The coin", "The cohort", "Run"];
+
+  const controlMax = (c, P) => (typeof c.max === "function" ? c.max(P) : c.max);
+
+  /* ------------------------------------------------------------ validate */
+  function validate(cfg) {
+    const errors = [], warnings = [];
+    const has = k => Object.prototype.hasOwnProperty.call(cfg, k);
+
+    if (!cfg || typeof cfg !== "object") return { ok: false, errors: ["config is not an object"], warnings };
+    if (!cfg.id) errors.push("missing id");
+    if (!has("params")) errors.push("missing params");
+
+    const P = cfg.params || {};
+    PARAM_KEYS.forEach(k => {
+      if (!Object.prototype.hasOwnProperty.call(P, k)) errors.push("params." + k + " is missing");
+      else if (typeof P[k] !== "number" || !isFinite(P[k])) errors.push("params." + k + " is not a finite number");
+    });
+    Object.keys(P).forEach(k => {
+      if (PARAM_KEYS.indexOf(k) < 0) errors.push("params." + k + " is not an engine parameter");
+    });
+
+    const locked = cfg.locked || [];
+    locked.forEach(k => {
+      if (PARAM_KEYS.indexOf(k) < 0) errors.push("locked names '" + k + "', which is not a parameter");
+    });
+
+    const controls = cfg.controls || [];
+    controls.forEach(id => {
+      const c = CONTROLS[id];
+      if (!c) { errors.push("unknown control '" + id + "'"); return; }
+      /* Locking is the teaching device; a locked param with a control on
+         screen is a contradiction, not a precedence question. */
+      if (c.param && locked.indexOf(c.param) >= 0)
+        errors.push("control '" + id + "' renders a locked parameter");
+    });
+    if (new Set(controls).size !== controls.length) errors.push("controls contains duplicates");
+
+    /* Switches are validated against the engine, at load, so an unbuilt scene
+       fails on arrival rather than producing plausible wrong numbers. */
+    const sw = cfg.switches || {};
+    Object.keys(sw).forEach(k => {
+      if (!Engine.SWITCHES[k]) errors.push("unknown switch '" + k + "'");
+      else if (sw[k] && !Engine.SWITCHES[k].implemented)
+        errors.push("switch '" + k + "' (" + Engine.SWITCHES[k].section + ") is not implemented yet");
+    });
+
+    const figures = cfg.figures || [];
+    figures.forEach((f, i) => {
+      if (FIGURE_TYPES.indexOf(f.type) < 0) errors.push("figures[" + i + "] unknown type '" + f.type + "'");
+      if (!f.slot) errors.push("figures[" + i + "] has no slot");
+      (f.revealUnlocks || []).forEach(a => {
+        if (AFFORDANCES.indexOf(a) < 0) warnings.push("figures[" + i + "] unlocks unknown affordance '" + a + "'");
+        if (!f.collapsed) warnings.push("figures[" + i + "] unlocks '" + a + "' but does not start collapsed");
+      });
+    });
+
+    (cfg.stats || []).forEach(s => {
+      if (STAT_KEYS.indexOf(s) < 0) errors.push("unknown stat '" + s + "'");
+    });
+
+    /* A scene showing the ruin stat with the bet locked below the ruin
+       threshold will always read 0.0% — worth a word, not an error. */
+    if ((cfg.stats || []).indexOf("ruined") >= 0 && (cfg.locked || []).indexOf("f") >= 0 &&
+        P.f < (P.loss > 0 ? 1 / P.loss : Infinity))
+      warnings.push("stat 'ruined' is shown but f is locked below the ruin threshold — it can only read 0%");
+
+    if (cfg.revealAnswers === undefined) warnings.push("revealAnswers not set; defaulting to false");
+
+    return { ok: errors.length === 0, errors, warnings };
+  }
+
+  /* -------------------------------------------------------------- create */
+  /* Returns a resolved, inert description of the scene. It holds no canvas,
+     no element and no simulation — the shell drives it. */
+  function create(cfg) {
+    const v = validate(cfg);
+    if (!v.ok) throw new Error("Scene '" + (cfg && cfg.id) + "' is invalid:\n  - " + v.errors.join("\n  - "));
+
+    const locked = (cfg.locked || []).slice();
+    const params = {};
+    PARAM_KEYS.forEach(k => { params[k] = cfg.params[k]; });
+    const switches = Object.assign({}, Engine.NO_SWITCHES, cfg.switches || {});
+
+    const controls = (cfg.controls || []).map(id => Object.assign({ id }, CONTROLS[id]));
+    const figures = (cfg.figures || []).map(f => Object.assign(
+      { collapsed: false, revealUnlocks: [] }, f));
+
+    return {
+      id: cfg.id,
+      title: cfg.title || "", eyebrow: cfg.eyebrow || "", standfirst: cfg.standfirst || "",
+      question: cfg.question || "", punchline: cfg.punchline || null,
+      defaults: Object.freeze(Object.assign({}, params)),
+      params, switches, locked, controls, figures,
+      stats: (cfg.stats || []).slice(),
+      revealAnswers: !!cfg.revealAnswers,
+      warnings: v.warnings,
+
+      isLocked: k => locked.indexOf(k) >= 0,
+      hasControl: id => controls.some(c => c.id === id),
+      hasFigure: type => figures.some(f => f.type === type),
+      showsStat: k => (cfg.stats || []).indexOf(k) >= 0,
+      figure: type => figures.find(f => f.type === type) || null,
+      controlMax: (id, P) => controlMax(CONTROLS[id], P || params),
+      reset() { PARAM_KEYS.forEach(k => { params[k] = cfg.params[k]; }); return params; }
+    };
+  }
+
+  return { PARAM_KEYS, FIGURE_TYPES, STAT_KEYS, AFFORDANCES, CONTROLS, GROUP_ORDER,
+           controlMax, validate, create };
+});
+</script>
+
+<script>
+/* ---- src/scenes.js ---- */
+/* =========================================================================
+   RLL.Scenes — the presets. Data only; no behaviour lives here.
+
+   P5 and P3 are transcribed from TRANSFER §3 and §3.1, with the copy taken
+   from the two prototypes. §3.1 sets the bar for the schema: "P3 is P5 with f
+   locked at 1, ruin unreachable, the sensitivity figure absent, and the ruin
+   stat dropped. That is the whole difference. If your config can't express
+   that cleanly, the schema is wrong." check.js asserts exactly that diff.
+
+   Figure titles are per-scene copy rather than a property of the renderer,
+   because the same figure carries a different question in different scenes.
+   ========================================================================= */
+(function (root, factory) {
+  const api = factory();
+  if (typeof module === "object" && module && module.exports) module.exports = api;
+  else (root.RLL = root.RLL || {}).Scenes = api;
+})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+  "use strict";
+
+  /* The coin every scene in §0-§7 uses. Kept in one place so a scene that
+     means to change it has to say so. */
+  const COIN = { pWin: 0.50, gain: 0.50, loss: 0.40, spread: 0 };
+  const COHORT = { managers: 1000, rounds: 100, start: 100, seed: 7 };
+
+  const p5 = {
+    id: "p5",
+    eyebrow: "Scene P5 · Situational Awareness, Leverage & Risk",
+    title: "The coin is fine. How much do you bet?",
+    standfirst: "",
+
+    params: Object.assign({ f: 1.00 }, COIN, COHORT),
+    locked: ["spread"],
+    switches: { additive: false, pooling: false, fees: false },
+
+    controls: ["f", "pWin", "gain", "loss", "managers", "rounds", "tick",
+               "scale", "seed", "ghost"],
+    figures: [
+      { type: "paths", slot: "a", title: "Every manager's path" },
+      { type: "hist", slot: "b", title: "Where they all ended up",
+        note: "hover, click to trace" },
+      { type: "sensitivity", slot: "wide", title: "How much should I bet?",
+        note: "the blue line is where you are now",
+        collapsed: true, revealUnlocks: ["jumps"] }
+    ],
+
+    stats: ["above", "beatMean", "ruined", "best", "worst", "arith", "geo"],
+    question: "So how sensitive is all of this to one number — how much you bet?",
+    revealAnswers: false
+  };
+
+  /* §3.1. The only differences from p5 are: f locked at 1, the sensitivity
+     figure absent, the ruin stat dropped, the copy, and revealAnswers — there
+     is no answer to give away once the bet cannot move. */
+  const p3 = {
+    id: "p3",
+    eyebrow: "Scene P3 / P4 · Situational Awareness, Leverage & Risk",
+    title: "A thousand managers, one coin",
+    standfirst: "",
+
+    params: Object.assign({ f: 1.00 }, COIN, COHORT),
+    locked: ["f", "spread"],
+    switches: { additive: false, pooling: false, fees: false },
+
+    controls: ["pWin", "gain", "loss", "managers", "rounds", "tick",
+               "scale", "seed", "ghost"],
+    figures: [
+      { type: "paths", slot: "a", title: "Every manager's path" },
+      { type: "hist", slot: "b", title: "Where they all ended up",
+        note: "hover, click to trace" }
+    ],
+
+    stats: ["above", "beatMean", "best", "worst", "arith", "geo"],
+    question: "",
+    revealAnswers: true
+  };
+
+  return { p5, p3, all: [p3, p5], byId: { p3, p5 }, COIN, COHORT };
+});
+</script>
+
+<script>
+/* ---- src/copy.js ---- */
+/* =========================================================================
+   RLL.Copy — the scene's words: stat labels, figure captions, punchlines.
+
+   Verbatim from the two prototypes. The punchlines are the teaching payload
+   of their scenes and are not to be tidied, shortened or merged.
+
+   Keyed by scene id with p5 as the fallback. THIS IS A SEAM, not a design:
+   TRANSFER §3's schema carries title / eyebrow / standfirst / question but not
+   the punchline, so scene-specific narration lives here until it is decided
+   whether copy belongs in the config. Nothing else in the codebase branches
+   on scene id.
+
+   Emits strings. No DOM.
+   ========================================================================= */
+(function (root, factory) {
+  const dep = (typeof module === "object" && module && module.exports)
+    ? { Format: require("./format.js") } : { Format: root.RLL.Format };
+  const api = factory(dep);
+  if (typeof module === "object" && module && module.exports) module.exports = api;
+  else (root.RLL = root.RLL || {}).Copy = api;
+})(typeof globalThis !== "undefined" ? globalThis : this, function (dep) {
+  "use strict";
+  const { money, pct, sgn, stake } = dep.Format;
+
+  /* ---------------------------------------------------------------- rail */
+  /* The headline average shows the measured figure AND the theoretical one,
+     the same way the rail already shows "+1.90% (+5.00%)" for the per-flip
+     rates. They differ enormously — $659.95 against $13,150 at 1,000
+     managers — because a cohort this size almost never contains one of the
+     freak winners that make the true average what it is. That gap is part of
+     the lesson (§8), and the lecturer's notes quote the theoretical number,
+     so both have to be on screen. The theoretical figure is exactly where the
+     gold dashed line on Figure 1 ends. */
+  const theoryMean = (st, rt, P) => P.start * Math.pow(1 + rt.arith, st.t);
+
+  const VERDICT = [
+    { key: "mean", label: "Average ending wealth", cls: "mean",
+      value: (st, rt, P) => money(st.mean) +
+        ' <span class="theory">(theory ' + money(theoryMean(st, rt, P)) + ')</span>' },
+    { key: "median", label: "Median ending wealth", cls: "med",
+      value: st => money(st.median) }
+  ];
+
+  const STATS = {
+    above:    { label: P => "Finished above " + stake(P.start), value: (st) => pct(st.above) },
+    beatMean: { label: () => "Beat the average", value: (st) => pct(st.beat) },
+    ruined:   { label: () => "Wiped out", value: (st) => pct(st.ruined) },
+    best:     { label: () => "Best manager", value: (st) => money(st.best) },
+    worst:    { label: () => "Worst manager", value: (st) => money(st.worst) },
+    arith:    { label: () => "Average per flip",
+                value: (st, rt) => sgn(st.realArith) + " (" + sgn(rt.arith) + ")" },
+    geo:      { label: () => "Typical per flip",
+                value: (st, rt) => sgn(st.realGeo) + " (" + sgn(rt.geo) + ")" }
+  };
+
+  const STAT_NOTE = "Measured from this run; the coin's theoretical value in brackets. " +
+                    "Typical is taken from the median manager.";
+
+  /* Ghost caption reads the diff live, so the comparison names itself rather
+     than relying on the room to remember what was moved (§4.3). */
+  function ghostNote(ghost, P) {
+    if (!ghost) return "Freeze the current run, then change a dial to see what moved.";
+    const g = ghost.p, d = [];
+    const p100 = x => Math.round(x * 100) + "%";
+    if (Math.abs(g.f - P.f) > 1e-9) d.push("bet " + g.f.toFixed(2) + "× → " + P.f.toFixed(2) + "×");
+    if (g.pWin !== P.pWin) d.push("win " + p100(g.pWin) + " → " + p100(P.pWin));
+    if (g.gain !== P.gain) d.push("gain " + p100(g.gain) + " → " + p100(P.gain));
+    if (g.loss !== P.loss) d.push("loss " + p100(g.loss) + " → " + p100(P.loss));
+    if (g.rounds !== P.rounds) d.push("flips " + g.rounds + " → " + P.rounds);
+    if (g.managers !== P.managers) d.push("managers " + g.managers + " → " + P.managers);
+    if (g.seed !== P.seed) d.push("reseeded");
+    return "ghost median <b>" + money(ghost.median) + "</b>" +
+      (d.length ? " · " + d.join(" · ") : " · nothing changed yet");
+  }
+
+  const ruinNote = st => st.ruined > 0
+    ? "<span style='color:var(--loss)'>dots mark where equity ran out</span>" : "";
+
+  /* -------------------------------------------------------------- scenes */
+  const SETS = {
+    p5: {
+      /* The bet is named in the caption because it is the dial the scene is
+         about; "1,200 of 5,000 drawn" is on screen because statistics always
+         use the full cohort while drawing is capped (§4.2). */
+      figNum: (P, r) => "Figure 1 · betting " + P.f.toFixed(2) + "× · " +
+        r.drawn.toLocaleString() + " of " + r.total.toLocaleString() + " drawn",
+
+      punchline: (P, st, rt, marks) => {
+        if (st.ruined > 0.5) {
+          return "<b>Above " + marks.ruin.toFixed(2) + "× a single bad flip ends you</b> — " +
+            pct(st.ruined) + " of managers are already gone. Look at Figure 3: the average line " +
+            "is still climbing at this bet size. It never tells you to stop.";
+        }
+        if (rt.geo > 0) {
+          return "<b>At " + P.f.toFixed(2) + "× the typical manager compounds at " + sgn(rt.geo) +
+            " per flip.</b> The best available is " + sgn(marks.best.geo) + " at " +
+            marks.best.f.toFixed(2) + "×. The same coin that destroyed everyone at 1.00× makes " +
+            "a living at a quarter of the size.";
+        }
+        return "<b>At " + P.f.toFixed(2) + "× the typical manager loses " + sgn(rt.geo) +
+          " per flip</b> while the average gains " + sgn(rt.arith) + ". Drag your bet down to " +
+          marks.best.f.toFixed(2) + "× and the same coin turns productive.";
+      }
+    },
+
+    p3: {
+      figNum: (P, r) => "Figure 1 · " + r.drawn.toLocaleString() +
+        " of " + r.total.toLocaleString() + " drawn",
+
+      punchline: (P, st, rt) => {
+        if (rt.geo < 0 && rt.arith > 0) {
+          return "<b>Both of these are true at once.</b> The coin gains " + sgn(rt.arith) +
+            " per flip when you average across managers, and loses " + sgn(rt.geo) +
+            " per flip when you follow any single manager through time. The first number is " +
+            "the one that gets pitched. The second is the one that gets lived.";
+        }
+        if (rt.geo > 0) {
+          return "<b>This version of the coin is genuinely good.</b> It compounds at " +
+            sgn(rt.geo) + " per flip for a typical manager, not just on paper. Drag the loss " +
+            "back up and find the point where that number crosses zero.";
+        }
+        return "<b>This coin loses money both ways.</b> Nothing subtle is happening — " +
+          "raise the win chance or the size of the win to get back to the interesting case.";
+      }
+    }
+  };
+
+  const forScene = id => Object.assign({}, SETS.p5, SETS[id] || {});
+
+  return { VERDICT, STATS, STAT_NOTE, theoryMean, ghostNote, ruinNote, SETS, forScene };
+});
+</script>
+
+<script>
+/* ---- src/figures.paths.js ---- */
+/* =========================================================================
+   RLL.Figures.paths — Figure 1: every manager's wealth over time.
+
+     draw(ctx, geometry, data, config) -> readout
+
+   geometry  { w, h, pad, iw, ih }   from geometry(w, h); pixel box only
+   data      { sim }                 an Engine sim result
+   config    { params, theme, logScale, tick, selRange, ghost }
+   readout   { drawn, total, deaths } — facts for the caller's caption; this
+                                        module writes no text to the page
+
+   No DOM, no globals, no canvas sizing, no state between calls.
+
+   Drawing order is deliberate and matches the prototype exactly: gridlines,
+   the green $100 baseline, then everything else inside a clip on the plot
+   rect (paths below the floor used to be drawn over the axis labels), then
+   the axis outside the clip.
+   ========================================================================= */
+(function (root, factory) {
+  const dep = (typeof module === "object" && module && module.exports)
+    ? { Format: require("./format.js") }
+    : { Format: root.RLL.Format };
+  const api = factory(dep);
+  if (typeof module === "object" && module && module.exports) module.exports = api;
+  else ((root.RLL = root.RLL || {}).Figures = root.RLL.Figures || {}).paths = api;
+})(typeof globalThis !== "undefined" ? globalThis : this, function (dep) {
+  "use strict";
+  const money = dep.Format.money;
+
+  const PAD = { l: 54, r: 12, t: 12, b: 30 };
+  const MAX_DRAWN = 1200;   // statistics always use the full cohort (§4.2)
+
+  function geometry(w, h) {
+    return { w, h, pad: PAD, iw: w - PAD.l - PAD.r, ih: h - PAD.t - PAD.b };
+  }
+
+  function draw(ctx, geom, data, cfg) {
+    const P = cfg.params, T = cfg.theme, sim = data.sim;
+    const logScale = cfg.logScale, tick = cfg.tick, ghost = cfg.ghost || null;
+    const { w, h, pad, iw, ih } = geom;
+    const W = P.rounds + 1, M = P.managers;
+    if (iw < 40 || ih < 40) return { drawn: 0, total: M, deaths: 0, tooSmall: true };
+
+    let lo = sim.yMin, hi = sim.yMax;
+    if (logScale) lo = Math.max(lo, Math.log(P.start) - 9 * Math.LN10);
+    else { lo = 0; hi = Math.log(Math.min(Math.exp(sim.yMax), P.start * 50)); }
+    if (hi - lo < 0.5) hi = lo + 0.5;
+
+    const X = t => pad.l + (t / (W - 1)) * iw;
+    const Y = L => {
+      const c = L < lo ? lo : (L > hi ? hi : L);
+      if (logScale) return pad.t + ih - ((c - lo) / (hi - lo)) * ih;
+      const v = Math.exp(c), vmax = Math.exp(hi);
+      return pad.t + ih - (Math.max(0, Math.min(v, vmax)) / vmax) * ih;
+    };
+
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = T.panel; ctx.fillRect(0, 0, w, h);
+    ctx.font = T.fonts.axis; ctx.fillStyle = T.muted; ctx.strokeStyle = T.rule;
+    ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.lineWidth = 1;
+    if (logScale) {
+      const d0 = Math.floor(lo / Math.LN10), d1 = Math.ceil(hi / Math.LN10);
+      const st = Math.max(1, Math.ceil((d1 - d0) / Math.max(3, Math.floor(ih / 42))));
+      for (let d = d0; d <= d1; d += st) {
+        const L = d * Math.LN10; if (L < lo || L > hi) continue;
+        const y = Y(L);
+        ctx.beginPath(); ctx.moveTo(pad.l, y + .5); ctx.lineTo(w - pad.r, y + .5); ctx.stroke();
+        ctx.fillText(money(Math.pow(10, d)), pad.l - 7, y);
+      }
+    } else {
+      for (let i = 0; i <= 4; i++) {
+        const v = Math.exp(hi) * i / 4, y = pad.t + ih - (i / 4) * ih;
+        ctx.beginPath(); ctx.moveTo(pad.l, y + .5); ctx.lineTo(w - pad.r, y + .5); ctx.stroke();
+        ctx.fillText(money(v), pad.l - 7, y);
+      }
+    }
+
+    /* Green, semi-thick, dashed = neither gained nor lost. The same visual
+       carries the same meaning on all three figures (§4.2). */
+    const y100 = Y(Math.log(P.start));
+    ctx.save(); ctx.setLineDash([6, 4]); ctx.strokeStyle = T.gain;
+    ctx.globalAlpha = .8; ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.moveTo(pad.l, y100 + .5); ctx.lineTo(w - pad.r, y100 + .5); ctx.stroke(); ctx.restore();
+
+    ctx.save(); ctx.beginPath(); ctx.rect(pad.l, pad.t - 2, iw, ih + 4); ctx.clip();
+
+    const capped = Math.min(M, MAX_DRAWN), stride = M / capped;
+    const sel = cfg.selRange || null, dim = sel ? 0.3 : 1;
+    const deaths = [];
+    ctx.lineWidth = 1;
+    for (let k = 0; k < capped; k++) {
+      const i = Math.floor(k * stride), o = i * W;
+      const end = Math.min(tick, sim.ruinAt[i] - 1);
+      const fin = sim.ruinAt[i] <= tick ? -Infinity : sim.logs[o + end];
+      if (sel && fin >= sel[0] && fin < sel[1]) continue;
+      ctx.strokeStyle = (fin >= Math.log(P.start)) ? T.gain : T.loss;
+      ctx.globalAlpha = dim * Math.max(0.035, Math.min(0.28, 36 / capped));
+      ctx.beginPath(); ctx.moveTo(X(0), Y(sim.logs[o]));
+      for (let t = 1; t <= end; t++) ctx.lineTo(X(t), Y(sim.logs[o + t]));
+      ctx.stroke();
+      if (sim.ruinAt[i] <= tick && deaths.length < 400) deaths.push([X(end), Y(sim.logs[o + end])]);
+    }
+    /* The traced column is drawn last and opaque so it reads over the cloud. */
+    if (sel) {
+      ctx.globalAlpha = .9; ctx.strokeStyle = T.sel; ctx.lineWidth = 1.8;
+      for (let k = 0; k < capped; k++) {
+        const i = Math.floor(k * stride), o = i * W;
+        const end = Math.min(tick, sim.ruinAt[i] - 1);
+        const fin = sim.ruinAt[i] <= tick ? -Infinity : sim.logs[o + end];
+        if (!(fin >= sel[0] && fin < sel[1])) continue;
+        ctx.beginPath(); ctx.moveTo(X(0), Y(sim.logs[o]));
+        for (let t = 1; t <= end; t++) ctx.lineTo(X(t), Y(sim.logs[o + t]));
+        ctx.stroke();
+      }
+    }
+    /* Ruin is absorbing: a dot where equity ran out, and the path stops. It is
+       never continued into negative territory (§2.2). */
+    ctx.globalAlpha = .55; ctx.fillStyle = T.loss;
+    deaths.forEach(([x, y]) => { ctx.beginPath(); ctx.arc(x, y, 2, 0, 6.284); ctx.fill(); });
+
+    if (ghost && ghost.logScale === logScale) {
+      ctx.globalAlpha = .38; ctx.lineWidth = 1.6; ctx.strokeStyle = T.ink;
+      ctx.setLineDash([4, 3]); ctx.beginPath();
+      const last = Math.min(tick, ghost.rounds);
+      for (let t = 0; t <= last; t++) (t ? ctx.lineTo : ctx.moveTo).call(ctx, X(t), Y(ghost.medLine[t]));
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+
+    ctx.globalAlpha = 1; ctx.lineWidth = 2.2; ctx.strokeStyle = T.ink;
+    ctx.beginPath();
+    for (let t = 0; t <= tick; t++) (t ? ctx.lineTo : ctx.moveTo).call(ctx, X(t), Y(sim.medLine[t]));
+    ctx.stroke();
+    ctx.lineWidth = 1.8; ctx.strokeStyle = T.mean; ctx.setLineDash([5, 4]);
+    ctx.beginPath();
+    for (let t = 0; t <= tick; t++) (t ? ctx.lineTo : ctx.moveTo).call(ctx, X(t), Y(sim.meanLine[t]));
+    ctx.stroke(); ctx.setLineDash([]);
+    ctx.restore();
+
+    ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.fillStyle = T.muted;
+    const xstep = Math.max(1, Math.round(P.rounds / Math.max(4, Math.floor(iw / 70))));
+    for (let t = 0; t <= P.rounds; t += xstep) ctx.fillText(String(t), X(t), h - pad.b + 7);
+    ctx.textAlign = "right"; ctx.fillText("flips →", w - pad.r, h - pad.b + 7);
+
+    return { drawn: capped, total: M, deaths: deaths.length };
+  }
+
+  return { PAD, MAX_DRAWN, geometry, draw };
+});
+</script>
+
+<script>
+/* ---- src/figures.hist.js ---- */
+/* =========================================================================
+   RLL.Figures.hist — Figure 2: where the whole cohort ended up.
+
+     draw(ctx, geometry, data, config) -> readout
+
+   geometry  { w, h, pad, iw, ih }
+   data      { stats, hist }         Engine.statsAt + Engine.histogram
+   config    { params, theme, logScale, selBin, hoverX, ghost }
+   readout   { hoverBin, cursorV, selBin } — the caller turns this into the
+                                             strip text; this module writes none
+
+   Interactions are hit-tested by hand against the same PAD the drawing uses,
+   which is why binAtX/valueAtX live here: the prototype's click handler had
+   its own copy of the padding constants and could drift out of step.
+
+   No DOM, no globals, no state between calls.
+   ========================================================================= */
+(function (root, factory) {
+  const dep = (typeof module === "object" && module && module.exports)
+    ? { Format: require("./format.js") }
+    : { Format: root.RLL.Format };
+  const api = factory(dep);
+  if (typeof module === "object" && module && module.exports) module.exports = api;
+  else ((root.RLL = root.RLL || {}).Figures = root.RLL.Figures || {}).hist = api;
+})(typeof globalThis !== "undefined" ? globalThis : this, function (dep) {
+  "use strict";
+  const money = dep.Format.money, retShort = dep.Format.retShort;
+
+  const PAD = { l: 46, r: 12, t: 12, b: 44 };
+
+  function geometry(w, h) {
+    return { w, h, pad: PAD, iw: w - PAD.l - PAD.r, ih: h - PAD.t - PAD.b };
+  }
+
+  /* ------------------------------------------------------------ hit tests */
+  /* x is in CSS pixels relative to the canvas box, exactly what a mouse event
+     minus getBoundingClientRect().left gives you. */
+  function binAtX(geom, H, x) {
+    if (!H) return null;
+    const bw = geom.iw / H.nb;
+    const b = Math.floor((x - geom.pad.l) / bw);
+    return (b < 0 || b >= H.nb) ? null : b;
+  }
+  /* The value under the crosshair — a continuous position, not a bin centre.
+     Percentiles are read from this by binary search on the sorted cohort, so
+     the readout can never disagree with its own label (§8). */
+  function valueAtX(geom, H, x, start) {
+    if (!H) return null;
+    const p = H.dom[0] + ((x - geom.pad.l) / geom.iw) * (H.dom[1] - H.dom[0]);
+    return H.logScale ? start * Math.pow(10, p) : Math.max(0, p);
+  }
+  /* Count and average of a column. P3 reported a wealth *range* here; count +
+     average is the keeper (§7 drift list). */
+  function columnAt(H, b) {
+    const n = H.bins[b];
+    return { n, avg: n ? H.bsum[b] / n : 0, only: n === 1 ? H.bmax[b] : null };
+  }
+
+  /* ---------------------------------------------------------------- draw */
+  function draw(ctx, geom, data, cfg) {
+    const P = cfg.params, T = cfg.theme, st = data.stats, H = data.hist;
+    const logScale = cfg.logScale, ghost = cfg.ghost || null;
+    const selBin = (cfg.selBin === undefined) ? null : cfg.selBin;
+    const hoverX = (cfg.hoverX === undefined) ? null : cfg.hoverX;
+    const { w, h, pad, iw, ih } = geom;
+    if (iw < 40 || ih < 40) return { hoverBin: null, cursorV: null, selBin, tooSmall: true };
+
+    const X = p => pad.l + ((p - H.dom[0]) / (H.dom[1] - H.dom[0])) * iw;
+    const bw = iw / H.nb, rugY = pad.t + ih + 8, rugH = 14;
+
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = T.panel; ctx.fillRect(0, 0, w, h);
+
+    let hoverBin = null, cursorV = null;
+    if (hoverX !== null && hoverX >= pad.l && hoverX <= w - pad.r) {
+      hoverBin = Math.max(0, Math.min(H.nb - 1, Math.floor((hoverX - pad.l) / bw)));
+      cursorV = valueAtX(geom, H, hoverX, P.start);
+      /* Shading everything to the left of the cursor makes "x% did worse" a
+         picture, not a sentence. */
+      ctx.fillStyle = T.sunk; ctx.fillRect(pad.l, pad.t, hoverX - pad.l, ih);
+    }
+
+    for (let b = 0; b < H.nb; b++) {
+      if (!H.bins[b]) continue;
+      const bh = (H.bins[b] / H.max) * ih, x = pad.l + b * bw;
+      const mid = H.dom[0] + ((b + .5) / H.nb) * (H.dom[1] - H.dom[0]);
+      const win = logScale ? mid >= 0 : mid >= P.start;
+      ctx.fillStyle = (selBin === b) ? T.sel : (win ? T.gain : T.loss);
+      ctx.globalAlpha = (selBin === null || selBin === b) ? .85 : .3;
+      ctx.fillRect(x, pad.t + ih - bh, Math.max(1, bw - 1), bh);
+    }
+    ctx.globalAlpha = 1;
+
+    /* The ghost outline is scaled by SHARE of cohort, not by count, so it
+       stays comparable when the manager slider moves (§4.3). */
+    if (ghost && ghost.logScale === logScale) {
+      const g = ghost.hist, curMaxFrac = H.max / P.managers;
+      ctx.strokeStyle = T.ink; ctx.globalAlpha = .42; ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      for (let b = 0; b < g.nb; b++) {
+        const x0 = X(g.dom[0] + (b / g.nb) * (g.dom[1] - g.dom[0]));
+        const x1 = X(g.dom[0] + ((b + 1) / g.nb) * (g.dom[1] - g.dom[0]));
+        const frac = (g.bins[b] / ghost.managers) / curMaxFrac;
+        const y = pad.t + ih - Math.min(1, frac) * ih;
+        if (b === 0) ctx.moveTo(x0, y); else ctx.lineTo(x0, y);
+        ctx.lineTo(x1, y);
+      }
+      ctx.stroke(); ctx.globalAlpha = 1;
+    }
+
+    /* One tick per manager under the axis: bars show shape, the rug shows
+       that these are people. */
+    for (let i = 0; i < P.managers; i++) {
+      const x = X(H.pos(i));
+      if (x < pad.l || x > w - pad.r) continue;
+      ctx.globalAlpha = Math.max(.06, Math.min(.5, 110 / P.managers));
+      ctx.strokeStyle = (logScale ? H.pos(i) >= 0 : H.pos(i) >= P.start) ? T.gain : T.loss;
+      ctx.beginPath(); ctx.moveTo(x + .5, rugY); ctx.lineTo(x + .5, rugY + rugH); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    const zero = logScale ? X(0) : X(P.start);
+    ctx.save(); ctx.setLineDash([6, 4]); ctx.globalAlpha = .8; ctx.lineWidth = 1.8;
+    ctx.strokeStyle = T.gain;
+    ctx.beginPath(); ctx.moveTo(zero + .5, pad.t); ctx.lineTo(zero + .5, rugY + rugH); ctx.stroke(); ctx.restore();
+
+    ctx.font = T.fonts.marker;
+    [{ v: st.mean, c: T.mean, t: "average" }, { v: st.median, c: T.ink, t: "median" }].forEach(m => {
+      const x = logScale ? X(Math.log10(Math.max(1e-12, m.v / P.start))) : X(m.v);
+      if (x < pad.l - 2 || x > w - pad.r + 2) return;
+      ctx.strokeStyle = m.c; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + ih); ctx.stroke();
+      ctx.fillStyle = m.c; ctx.textAlign = x > w - 76 ? "right" : "left"; ctx.textBaseline = "top";
+      ctx.fillText(m.t, x + (x > w - 76 ? -3 : 3), pad.t + 1);
+    });
+
+    if (hoverX !== null && hoverBin !== null) {
+      ctx.strokeStyle = T.sel; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(hoverX + .5, pad.t); ctx.lineTo(hoverX + .5, rugY + rugH); ctx.stroke();
+    }
+
+    /* Axis labels are two stacked rows — dollars over the same number as a
+       return — and the decade step is chosen from available width. */
+    ctx.font = T.fonts.axis; ctx.textAlign = "center"; ctx.textBaseline = "top";
+    const ty = rugY + rugH + 4;
+    if (logScale) {
+      const perDec = iw / (H.dom[1] - H.dom[0]);
+      const st2 = Math.max(1, Math.ceil(78 / perDec));
+      for (let d = Math.ceil(H.dom[0]); d <= Math.floor(H.dom[1]); d += st2) {
+        const x = X(d); if (x < pad.l + 10 || x > w - pad.r - 10) continue;
+        const v = P.start * Math.pow(10, d);
+        ctx.fillStyle = T.ink; ctx.fillText(money(v), x, ty);
+        ctx.fillStyle = T.muted; ctx.fillText(retShort(v, P.start), x, ty + 13);
+      }
+    } else {
+      const n = iw > 420 ? 5 : 3;
+      for (let i = 0; i <= n; i++) {
+        const v = H.dom[0] + (i / n) * (H.dom[1] - H.dom[0]);
+        ctx.fillStyle = T.ink; ctx.fillText(money(v), X(v), ty);
+        ctx.fillStyle = T.muted; ctx.fillText(retShort(v, P.start), X(v), ty + 13);
+      }
+    }
+    ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.fillStyle = T.muted;
+    for (let i = 0; i <= 3; i++) {
+      const y = pad.t + ih - (i / 3) * ih;
+      ctx.fillText(String(Math.round(H.max * i / 3)), pad.l - 6, y);
+    }
+
+    return { hoverBin, cursorV, selBin };
+  }
+
+  return { PAD, geometry, draw, binAtX, valueAtX, columnAt };
+});
+</script>
+
+<script>
+/* ---- src/figures.sensitivity.js ---- */
+/* =========================================================================
+   RLL.Figures.sensitivity — Figure 3: growth against bet size.
+
+     draw(ctx, geometry, data, config) -> readout
+
+   geometry  { w, h, pad, iw, ih }
+   data      unused — this figure is closed-form from the coin alone and never
+             looks at the cohort. The argument is kept so all three renderers
+             share one signature.
+   config    { params, theme, ghost }
+   readout   { here, marks, best, zero, ruin, xMax }
+
+   The shape is the lesson: the cliff on the right is far steeper than the
+   climb on the left. Erring small costs a little; erring large costs
+   everything. The average line keeps climbing past the point where the
+   typical manager is wiped out — it never tells you to stop.
+
+   No DOM, no globals, no state between calls.
+   ========================================================================= */
+(function (root, factory) {
+  const dep = (typeof module === "object" && module && module.exports)
+    ? { Engine: require("./engine.js") }
+    : { Engine: root.RLL.Engine };
+  const api = factory(dep);
+  if (typeof module === "object" && module && module.exports) module.exports = api;
+  else ((root.RLL = root.RLL || {}).Figures = root.RLL.Figures || {}).sensitivity = api;
+})(typeof globalThis !== "undefined" ? globalThis : this, function (dep) {
+  "use strict";
+  const E = dep.Engine;
+
+  const PAD = { l: 54, r: 76, t: 34, b: 26 };   // r leaves room for the end labels,
+  const N = 280;                                 // t for the marker band (§4.2)
+
+  function geometry(w, h) {
+    return { w, h, pad: PAD, iw: w - PAD.l - PAD.r, ih: h - PAD.t - PAD.b };
+  }
+
+  function draw(ctx, geom, data, cfg) {
+    const P = cfg.params, T = cfg.theme, ghost = cfg.ghost || null;
+    const { w, h, pad, iw, ih } = geom;
+    if (iw < 40 || ih < 40) return { tooSmall: true };
+
+    const rF = E.ruinF(P), bF = E.bestF(P), zF = E.zeroF(P);
+    const xMax = Math.max(1.25, Math.min(3, Math.max(P.f * 1.35, isFinite(rF) ? rF * 1.06 : 1.25)));
+
+    const xs = [], ar = [], ge = [];
+    for (let i = 0; i <= N; i++) {
+      const f = xMax * i / N, r = E.rates(P, f);
+      xs.push(f); ar.push(r.arith); ge.push(Math.max(-1, r.geo));
+    }
+    let yHi = 0.02, yLo = -0.05;
+    for (let i = 0; i <= N; i++) { yHi = Math.max(yHi, ar[i], ge[i]); yLo = Math.min(yLo, ge[i]); }
+    yLo = Math.max(yLo, -1); yHi *= 1.14; yLo *= 1.06;
+
+    const X = f => pad.l + (f / xMax) * iw;
+    const Y = v => pad.t + ih - ((Math.max(yLo, Math.min(yHi, v)) - yLo) / (yHi - yLo)) * ih;
+
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = T.panel; ctx.fillRect(0, 0, w, h);
+
+    ctx.font = T.fonts.axis; ctx.fillStyle = T.muted; ctx.strokeStyle = T.rule;
+    ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.lineWidth = 1;
+    const stepRaw = (yHi - yLo) / Math.max(3, Math.floor(ih / 34));
+    const mag = Math.pow(10, Math.floor(Math.log10(stepRaw)));
+    const step = Math.ceil(stepRaw / mag) * mag;
+    for (let v = Math.ceil(yLo / step) * step; v <= yHi; v += step) {
+      const y = Y(v);
+      ctx.beginPath(); ctx.moveTo(pad.l, y + .5); ctx.lineTo(w - pad.r, y + .5); ctx.stroke();
+      ctx.fillText((v >= 0 ? "+" : "") + (v * 100).toFixed(step < 0.02 ? 1 : 0) + "%", pad.l - 7, y);
+    }
+    const y0 = Y(0);
+    ctx.save(); ctx.setLineDash([6, 4]); ctx.strokeStyle = T.gain;
+    ctx.globalAlpha = .8; ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.moveTo(pad.l, y0 + .5); ctx.lineTo(w - pad.r, y0 + .5); ctx.stroke(); ctx.restore();
+
+    /* Markers get their own band above the plot. Sharing the bottom strip with
+       the numeric axis produced collisions no alternating-height scheme fixed.
+
+       INSERTION POINT — scene config `revealAnswers` (§3). When false, the
+       best/zero marks and their labels must not be drawn at all: a marker
+       reading "best 0.25" gives away the section's punchline before the room
+       has been asked to guess. Filter `marks` here, not at the call site. */
+    const marks = [];
+    if (bF.geo > 0) marks.push({ kind: "best", f: bF.f, t: "best " + bF.f.toFixed(2), c: T.muted });
+    if (zF) marks.push({ kind: "zero", f: zF, t: "zero " + zF.toFixed(2), c: T.muted });
+    marks.push({ kind: "one", f: 1, t: "all in 1.00", c: T.muted });
+    if (isFinite(rF) && rF <= xMax) marks.push({ kind: "ruin", f: rF, t: "ruin " + rF.toFixed(2), c: T.loss });
+    marks.sort((a, b) => a.f - b.f);
+
+    ctx.save();
+    ctx.beginPath(); ctx.rect(pad.l, pad.t - 4, iw, ih + 8); ctx.clip();
+    ctx.setLineDash([3, 4]); ctx.strokeStyle = T.rule; ctx.lineWidth = 1;
+    marks.forEach(m => {
+      if (m.f > xMax) return;
+      ctx.beginPath(); ctx.moveTo(X(m.f), pad.t); ctx.lineTo(X(m.f), pad.t + ih); ctx.stroke();
+    });
+    ctx.setLineDash([]);
+    if (isFinite(rF) && rF < xMax) {
+      ctx.fillStyle = T.loss; ctx.globalAlpha = .08;
+      ctx.fillRect(X(rF), pad.t, X(xMax) - X(rF), ih); ctx.globalAlpha = 1;
+    }
+    ctx.strokeStyle = T.mean; ctx.lineWidth = 2; ctx.setLineDash([5, 4]);
+    ctx.beginPath();
+    for (let i = 0; i <= N; i++) (i ? ctx.lineTo : ctx.moveTo).call(ctx, X(xs[i]), Y(ar[i]));
+    ctx.stroke(); ctx.setLineDash([]);
+    ctx.strokeStyle = T.ink; ctx.lineWidth = 2.6;
+    ctx.beginPath();
+    for (let i = 0; i <= N; i++) (i ? ctx.lineTo : ctx.moveTo).call(ctx, X(xs[i]), Y(ge[i]));
+    ctx.stroke();
+
+    if (ghost && ghost.p.f <= xMax) {
+      ctx.strokeStyle = T.ink; ctx.globalAlpha = .32; ctx.lineWidth = 1.4;
+      ctx.setLineDash([4, 3]); ctx.beginPath();
+      ctx.moveTo(X(ghost.p.f), pad.t); ctx.lineTo(X(ghost.p.f), pad.t + ih);
+      ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+    }
+
+    const here = E.rates(P, P.f);
+    ctx.strokeStyle = T.sel; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(X(P.f), pad.t); ctx.lineTo(X(P.f), pad.t + ih); ctx.stroke();
+    [[here.arith, T.mean], [Math.max(-1, here.geo), T.ink]].forEach(([v, c]) => {
+      ctx.fillStyle = c; ctx.beginPath(); ctx.arc(X(P.f), Y(v), 4, 0, 6.284); ctx.fill();
+      ctx.strokeStyle = T.panel; ctx.lineWidth = 1.5; ctx.stroke();
+    });
+    ctx.restore();
+
+    ctx.font = T.fonts.legend;
+    ctx.textAlign = "left"; ctx.textBaseline = "middle";
+    ctx.fillStyle = T.mean; ctx.fillText("average", w - pad.r + 7, Y(ar[N]));
+    ctx.fillStyle = T.ink; ctx.fillText("typical", w - pad.r + 7, Y(ge[N]));
+
+    /* One row of marker labels; a label is dropped rather than shifted when it
+       would collide with the one before it (§4.2). */
+    ctx.font = T.fonts.axis; ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+    let lastRight = -1e9;
+    marks.forEach(m => {
+      if (m.f > xMax) return;
+      const x = X(m.f), half = ctx.measureText(m.t).width / 2 + 7;
+      if (x - half < lastRight) return;
+      lastRight = x + half;
+      ctx.fillStyle = m.c;
+      ctx.fillText(m.t, x, pad.t - 9);
+      ctx.strokeStyle = T.rule; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x, pad.t - 6); ctx.lineTo(x, pad.t); ctx.stroke();
+    });
+
+    /* Tick spacing comes from available width, minimum ~74px between labels. */
+    ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.fillStyle = T.muted;
+    const cand = [0.1, 0.25, 0.5, 1];
+    const xstep = cand.find(s => (s / xMax) * iw >= 74) || 1;
+    for (let f = 0; f <= xMax + 1e-9; f += xstep) {
+      const x = X(f); if (x > w - pad.r + 1) break;
+      ctx.fillText(f.toFixed(2), x, pad.t + ih + 6);
+    }
+
+    return { here, marks, best: bF, zero: zF, ruin: rF, xMax };
+  }
+
+  return { PAD, N, geometry, draw };
+});
+</script>
+
+<script>
+/* ---- src/readouts.js ---- */
+/* =========================================================================
+   RLL.Readouts — the words under each figure.
+
+   Renderers return facts; this turns facts into the sentence the prototype
+   printed, word for word. It sits between the figures and the shell so that
+   (a) renderers stay DOM-free and copy-free, and (b) the copy has one home
+   when scenes start needing their own wording.
+
+   Emits HTML strings. Touches no DOM — the caller decides where they land.
+
+   The copy here is verbatim from scene-p5-leverage-v2.html and is asserted
+   character-for-character in check.js. It is deliberate teaching language:
+   do not tidy it.
+   ========================================================================= */
+(function (root, factory) {
+  const dep = (typeof module === "object" && module && module.exports)
+    ? { Format: require("./format.js"), Engine: require("./engine.js"),
+        Hist: require("./figures.hist.js") }
+    : { Format: root.RLL.Format, Engine: root.RLL.Engine, Hist: root.RLL.Figures.hist };
+  const api = factory(dep);
+  if (typeof module === "object" && module && module.exports) module.exports = api;
+  else (root.RLL = root.RLL || {}).Readouts = api;
+})(typeof globalThis !== "undefined" ? globalThis : this, function (dep) {
+  "use strict";
+  const { money, pct, sgn } = dep.Format;
+
+  /* Count + average, never a wealth range (§7 drift list: P3 reported the
+     range; count + average is the keeper). */
+  function columnText(H, b) {
+    const c = dep.Hist.columnAt(H, b);
+    if (!c.n) return "empty";
+    if (c.n === 1) return "1 manager " + money(c.only);
+    return c.n.toLocaleString() + " managers avg. " + money(c.avg);
+  }
+
+  /* readout is what figures.hist.draw returned. `Figure 1` is hardcoded copy
+     for now; it becomes scene config when figures get slots (§3). */
+  function histStrip(readout, H, stats) {
+    const { hoverBin, cursorV, selBin } = readout;
+    if (hoverBin === null || hoverBin === undefined) {
+      return (selBin === null || selBin === undefined)
+        ? "hover to read percentiles · click a column to trace it in Figure 1"
+        : "traced: <b>" + columnText(H, selBin) + "</b> · press Escape to clear";
+    }
+    const below = dep.Engine.shareBelow(stats.sorted, cursorV);
+    return "cursor <b>" + money(cursorV) + "</b>" +
+      " · <b>" + pct(below) + "</b> did worse" +
+      " · <b>" + pct(1 - below) + "</b> did better" +
+      " · this column <b>" + columnText(H, hoverBin) + "</b>";
+  }
+
+  /* Average dashed and gold, typical solid and ink — the same pairing as the
+     lines themselves, so the legend needs no explaining. */
+  function heroStrip(here) {
+    return "<span style='color:var(--mean)'><i class='sw dash'></i>average per flip <b>" +
+      sgn(here.arith) + "</b></span>" +
+      "<span style='color:var(--ink)'><i class='sw' style='background:currentColor;height:3px'></i>typical per flip <b>" +
+      sgn(here.geo) + "</b></span>";
+  }
+
+  return { columnText, histStrip, heroStrip };
+});
+</script>
+
+<script>
+/* ---- src/shell.js ---- */
+/* =========================================================================
+   RLL.Shell — the only module that touches the DOM.
+
+   Builds a scene's markup from its config, owns the view state the engine
+   deliberately knows nothing about (which flip is showing, log or linear,
+   which column is traced, where the cursor is, the ghost), sizes the canvases,
+   and drives the render loop.
+
+     RLL.Shell.mount(hostElement, sceneConfig) -> { scene, destroy, render }
+
+   Everything it draws comes from Engine + Figures; everything it says comes
+   from Copy + Readouts. It contains no simulation and no wording of its own.
+   ========================================================================= */
+(function (root, factory) {
+  const api = factory(root.RLL);
+  (root.RLL = root.RLL || {}).Shell = api;
+})(typeof globalThis !== "undefined" ? globalThis : this, function (RLL) {
+  "use strict";
+
+  function mount(host, sceneConfig) {
+    const { Engine, Scene, Theme, Format, Copy, Readouts, Figures } = RLL;
+    const scene = Scene.create(sceneConfig);
+    const copy = Copy.forScene(scene.id);
+    const P = scene.params;
+    const ns = id => scene.id + "-" + id;
+
+    /* ------------------------------------------------------- view state */
+    let tick = P.rounds, logScale = true, selBin = null, hoverX = null;
+    let ghost = null, playing = false, playRAF = 0, raf = 0;
+    let simResult = null, lastStats = null, lastHist = null;
+
+    const sim = Engine.createSim();
+    const theme = Theme.readFromCSS(document.documentElement);
+
+    /* --------------------------------------------------------- markup */
+    const el = (tag, attrs, ...kids) => {
+      const n = document.createElement(tag);
+      for (const k in (attrs || {})) {
+        if (k === "class") n.className = attrs[k];
+        else if (k === "html") n.innerHTML = attrs[k];
+        else if (k === "text") n.textContent = attrs[k];
+        else if (attrs[k] !== null && attrs[k] !== undefined) n.setAttribute(k, attrs[k]);
+      }
+      kids.flat().forEach(c => { if (c) n.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+      return n;
+    };
+
+    const FIG_MOD = { paths: Figures.paths, hist: Figures.hist, sensitivity: Figures.sensitivity };
+    const figs = [];   // { def, mod, canvas, strip, num, readout }
+
+    function buildFigure(def) {
+      const canvas = el("canvas");
+      const num = el("span", { class: "fignum" });
+      const strip = el("div", { class: "strip" });
+      const fig = el("figure", { "data-slot": def.slot },
+        el("div", { class: "figtop" }, el("span", { class: "figtitle", text: def.title || "" }), num),
+        el("div", { class: "canvasbox" }, canvas), strip);
+      if (def.note) num.textContent = "";
+      figs.push({ def, mod: FIG_MOD[def.type], canvas, strip, num, readout: null, geom: null });
+      return fig;
+    }
+
+    /* The paths legend is static except for the ruin note, which only appears
+       once anything has actually been wiped out. */
+    function pathsLegend(strip) {
+      const sw = (color, extra) => el("i", { class: "sw", style: extra || "background:currentColor" });
+      strip.appendChild(el("span", { style: "color:var(--gain)" }, sw(), "above " + Format.stake(P.start)));
+      strip.appendChild(el("span", { style: "color:var(--loss)" }, sw(), "below " + Format.stake(P.start)));
+      strip.appendChild(el("span", { style: "color:var(--mean)" }, el("i", { class: "sw dash" }), "average"));
+      strip.appendChild(el("span", { style: "color:var(--ink)" },
+        sw(null, "background:currentColor;height:3px"), "median manager"));
+      strip.appendChild(el("span", { "data-ruin": "" }));
+    }
+
+    const bySlot = s => scene.figures.filter(f => f.slot === s);
+    const wide = bySlot("wide")[0] || null;
+
+    const main = el("div", { class: "main", "data-layout": wide ? "duo-wide" : "duo" });
+    if (wide && wide.collapsed) main.classList.add("collapsed");
+
+    main.appendChild(el("header", { class: "head" },
+      el("div", null,
+        el("p", { class: "eyebrow", text: scene.eyebrow }),
+        el("h1", { text: scene.title })),
+      el("div", { class: "verdict" },
+        ...Copy.VERDICT.map(v => el("div", { class: "cell" },
+          el("span", { class: "k", text: v.label }),
+          el("span", { class: "v " + v.cls, "data-verdict": v.key, text: "—" }))))));
+
+    main.appendChild(el("div", { class: "duo" }, ...bySlot("a").concat(bySlot("b")).map(buildFigure)));
+
+    let disclose = null, cue = null;
+    if (scene.question) {
+      cue = el("span", { class: "cue", text: wide && wide.collapsed ? "Show" : "Hide" });
+      disclose = el("button", { class: "disclose", type: "button",
+        "aria-expanded": String(!(wide && wide.collapsed)) }, el("span", { text: scene.question }), cue);
+      main.appendChild(el("p", { class: "qband" }, disclose));
+    }
+    if (wide) main.appendChild(buildFigure(wide));
+    const punch = el("p", { class: "punch" });
+    main.appendChild(punch);
+
+    figs.forEach(f => { if (f.def.type === "paths") pathsLegend(f.strip); });
+
+    /* ------------------------------------------------------------- rail */
+    const rail = el("aside", { class: "rail" });
+    const statRows = {};
+    if (scene.stats.length) {
+      const dl = el("dl");
+      scene.stats.forEach(k => {
+        const dd = el("dd", { text: "—" });
+        statRows[k] = dd;
+        dl.appendChild(el("div", { class: "stat" }, el("dt", { text: Copy.STATS[k].label(P) }), dd));
+      });
+      rail.appendChild(el("fieldset", { class: "group" },
+        el("legend", { text: "This run" }), dl, el("p", { class: "statnote", text: Copy.STAT_NOTE })));
+    }
+
+    const widgets = {};   // id -> { def, slider, box, hint, ... }
+    const jumpBtns = {};
+    let jumpsRow = null;
+
+    function buildSlider(c) {
+      const box = el("input", { class: "val", id: ns("l-" + c.id), type: "text",
+        inputmode: c.dec ? "decimal" : "numeric", "aria-label": c.label });
+      const wrapKids = [c.prefix || null, box, c.suffix || null];
+      let ofSpan = null;
+      if (c.id === "tick") { ofSpan = el("span", { text: String(P.rounds) }); wrapKids.push(" of ", ofSpan); }
+      const slider = el("input", { type: "range", id: ns(c.id),
+        min: typeof c.sliderMin === "function" ? c.sliderMin(P) : c.sliderMin,
+        max: typeof c.sliderMax === "function" ? c.sliderMax(P) : c.sliderMax,
+        step: c.step, value: readControl(c) });
+      const hint = c.hint ? el("p", { class: "hint" }) : null;
+      widgets[c.id] = { def: c, slider, box, hint, ofSpan };
+      return [el("div", { class: "ctl" },
+        el("label", { for: ns(c.id) }, c.label, el("span", { class: "valwrap" }, ...wrapKids)),
+        slider), hint];
+    }
+
+    function readControl(c) { return c.param ? c.get(P) : tick; }
+    function writeControl(c, v) { if (c.param) c.set(P, v); else { tick = Math.round(v); } }
+    const ctlMax = c => Scene.controlMax(c, P);
+
+    function buildGroup(name, ctls) {
+      const kids = [];
+      ctls.forEach(c => {
+        if (c.kind === "slider") kids.push(...buildSlider(c));
+        else if (c.kind === "toggle") { /* rendered with tick's row below */ }
+      });
+      /* Your bet carries the jump buttons when the scene reveals them. */
+      if (name === "Your bet") {
+        const sf = scene.figure("sensitivity");
+        if (sf && (sf.revealUnlocks || []).indexOf("jumps") >= 0) {
+          jumpsRow = el("div", { class: "row", "data-jumps": "" });
+          [["best", "Best"], ["zero", "Zero"], ["one", "All in"], ["ruin", "Ruin"]].forEach(([k, label]) => {
+            const b = el("b", { text: k === "one" ? "1.00" : "" });
+            jumpBtns[k] = b;
+            jumpsRow.appendChild(el("button", { class: "jump", type: "button", "data-jump": k }, label + " ", b));
+          });
+          kids.push(jumpsRow);
+        }
+      }
+      if (name === "Compare") {
+        widgets.ghostSet = el("button", { id: ns("ghost-set"), type: "button", text: "Set ghost" });
+        widgets.ghostClear = el("button", { id: ns("ghost-clear"), type: "button", text: "Clear" });
+        widgets.ghostNote = el("p", { class: "hint" });
+        kids.push(el("div", { class: "row", style: "margin-top:0" }, widgets.ghostSet, widgets.ghostClear),
+                  widgets.ghostNote);
+      }
+      if (name === "Run") {
+        const has = id => ctls.some(c => c.id === id);
+        if (has("tick") || has("scale")) {
+          const row = el("div", { class: "row" });
+          if (has("tick")) { widgets.play = el("button", { type: "button", text: "Play" }); row.appendChild(widgets.play); }
+          if (has("scale")) {
+            widgets.scaleLog = el("button", { type: "button", "aria-pressed": "true", text: "Log" });
+            widgets.scaleLin = el("button", { type: "button", "aria-pressed": "false", text: "Linear" });
+            row.appendChild(el("span", { class: "pill", role: "group", "aria-label": "Chart scale" },
+              widgets.scaleLog, widgets.scaleLin));
+          }
+          kids.push(row);
+        }
+        if (has("seed")) {
+          widgets.seed = el("input", { type: "number", value: String(P.seed), min: "1", step: "1",
+            "aria-label": "Random seed" });
+          widgets.reroll = el("button", { type: "button", text: "Reroll" });
+          widgets.reset = el("button", { type: "button", text: "Reset" });
+          kids.push(el("div", { class: "row" }, widgets.seed, widgets.reroll, widgets.reset));
+        }
+      }
+      if (!kids.length) return null;
+      const fs = el("fieldset", { class: "group" + (name === "Your bet" ? " star" : "") },
+        el("legend", { text: name }), ...kids);
+      return fs;
+    }
+
+    Scene.GROUP_ORDER.forEach(name => {
+      const ctls = scene.controls.filter(c => c.group === name);
+      if (!ctls.length) return;
+      const g = buildGroup(name, ctls);
+      if (g) rail.appendChild(g);
+    });
+
+    const app = el("div", { class: "app" }, main, rail);
+    host.innerHTML = "";
+    host.appendChild(app);
+    document.body.classList.toggle("revealed", scene.revealAnswers);
+
+    /* ------------------------------------------------------- rendering */
+    function fitCanvas(cv) {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2), r = cv.getBoundingClientRect();
+      cv.width = Math.max(1, Math.round(r.width * dpr));
+      cv.height = Math.max(1, Math.round(r.height * dpr));
+      const ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return { ctx, w: r.width, h: r.height };
+    }
+
+    function render(recompute) {
+      if (recompute) { simResult = sim.run(P, scene.switches); selBin = null; }
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const st = Engine.statsAt(simResult, P, tick);
+        const H = Engine.histogram(st, P, { logScale });
+        lastStats = st; lastHist = H;
+        const data = { sim: simResult, stats: st, hist: H };
+        const cfg = { params: P, theme, logScale, tick, selBin, hoverX,
+                      selRange: Engine.selectedRange(H, selBin), ghost };
+        figs.forEach(f => {
+          const { ctx, w, h } = fitCanvas(f.canvas);
+          f.geom = f.mod.geometry(w, h);
+          f.readout = f.mod.draw(ctx, f.geom, data, cfg);
+        });
+        narrate(st, H);
+      });
+    }
+
+    function narrate(st, H) {
+      const rt = Engine.rates(P, P.f);
+      main.querySelectorAll("[data-verdict]").forEach(n =>
+        n.innerHTML = Copy.VERDICT.find(v => v.key === n.getAttribute("data-verdict")).value(st, rt, P));
+
+      scene.controls.forEach(c => {
+        const wgt = widgets[c.id];
+        if (wgt && wgt.hint && c.hint) wgt.hint.textContent = c.hint(P);
+      });
+      if (widgets.ghostNote) widgets.ghostNote.innerHTML = Copy.ghostNote(ghost, P);
+
+      figs.forEach(f => {
+        if (f.def.type === "paths") {
+          f.num.textContent = copy.figNum(P, f.readout);
+          const rn = f.strip.querySelector("[data-ruin]");
+          if (rn) rn.innerHTML = Copy.ruinNote(st);
+        } else if (f.def.type === "hist") {
+          f.num.textContent = "Figure 2" + (f.def.note ? " · " + f.def.note : "");
+          f.strip.innerHTML = f.readout.tooSmall ? "" : Readouts.histStrip(f.readout, H, st);
+        } else if (f.def.type === "sensitivity") {
+          f.num.textContent = "Figure 3" + (f.def.note ? " · " + f.def.note : "");
+          f.strip.innerHTML = f.readout.tooSmall ? "" : Readouts.heroStrip(f.readout.here);
+        }
+      });
+
+      const bF = Engine.bestF(P), zF = Engine.zeroF(P), rF = Engine.ruinF(P);
+      punch.innerHTML = copy.punchline(P, st, rt, { best: bF, zero: zF, ruin: rF });
+
+      scene.stats.forEach(k => { statRows[k].textContent = Copy.STATS[k].value(st, rt); });
+
+      if (jumpBtns.best) jumpBtns.best.textContent = bF.geo > 0 ? bF.f.toFixed(2) : "—";
+      if (jumpBtns.zero) jumpBtns.zero.textContent = zF ? zF.toFixed(2) : "—";
+      if (jumpBtns.ruin) jumpBtns.ruin.textContent = isFinite(rF) ? rF.toFixed(2) : "—";
+    }
+
+    function syncLabels() {
+      scene.controls.forEach(c => {
+        const wgt = widgets[c.id];
+        if (!wgt || !wgt.slider) return;
+        const v = readControl(c);
+        if (document.activeElement !== wgt.box) {
+          wgt.box.value = c.dec ? v.toFixed(c.dec) : v;
+          wgt.box.classList.remove("bad");
+        }
+        wgt.slider.max = ctlMax(c);
+        wgt.slider.value = v;
+      });
+      if (widgets.tick && widgets.tick.ofSpan) widgets.tick.ofSpan.textContent = String(P.rounds);
+      if (widgets.seed) widgets.seed.value = String(P.seed);
+    }
+
+    /* ---------------------------------------------------------- events */
+    const off = [];
+    const on = (t, ev, fn) => { t.addEventListener(ev, fn); off.push(() => t.removeEventListener(ev, fn)); };
+
+    scene.controls.forEach(c => {
+      const wgt = widgets[c.id];
+      if (!wgt || !wgt.slider) return;
+      on(wgt.slider, "input", () => { writeControl(c, +wgt.slider.value); clampTick(); syncLabels(); render(c.recompute); });
+      const commit = () => {
+        const v = parseFloat(String(wgt.box.value).replace(/[,\s%×x]/g, ""));
+        if (!isFinite(v) || v < c.min || v > ctlMax(c)) { wgt.box.classList.add("bad"); return false; }
+        writeControl(c, v); clampTick(); syncLabels(); render(c.recompute); return true;
+      };
+      on(wgt.box, "keydown", e => { if (e.key === "Enter") { e.preventDefault(); if (commit()) wgt.box.blur(); } });
+      on(wgt.box, "input", () => wgt.box.classList.remove("bad"));
+      on(wgt.box, "blur", () => {
+        const v = readControl(c);
+        wgt.box.value = c.dec ? v.toFixed(c.dec) : v; wgt.box.classList.remove("bad");
+      });
+    });
+    function clampTick() { if (tick > P.rounds) tick = P.rounds; }
+
+    if (jumpsRow) {
+      jumpsRow.querySelectorAll("[data-jump]").forEach(b => on(b, "click", () => {
+        const k = b.getAttribute("data-jump");
+        let v = 1;
+        if (k === "best") v = Engine.bestF(P).f;
+        else if (k === "zero") { const z = Engine.zeroF(P); if (!z) return; v = z; }
+        else if (k === "ruin") { const r = Engine.ruinF(P); if (!isFinite(r)) return; v = Math.min(3, r); }
+        P.f = Math.min(3, Math.max(0, +v.toFixed(2)));
+        syncLabels(); render(true);
+      }));
+    }
+
+    if (disclose) on(disclose, "click", () => {
+      const open = main.classList.toggle("collapsed") === false;
+      document.body.classList.toggle("revealed", open || scene.revealAnswers);
+      disclose.setAttribute("aria-expanded", String(open));
+      cue.textContent = open ? "Hide" : "Show";
+      render(false);
+    });
+
+    function setScale(isLog, redraw) {
+      logScale = isLog;
+      if (widgets.scaleLog) widgets.scaleLog.setAttribute("aria-pressed", String(isLog));
+      if (widgets.scaleLin) widgets.scaleLin.setAttribute("aria-pressed", String(!isLog));
+      if (redraw) { selBin = null; render(false); }
+    }
+    if (widgets.scaleLog) on(widgets.scaleLog, "click", () => setScale(true, true));
+    if (widgets.scaleLin) on(widgets.scaleLin, "click", () => setScale(false, true));
+
+    if (widgets.seed) {
+      on(widgets.seed, "change", e => { P.seed = Math.max(1, Math.floor(+e.target.value) || 1); render(true); });
+      on(widgets.reroll, "click", () => {
+        P.seed = 1 + Math.floor(Math.random() * 99999);
+        widgets.seed.value = String(P.seed); render(true);
+      });
+      on(widgets.reset, "click", () => {
+        scene.reset(); tick = P.rounds; selBin = null; ghost = null;
+        document.body.classList.toggle("revealed", scene.revealAnswers);
+        if (wide && wide.collapsed) {
+          main.classList.add("collapsed");
+          if (disclose) { disclose.setAttribute("aria-expanded", "false"); cue.textContent = "Show"; }
+        }
+        setScale(true, false); syncLabels(); render(true);
+      });
+    }
+
+    if (widgets.play) on(widgets.play, "click", () => {
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (playing) { playing = false; cancelAnimationFrame(playRAF); widgets.play.textContent = "Play"; return; }
+      if (reduce) { tick = P.rounds; syncLabels(); render(false); return; }
+      playing = true; widgets.play.textContent = "Pause"; tick = 1;
+      const stepFn = () => {
+        if (!playing) return;
+        tick = Math.min(P.rounds, tick + Math.max(1, Math.round(P.rounds / 120)));
+        syncLabels(); render(false);
+        if (tick >= P.rounds) { playing = false; widgets.play.textContent = "Play"; return; }
+        playRAF = requestAnimationFrame(stepFn);
+      };
+      playRAF = requestAnimationFrame(stepFn);
+    });
+
+    const histFig = figs.find(f => f.def.type === "hist");
+    if (histFig) {
+      on(histFig.canvas, "mousemove", e => {
+        hoverX = e.clientX - histFig.canvas.getBoundingClientRect().left; render(false);
+      });
+      on(histFig.canvas, "mouseleave", () => { hoverX = null; render(false); });
+      on(histFig.canvas, "click", e => {
+        const x = e.clientX - histFig.canvas.getBoundingClientRect().left;
+        const b = Figures.hist.binAtX(histFig.geom, lastHist, x);
+        selBin = (b === null || b === selBin) ? null : b;
+        render(false);
+      });
+    }
+
+    /* The ghost is a frozen SCENARIO, not a frozen slider: it snapshots every
+       parameter, so it works for changes to the coin as well as the bet. */
+    function setGhost() {
+      if (!simResult || !lastHist || !lastStats) return;
+      ghost = {
+        medLine: Float32Array.from(simResult.medLine),
+        rounds: P.rounds, managers: P.managers, logScale,
+        hist: { nb: lastHist.nb, dom: lastHist.dom.slice(),
+                bins: Int32Array.from(lastHist.bins), max: lastHist.max },
+        p: { f: P.f, pWin: P.pWin, gain: P.gain, loss: P.loss,
+             managers: P.managers, rounds: P.rounds, seed: P.seed },
+        mean: lastStats.mean, median: lastStats.median
+      };
+      render(false);
+    }
+    function clearGhost() { ghost = null; render(false); }
+    if (widgets.ghostSet) {
+      on(widgets.ghostSet, "click", setGhost);
+      on(widgets.ghostClear, "click", clearGhost);
+    }
+
+    on(document, "keydown", e => {
+      const tag = (e.target.tagName || "").toLowerCase();
+      if (tag === "input" || tag === "textarea") return;
+      if (e.key === "Escape") { selBin = null; render(false); }
+      else if (e.key === "g" && widgets.ghostSet) setGhost();
+      else if (e.key === "G" && widgets.ghostSet) clearGhost();
+    });
+
+    let ro = null, rt = 0;
+    if (window.ResizeObserver) {
+      let d = 0;
+      ro = new ResizeObserver(() => { clearTimeout(d); d = setTimeout(() => render(false), 60); });
+      app.querySelectorAll(".canvasbox").forEach(n => ro.observe(n));
+    }
+    on(window, "resize", () => { clearTimeout(rt); rt = setTimeout(() => render(false), 100); });
+
+    syncLabels(); render(true);
+
+    return {
+      scene, render,
+      destroy() {
+        playing = false; cancelAnimationFrame(playRAF); cancelAnimationFrame(raf);
+        if (ro) ro.disconnect();
+        off.forEach(fn => fn());
+        host.innerHTML = "";
+      }
+    };
+  }
+
+  return { mount };
+});
+</script>
+
+<script>
+(function () {
+  "use strict";
+  const host = document.getElementById("host");
+  const Q = new URLSearchParams(location.search);
+  const hash = (location.hash || "").replace("#", "");
+  let live = null;
+
+  /* Every parameter is addressable, so a slide, an iframe or a link can ask
+     for an exact state and a reload restores it rather than starting over.
+     e.g. ?scene=p5&f=0.25   ?scene=p3&managers=2000&seed=42 */
+  const NUMERIC = ["f", "pWin", "gain", "loss", "spread",
+                   "managers", "rounds", "start", "seed"];
+
+  function configFor(id) {
+    const base = RLL.Scenes.byId[id] || RLL.Scenes.p5;
+    const over = {};
+    NUMERIC.forEach(function (k) {
+      if (!Q.has(k)) return;
+      const v = parseFloat(Q.get(k));
+      if (isFinite(v)) over[k] = v;
+    });
+    if (!Object.keys(over).length) return base;
+    return Object.assign({}, base, {
+      params: Object.assign({}, base.params, over)
+    });
+  }
+
+  function show(id) {
+    if (live) live.destroy();
+    live = RLL.Shell.mount(host, configFor(id));
+    const bar = document.getElementById("devbar");
+    if (bar) bar.querySelectorAll("[data-scene]").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(b.getAttribute("data-scene") === id));
+    });
+    if (document.body.classList.contains("embed")) fitEmbed();
+  }
+
+  /* Embed mode holds the design size and scales it, so the single-screen
+     layout survives being dropped into a small rectangle. */
+  /* The design frame. 900 tall rather than a 16:9 810 because the control
+     rail needs it — at 810 the Run group falls off the bottom. A 16:9 slide
+     rectangle letterboxes slightly at the sides, which is the right trade.
+     Overridable with ?w= and ?h= if a slide wants a different shape. */
+  const FRAME_W = parseFloat(Q.get("w")) || 1440;
+  const FRAME_H = parseFloat(Q.get("h")) || 900;
+  function fitEmbed() {
+    const app = document.querySelector(".app");
+    if (!app) return;
+    app.style.width = FRAME_W + "px";
+    app.style.height = FRAME_H + "px";
+    const s = Math.min(window.innerWidth / FRAME_W, window.innerHeight / FRAME_H);
+    app.style.transform = "scale(" + s + ")";
+  }
+  if (Q.get("embed") === "1") {
+    document.body.classList.add("embed");
+    window.addEventListener("resize", fitEmbed);
+  }
+
+  const bar = document.getElementById("devbar");
+  if (bar) ["p3", "p5"].forEach(function (id) {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = id; b.setAttribute("data-scene", id);
+    b.addEventListener("click", function () { location.hash = id; show(id); });
+    bar.appendChild(b);
+  });
+
+  show(Q.get("scene") || hash || "p5");
+})();
+</script>
+</body>
+</html>
