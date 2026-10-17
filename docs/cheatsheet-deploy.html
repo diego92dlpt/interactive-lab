@@ -550,6 +550,73 @@ git push origin main</div>
 
 
   <!-- ══════════════════════════════════════════════════ -->
+  <p class="phase">Side Route — Adding a Standalone HTML Page (no React)</p>
+
+  <div class="step">
+    <div class="step-num">A</div>
+    <div class="step-body">
+      <div class="step-action">Drop the new files in <code>WaitCalculationSim\incoming\</code> — not in the repo yet</div>
+      <details>
+        <summary><span class="summary-label">Details / Why</span></summary>
+        <div class="details-body">
+          <p><code>incoming\</code> sits one level <em>above</em> <code>wait-calc-sim\</code>, so git can't see it. Nothing there can be pushed by accident while you decide on a name.</p>
+          <p>Save the HTML as a file (don't paste it into chat) plus any handoff notes from the chat that built it.</p>
+          <p>Handoff notes stay in <code>incoming\</code> for good. Everything in <code>public\</code> is publicly downloadable.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">B</div>
+    <div class="step-body">
+      <div class="step-action">Move it to <code>public\&lt;name&gt;\index.html</code> (keepers) or <code>public\scratch\</code> (throwaways)</div>
+      <div class="code-block">public\car-vs-plane\index.html   →  interactive-lab.vercel.app/car-vs-plane/
+public\scratch\some-test.html    →  interactive-lab.vercel.app/scratch/some-test.html</div>
+      <details>
+        <summary><span class="summary-label">Details / Why</span></summary>
+        <div class="details-body">
+          <p>Vite copies <code>public\</code> to the site untouched. No routing and no <code>App.jsx</code> changes are needed.</p>
+          <p>Name the file <code>index.html</code> to get a clean folder URL. A folder also leaves room for an OG preview image later.</p>
+          <p>Use lowercase with dashes. Vercel runs on Linux, where <code>Car-vs-Plane</code> and <code>car-vs-plane</code> are different URLs.</p>
+          <p>Never put it in <code>src\</code> (React only), <code>dist\</code> (regenerated), or <code>screenshots (temporary)\</code> (gitignored).</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">C</div>
+    <div class="step-body">
+      <div class="step-action">Test locally: <code>npm run dev</code> → open <code>localhost:5173/&lt;name&gt;/index.html</code></div>
+      <details>
+        <summary><span class="summary-label">Details / Why</span></summary>
+        <div class="details-body">
+          <p>Include <code>index.html</code> in the URL locally. The dev server doesn't map <code>/&lt;name&gt;/</code> to it and shows a blank React page instead. Vercel <em>does</em> map it, so the clean URL works once it's live.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">D</div>
+    <div class="step-body">
+      <div class="step-action">Stage just that folder, commit, push</div>
+      <div class="code-block">git add public/car-vs-plane/
+git commit -m "Add car-vs-plane CO2 explorer"
+git push origin main</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">E</div>
+    <div class="step-body">
+      <div class="step-action">Check the clean URL in a private window, then empty <code>incoming\</code> (keep the handoff notes somewhere)</div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════ -->
   <div class="quick-ref">
     <p class="quick-ref-title">Quick Reference</p>
 

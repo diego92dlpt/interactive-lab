@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Car vs. plane: CO₂ per person, New York to Frankfurt</title>
+<meta name="description" content="If you could drive a straight road from JFK to Frankfurt, would a car beat flying? CO₂ per person for gasoline and diesel cars vs. 13 airliners, with every assumption adjustable.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Interactive Lab">
+<meta property="og:title" content="Car vs. plane: CO₂ per person, New York to Frankfurt">
+<meta property="og:description" content="If you could drive to Frankfurt, would it beat flying? Cars vs. 13 airliners, every assumption adjustable, sources in the FAQ.">
+<meta property="og:image" content="https://interactive-lab.vercel.app/car-vs-plane/og-preview.png">
+<meta property="og:image:alt" content="Bar chart comparing CO₂ per person for a 787-9, a gasoline car, a diesel car and an A380 on a New York to Frankfurt trip">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://interactive-lab.vercel.app/car-vs-plane/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://interactive-lab.vercel.app/car-vs-plane/og-preview.png">
+<style>
+:root{--text-primary:#1a1a1a;--text-secondary:#52514e;--text-muted:#898781;--text-accent:#185fa5;--text-warning:#8a5a00;--border:rgba(11,11,11,.12);--border-strong:rgba(11,11,11,.22);--surface-0:#f7f7f4;--surface-1:#f1f0ec;--surface-2:#ffffff;--bg-accent:#e6f1fb;--border-accent:#85b7eb}
+@media (prefers-color-scheme:dark){:root{--text-primary:#f0efec;--text-secondary:#c3c2b7;--text-muted:#898781;--text-accent:#85b7eb;--text-warning:#fac775;--border:rgba(255,255,255,.12);--border-strong:rgba(255,255,255,.22);--surface-0:#121211;--surface-1:#1f1f1d;--surface-2:#1a1a19;--bg-accent:#0c2e52;--border-accent:#378add}}
+*{box-sizing:border-box}body{margin:0;background:var(--surface-0);color:var(--text-primary);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
+main{max-width:780px;margin:0 auto;padding:16px}h1{font-size:20px;font-weight:500;margin:.25rem 0 .25rem}.lede{font-size:14px;color:var(--text-secondary);margin:0 0 1rem}
+button{font:inherit;font-size:13px;background:transparent;color:var(--text-primary);border:.5px solid var(--border-strong);border-radius:8px;padding:5px 12px;cursor:pointer}button:hover{background:var(--surface-1)}
+select,input[type=number]{font:inherit;font-size:13px;height:34px;padding:0 8px;border:.5px solid var(--border-strong);border-radius:8px;background:var(--surface-2);color:var(--text-primary);max-width:100%}
+input[type=range]{width:100%;accent-color:#2a78d6}input[type=checkbox]{accent-color:#2a78d6}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.w{--tp:var(--text-primary);--ts:var(--text-secondary);--tm:var(--text-muted);--bd:var(--border);--bs:var(--border-strong);--s1:var(--surface-1);--s2:var(--surface-2);--ac:var(--text-accent);--acb:var(--bg-accent);--acl:var(--border-accent);font-size:14px}
+.zone{border:.5px solid var(--bs);border-radius:12px;padding:.75rem .9rem;margin-bottom:.75rem;background:var(--s2)}.zl{font-size:12px;color:var(--tm);margin:0 0 .4rem}
+.stk{position:sticky;top:0;z-index:4}@media (max-width:540px),(max-height:700px){.stk{position:static}}
+.tb{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:13px;color:var(--ts);margin-bottom:6px}
+.row{display:grid;grid-template-columns:120px minmax(0,1fr) 54px 180px;gap:8px;align-items:center;height:28px;font-size:13px}
+.row>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bar{height:14px;border-radius:0 4px 4px 0}
+.cm{font-size:11px;color:var(--tm);cursor:help;text-decoration:underline dotted;text-underline-offset:3px}.cm:hover{color:var(--ac)}
+#tip{position:absolute;left:0;right:0;z-index:6;background:var(--s2);border:.5px solid var(--bs);border-radius:8px;padding:.55rem .8rem;font-size:12px;color:var(--ts);line-height:1.5;display:none}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:.6rem}.chip{font-size:12px;padding:4px 11px;border-radius:14px}.chip.on{border:1px solid var(--acl);color:var(--ac);background:var(--acb)}
+.stat{background:var(--s1);border-radius:8px;padding:.55rem .8rem;font-size:13px;line-height:1.5;color:var(--ts)}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}.btns button{height:84px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;padding:0 14px;text-align:left;position:relative;min-width:0}
+.bn{font-size:15px;font-weight:500;color:var(--tp)}.bsum{font-size:12px;color:var(--tm);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dot{position:absolute;top:10px;right:12px;width:9px;height:9px;border-radius:50%;background:#2a78d6}
+.ph{display:flex;align-items:center;gap:10px;margin-bottom:.6rem}.ph .t{font-weight:500;flex:1}.lnk{border:none!important;background:none!important;color:var(--ac);font-size:13px;padding:2px 4px}
+.fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px 14px}.fld{display:flex;flex-direction:column;gap:3px;font-size:13px;color:var(--ts);padding:6px 8px;border-radius:8px;border:.5px solid transparent}.fld .h{display:flex;justify-content:space-between}.fld b{font-weight:500;color:var(--tp)}
+.chg{background:var(--acb);border-color:var(--acl)!important}.dh{font-size:11px;color:var(--ac)}.sub{font-size:13px;font-weight:500;margin:.6rem 0 .3rem;grid-column:1/-1}
+.pls{display:flex;flex-wrap:wrap;gap:6px}.pls label{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--ts);padding:3px 8px;border-radius:8px;border:.5px solid var(--bd)}
+details{border-bottom:.5px solid var(--bd);padding:.45rem 0;font-size:13px;color:var(--ts);line-height:1.6}summary{cursor:pointer;color:var(--tp);font-weight:500}
+@media (max-width:540px){main{padding:10px}.row{grid-template-columns:92px minmax(0,1fr) 46px;font-size:12px;height:24px;cursor:pointer}.cm{display:none}.bar{height:10px}.btns button{height:72px}}
+</style>
+</head>
+<body>
+<main>
+<h1>Car vs. plane: CO₂ per person, New York to Frankfurt</h1>
+<p class="lede">If you could drive a straight road from JFK to Frankfurt, how would a car compare with flying? Pick a scenario, or open the settings to change any assumption.</p>
+<div class="w">
+<h2 class="sr-only">Scenario explorer comparing CO2, energy or fuel per person for gasoline and diesel cars versus airliners on a New York to Frankfurt trip.</h2>
+<div class="zone stk">
+<div class="tb"><label style="display:flex;align-items:center;gap:6px">Measure <select id="met"><option value="co2">CO₂</option><option value="co2e">CO₂e incl. non-CO₂ effects</option><option value="mj">Energy (MJ)</option><option value="l">Raw fuel litres</option></select></label>
+<label style="display:flex;align-items:center;gap:6px">Show <select id="unit"><option value="mi">per 100 miles</option><option value="trip">whole trip</option></select></label>
+<label id="ncW" style="display:none;align-items:center;gap:6px">Aircraft multiplier <input type="range" id="nc" min="1" max="3" step="0.1" value="2" style="width:90px"><b id="ncO" style="font-weight:500;color:var(--tp)">2.0×</b></label></div>
+<div id="warn" style="font-size:12px;color:var(--text-warning);margin:0 0 4px"></div>
+<div id="axis" style="font-size:13px;font-weight:500;margin-bottom:4px"></div>
+<div style="display:flex;flex-wrap:wrap;gap:12px;font-size:11px;color:var(--ts);margin-bottom:4px">
+<span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border-radius:2px;background:#2a78d6"></span>Aircraft</span><span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border-radius:2px;background:#888780"></span>Measured average</span><span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border-radius:2px;background:#eb6834"></span>Gasoline</span><span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border-radius:2px;background:#eda100"></span>Diesel</span><span style="color:var(--tm)">Hover a comment (or tap a row on phones) for sources and math</span></div>
+<div id="wrap" style="position:relative"><div id="bars"></div><div id="tip"></div></div>
+</div>
+<div class="zone"><p class="zl">Scenarios</p><div class="chips" id="chips"></div><div class="stat" id="stat"></div></div>
+<div class="zone"><p class="zl">Settings</p><div id="bot" style="min-height:178px"></div></div>
+<p style="font-size:11px;color:var(--tm);margin:0">Data compiled October 2026 from EPA, FHWA, ICCT, World Bank and Wikipedia's "Fuel economy in aircraft" compilation. Sources and caveats in FAQ.</p>
+</div>
+</main>
+<script>
+const A=[["A321LR",2.99,154,3400,2018,2,"In production",1,"Long-range narrowbody used on thinner transatlantic routes."],["757-200",3.79,158,3400,1983,2,"Out of production",0,"With winglets; long a transatlantic workhorse."],["767-300ER",5.39,218,3000,1988,2,"Pax version out of production",1,""],["787-8",5.11,238,3400,2011,2,"In production",0,""],["787-9",5.77,304,3350,2014,2,"In production",1,""],["A330-300",6.25,262,3000,1994,2,"Succeeded by A330neo",0,""],["A330-900neo",6.0,310,3350,2018,2,"In production",1,""],["A350-900",6.03,315,4972,2015,2,"In production",1,"Source flight is longer than JFK–FRA, so this slightly overstates."],["777-200ER",6.96,301,3000,1997,2,"Out of production",0,""],["777-300ER",8.86,382,5507,2004,2,"Being succeeded by 777-9",1,"Source flight is longer than JFK–FRA, so this slightly overstates."],["747-8",9.9,467,3000,2012,4,"Out of production",0,""],["747-400",10.77,416,2151,1989,4,"Mostly retired",1,""],["A380",13.6,509,2000,2007,4,"Out of production",1,"Seats set to Lufthansa's 509; source row assumed 544."]];
+const GP={mid:[31,37,"Typical midsize sedan","2024 EPA labels, non-hybrid class (combined / highway): Accord 32/37, Altima 31/38, Malibu 31/36."],hyb:[57,56,"Hybrid sedan","2024 Prius-class EPA label."],suv:[24,29,"Midsize SUV","2024 EPA labels, non-hybrid class (combined / highway): Explorer 24/28, Santa Fe 24/29, Sorento 23–26/29–31."],fleet:[24.8,29,"US road average","FHWA 2022 on-road average; highway figure estimated."]};
+const DP={jetta:[34,42,"2014 Jetta TDI","EPA label, used US diesel sedan."],eu:[43.9,48,"EU compact diesel","~4.7 L/100 km WLTP + 14% real-world gap (ICCT 2022); highway estimated."],suv:[25,30,"Midsize diesel SUV","2016–18 Jeep Grand Cherokee EcoDiesel 2WD, EPA label (22 city / 30 highway / 25 combined), the only recent US midsize diesel SUV. The gasoline Grand Cherokee is rated 22 combined / 26 highway."],ram:[26,32,"Ram 1500 EcoDiesel","2020 4x2, EPA label."]};
+const SPD={'0':'Up to 65 mph','0.05':'70 mph','0.10':'75 mph','0.15':'80 mph'},CAB={'1':'Cabin average','0.8':'Economy (~0.8×)','2.4':'Business (~2.4×)','7.4':'First (~7.4×)'};
+const cl=o=>JSON.parse(JSON.stringify(o)),eq=(a,b)=>JSON.stringify(a)===JSON.stringify(b),$=i=>document.getElementById(i);
+const DEF={gp:'mid',gc:31,gh:37,dp:'jetta',dc:34,dh:42,mix:50,occ:2,lug:25,spd:'0',pl:A.map(a=>!!a[7]),fa:true,lf:80,fr:12,sd:100,cab:'1',dist:3851,ac:0,circ:0};
+const PRE={couple:['Couple road trip',{}],solo:['Solo driver',{occ:1}],family:['Family of 4',{occ:4,gp:'suv',gc:24,gh:29,dp:'suv',dc:25,dh:30,cab:'0.8'}],biz:['Business traveler',{occ:1,cab:'2.4'}],real:['Real-world driving',{gp:'fleet',gc:24.8,gh:29,spd:'0.10',circ:12}]};
+const G={cars:['Cars',['gp','gc','gh','dp','dc','dh','mix','occ','lug','spd']],air:['Aircraft',['pl','fa','lf','fr','sd','cab']],trip:['Trip',['dist','ac','circ']],faq:['FAQ',[]]};
+const pick=P=>({...Object.fromEntries(Object.entries(P).map(([k,v])=>[k,v[2]])),custom:'Custom'});
+const F={gp:{l:'Gasoline car',t:'sel',o:()=>pick(GP)},gc:{l:'Combined mpg',t:'num'},gh:{l:'Highway mpg',t:'num'},dp:{l:'Diesel car',t:'sel',o:()=>pick(DP)},dc:{l:'Combined mpg',t:'num'},dh:{l:'Highway mpg',t:'num'},mix:{l:'Share at highway mpg',t:'rng',mn:0,mx:100,st:5,f:v=>v+'%'},occ:{l:'People per car',t:'rng',mn:1,mx:5,st:1,f:v=>v},lug:{l:'Luggage per person',t:'rng',mn:0,mx:40,st:1,f:v=>v+' kg'},spd:{l:'Cruise speed',t:'sel',o:()=>SPD},lf:{l:'Seats filled',t:'rng',mn:40,mx:100,st:1,f:v=>v+'%'},fr:{l:'Fuel allocated to cargo',t:'rng',mn:0,mx:25,st:1,f:v=>v+'%'},sd:{l:'Seat count vs. source layout',t:'rng',mn:70,mx:115,st:1,f:v=>v+'%'},cab:{l:'Your cabin',t:'sel',o:()=>CAB},dist:{l:'Trip distance (miles)',t:'num'},ac:{l:'Drive to and from airports',t:'rng',mn:0,mx:120,st:5,f:v=>v+' mi'},circ:{l:'Road-distance penalty for cars',t:'rng',mn:0,mx:30,st:1,f:v=>v+'%'}};
+let S=cl(DEF),act='couple',view=null,fixed=false,rows=[],pinned=null;
+const chg=k=>!eq(S[k],DEF[k]),fv=(k,v)=>{const f=F[k];return f.t==='sel'?f.o()[v]:f.f?f.f(v):v},isMod=()=>!eq(S,{...cl(DEF),...cl(PRE[act][1])});
+const gName=()=>S.gp==='custom'?'Custom gasoline':GP[S.gp][2],dName=()=>S.dp==='custom'?'Custom diesel':DP[S.dp][2];
+function fld(k){const f=F[k],v=S[k],c=chg(k);let i=f.t==='rng'?`<input type="range" data-k="${k}" min="${f.mn}" max="${f.mx}" step="${f.st}" value="${v}">`:f.t==='sel'?`<select data-k="${k}">${Object.entries(f.o()).map(([a,b])=>`<option value="${a}"${a==v?' selected':''}>${b}</option>`).join('')}</select>`:`<input type="number" data-k="${k}" min="1" step="0.1" value="${v}">`;return `<div class="fld${c?' chg':''}" id="f_${k}"><div class="h"><span>${f.l}</span><b id="o_${k}">${f.t==='rng'?fv(k,v):''}</b></div>${i}<div class="dh" id="d_${k}">${c?'Default: '+fv(k,DEF[k]):''}</div></div>`}
+const FAQ=`<details><summary>What exactly is being compared?</summary>Fuel burned by the vehicle during the trip ("tank-to-wheel" for cars, "tank-to-wake" for planes), divided among the people on board. It's a physical comparison, not an economic one. By default the road is fictional and follows the flight's straight path.</details>
+<details><summary>What's deliberately left out?</summary>Pilot and crew salaries, airports, roads, air traffic control, maintenance, building and scrapping vehicles, extracting and refining fuel (adds roughly 15–25% to both fuels, so it largely cancels; jet fuel and gasoline are joint refinery products, and how refinery emissions are split between them is debated), travel time, prices, safety, and local pollutants such as NOx and particulates. Airport driving and real road distance can be added in the Trip panel.</details>
+<details><summary>Real roads aren't straight. How much does that matter?</summary>Even New York to San Francisco on I-80 (about 2,900 miles) is roughly 12% longer than the straight-line distance (about 2,590 miles), and that's a best case: one long, direct interstate. Routes bent by mountains or coastlines, such as Seattle–Los Angeles, often add 17–20% or more. Fuel and rest stops add little distance, mostly time. Flights aren't perfectly straight either; air routes and weather typically add a few percent. The "Real-world driving" scenario applies a 12% penalty to the cars but leaves the modeled planes as they are. For a real-world plane, compare against the gray widebody-average bar: it's measured, so it already includes routing, weather, older aircraft and premium cabins. Taxiing and idling are under 1% of fuel on a flight this long.</details>
+<details><summary>Why CO₂ instead of litres?</summary>A litre of jet fuel holds about 11% more energy than US pump gasoline (E10), and diesel about 15% more. CO₂ per litre: gasoline ~2.35 kg, diesel ~2.69 kg, jet fuel ~2.53 kg. CO₂ or energy puts all three on the same footing. Price was rejected because international jet fuel is untaxed while road fuel is taxed.</details>
+<details><summary>What does CO₂e incl. non-CO₂ effects mean?</summary>Planes: contrails and NOx at cruise altitude add warming beyond the CO₂ itself; estimates put aviation's total effect at roughly 1.7–3× its CO₂, with large uncertainty, so the multiplier is adjustable. Cars: methane and nitrous oxide from the exhaust system, plus air-conditioning refrigerant leaks, are small; CO₂ is about 95–99% of a car's greenhouse effect (EPA), so cars get a fixed 1.03×.</details>
+<details><summary>Where do the aircraft numbers come from?</summary>Wikipedia's "Fuel economy in aircraft" tables, compiling manufacturer performance summaries and analyst estimates (Leeham News; Aircraft Commerce using Lufthansa Systems flight-planning data). They're modeled, not measured. We use rows for flights of 3,000–3,400 nmi where available, close to JFK–Frankfurt (~3,340 nmi). The gray bar is a measured benchmark: widebody flights worldwide averaged 89 g CO₂ per passenger-km in 2019 (ICCT), already reflecting real layouts, load factors and cargo.</details>
+<details><summary>Seats filled, cargo and cabin class</summary>Fuel is divided by the share of seats filled; fuller planes burn slightly more, which isn't modeled. Cargo default 12%: belly cargo accounted for about 101 of ~848 million tonnes of CO₂ from passenger aircraft in 2018 (ICCT). Cabin factors use the World Bank's 2013 estimate (business ~3×, first ~9× economy), scaled so the cabin average is 1.0.</details>
+<details><summary>Where do the car numbers come from?</summary>EPA labels, already adjusted for real-world driving and assuming a 300 lb load; extra weight costs about 1% of fuel economy per 100 lb (US DOE, fueleconomy.gov). The "Share at highway mpg" setting blends each car's highway and combined ratings; since the combined rating already includes about 45% highway driving, the default 50% amounts to roughly three-quarters highway-like driving. The US road average is FHWA's 24.8 mpg for 2022. The 2014 Jetta TDI's ratings were achieved with the software later found in the VW emissions scandal. The European diesel is an estimate: typical WLTP rating plus ICCT's 14% real-world gap.</details>
+<details><summary>How precise are these numbers?</summary>The modeled aircraft figures are probably good to roughly ±10–20%, and car figures vary with driving style, weather and maintenance. Treat gaps of a few percent between bars as ties. The tool is for understanding magnitudes and which assumptions matter, not for ranking close calls.</details>
+<details><summary>What about short trips?</summary>The aircraft data come from long flights. On trips under about 1,000 miles, takeoff and climb use a much larger share of fuel and regional aircraft are common, so the planes would look better here than in reality.</details>
+<details><summary>What isn't modeled at all?</summary>Electric cars (their footprint depends on the power grid that charges them), trains, buses, ships, and sustainable aviation fuel. Each is a different analysis.</details>
+<details><summary>How much of air travel do these aircraft represent?</summary>Model-level shares mostly sit in paid databases. By class, in 2018 passenger narrowbodies produced 43% of commercial aviation CO₂, passenger widebodies 33%, regional aircraft 5%, and freight the remaining 19% (ICCT).</details>
+<details><summary>Can I link to a specific view?</summary>Yes. Add settings to the end of the address, e.g. <code>?measure=mj&amp;show=trip&amp;scenario=family</code>. Measure: co2, co2e, mj, l. Show: mi, trip. Scenario: couple, solo, family, biz, real. Multiplier: 1–3 (with measure=co2e).</details>`;
+function sums(){return{cars:`${gName()} · ${dName()} · ${S.occ} aboard`,air:`${S.pl.filter(Boolean).length} aircraft · ${S.lf}% full · ${CAB[S.cab].replace(/ \(.*/,'')}`,trip:`${(+S.dist).toLocaleString()} mi${S.ac?` · +${S.ac} mi airports`:''}${S.circ?` · +${S.circ}% road`:''}`,faq:'Scope, sources and caveats'}}
+function bot(){const b=$('bot');if(!view){const s=sums();b.innerHTML=`<div class="btns">${Object.entries(G).map(([g,[n,ks]])=>`<button data-open="${g}"><span class="bn">${n}</span><span class="bsum">${s[g]}</span>${ks.some(chg)?'<span class="dot" title="Changed from baseline" aria-label="changed from baseline"></span>':''}</button>`).join('')}</div>`;return}
+let h=`<div class="ph"><button id="back">← Back</button><span class="t">${G[view][0]}</span>${view!=='faq'?'<button class="lnk" id="rst">Reset section</button>':''}</div>`;
+if(view==='cars')h+=`<div class="fg"><div class="sub">Gasoline</div>${['gp','gc','gh'].map(fld).join('')}<div class="sub">Diesel</div>${['dp','dc','dh'].map(fld).join('')}<div class="sub">Both cars</div>${['occ','lug','mix','spd'].map(fld).join('')}</div>`;
+if(view==='air')h+=`<div class="sub" style="margin-top:0">Show aircraft</div><div class="pls">${A.map((a,i)=>`<label class="${S.pl[i]!==DEF.pl[i]?'chg':''}"><input type="checkbox" data-pl="${i}"${S.pl[i]?' checked':''}>${a[0]}</label>`).join('')}<label class="${chg('fa')?'chg':''}"><input type="checkbox" data-fa="1"${S.fa?' checked':''}>Widebody fleet average</label></div><label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ts);margin:.5rem 0"><input type="checkbox" data-fixed="1"${fixed?' checked':''}>Keep rows in fixed order</label><div class="fg">${['lf','fr','sd','cab'].map(fld).join('')}</div>`;
+if(view==='trip')h+=`<div class="fg">${['dist','ac','circ'].map(fld).join('')}</div>`;
+if(view==='faq')h+=FAQ;b.innerHTML=h}
+function chips(){const m=isMod();$('chips').innerHTML=Object.entries(PRE).map(([k,[n]])=>`<button class="chip${k===act?' on':''}" data-pre="${k}">${n}${k===act&&m?' · modified':''}</button>`).join('')+`<button class="chip lnk" data-pre="reset">Reset all</button>`}
+function uf(k){const e=$('f_'+k);if(!e)return;const c=chg(k);e.classList.toggle('chg',c);$('d_'+k).textContent=c?'Default: '+fv(k,DEF[k]):'';const o=$('o_'+k);if(o&&F[k].t==='rng')o.textContent=fv(k,S[k])}
+function calc(){
+const met=$('met').value,trip=$('unit').value==='trip',nc=+$('nc').value,dist=Math.max(1,+S.dist||1),k=trip?dist/100:1;
+$('ncW').style.display=met==='co2e'?'flex':'none';$('ncO').textContent=nc.toFixed(1)+'×';
+const w=[];if(met==='l')w.push("Litres of different fuels aren't equivalent. Use CO₂ or energy for a fair comparison.");if(dist<1000)w.push('Under ~1,000 miles the aircraft data flatter the planes; see FAQ.');$('warn').textContent=w.join(' ');
+const mix=S.mix/100,occ=S.occ,spd=+S.spd,lf=S.lf/100,fr=S.fr/100,sd=S.sd/100,cab=+S.cab,ncA=met==='co2e'?nc:1,ncC=met==='co2e'?1.03:1,mm=met==='co2e'?'co2':met,circ=1+S.circ/100;
+const exLb=occ*(80+S.lug)*2.20462-300,wf=1+exLb/100*0.01,sf=1+spd*mix;
+const carL=(c,h)=>(mix/Math.max(1,h)+(1-mix)/Math.max(1,c))*100*3.78541*wf*sf;
+const FU={g:{co2:2.35,mj:31.1},d:{co2:2.69,mj:35.8}},cm=(L,f)=>mm==='l'?L:L*FU[f][mm],jm=kg=>mm==='l'?kg/0.8:kg*(mm==='co2'?3.16:43.2);
+const gL=carL(S.gc,S.gh),dL=carL(S.dc,S.dh),gV=cm(gL,'g')/occ*circ*ncC,dV=cm(dL,'d')/occ*circ*ncC,acc=cm(gL,'g')*ncC/occ*S.ac/100/dist*100;
+const tipC=(n,L,src)=>`<b style="color:var(--tp)">${n}</b><br>${src}<br>${Math.round(mix*100)}% at highway mpg, rest at combined: ${L.toFixed(1)} L per 100 mi for the car, incl. ${((wf-1)*100).toFixed(1)}% weight and ${(spd*mix*100).toFixed(1)}% speed adjustment, shared by ${occ}${S.circ?`, plus ${S.circ}% road-distance penalty`:''}${ncC>1?', ×1.03 for non-CO₂ gases':''}.`;
+rows=[{n:'Gas · '+gName(),v:gV*k,t:'g',o:0,c:`${S.gc} / ${S.gh} mpg · ${occ} aboard`,tip:tipC(gName(),gL,S.gp==='custom'?'Your mpg values.':GP[S.gp][3])},{n:'Diesel · '+dName(),v:dV*k,t:'d',o:1,c:`${S.dc} / ${S.dh} mpg · ${occ} aboard`,tip:tipC(dName(),dL,S.dp==='custom'?'Your mpg values.':DP[S.dp][3])}];
+A.forEach((a,i)=>{if(!S.pl[i])return;const seats=a[2]*sd,kg=a[1]*160.934/seats/lf*(1-fr)*cab;rows.push({n:a[0],v:(jm(kg)*ncA+acc)*k,t:'p',o:2+i,c:`${a[4]} · ${a[5]} eng · ${a[6]}`,tip:`<b style="color:var(--tp)">${a[0]}</b> · entered service ${a[4]} · ${a[5]} engines · ${a[6]}<br>Source: ${a[1]} kg fuel/km, ${a[3].toLocaleString()} nmi flight, ${a[0]==='A380'?544:a[2]} seats (Wikipedia, "Fuel economy in aircraft").<br>Seats used ${Math.round(seats)}, ${Math.round(lf*100)}% filled, ${Math.round(fr*100)}% cargo share, cabin factor ${cab}.${a[8]?'<br>'+a[8]:''}`})});
+if(S.fa)rows.push({n:'Widebody avg',v:(jm(14.32/3.16)*ncA+acc)*k,t:'f',o:99,c:'Measured · global 2019 · ICCT',tip:'<b style="color:var(--tp)">Widebody fleet average (measured)</b><br>All widebody passenger flights worldwide averaged 89 g CO₂ per passenger-km in 2019 (ICCT). It already reflects real layouts, load factors and cargo, so the seats-filled, cargo, seat-count and cabin settings don\'t apply.'});
+rows.sort((a,b)=>fixed?a.o-b.o:a.v-b.v);
+const un=met==='co2'?'kg CO₂':met==='co2e'?'kg CO₂e':met==='mj'?'MJ':'litres',num=v=>v>=100?Math.round(v).toLocaleString():v.toFixed(1),fmt=v=>num(v)+' '+un,mx=Math.max(...rows.map(r=>r.v))*1.04||1;
+const per=trip?`for ${Math.round(dist).toLocaleString()} miles`:'per 100 miles';
+$('axis').textContent=`${un} per person, ${per}${S.ac?` · incl. ${S.ac} mi airport driving`:''}${met==='co2e'?' · climate-weighted':''}`;
+const C={p:'#2a78d6',f:'#888780',g:'#eb6834',d:'#eda100'};
+$('bars').innerHTML=rows.map((r,i)=>`<div class="row" data-r="${i}"><span>${r.n}</span><div><div class="bar" style="width:${(r.v/mx*100).toFixed(1)}%;background:${C[r.t]}"></div></div><span style="font-weight:500;text-align:right;font-variant-numeric:tabular-nums">${num(r.v)}</span><span class="cm" tabindex="0">${r.c}</span></div>`).join('');
+$('tip').style.display='none';pinned=null;
+const pl=rows.filter(r=>r.t==='p').sort((a,b)=>a.v-b.v);
+const ch=[];['gp','dp','gc','gh','dc','dh','occ','lug','mix','spd','lf','fr','sd','cab','dist','ac','circ'].forEach(q=>{if(!chg(q))return;if(['gc','gh'].includes(q)&&S.gp!=='custom')return;if(['dc','dh'].includes(q)&&S.dp!=='custom')return;ch.push(`${F[q].l.toLowerCase()} ${fv(q,S[q])}`)});if(chg('pl'))ch.push('aircraft selection changed');if(chg('fa'))ch.push('fleet average hidden');
+$('stat').innerHTML=`<b style="font-weight:500;color:var(--tp)">${PRE[act][0]}${isMod()?' · modified':''}</b>: gasoline car ${fmt(gV*k)}, diesel car ${fmt(dV*k)}, best aircraft ${pl.length?fmt(pl[0].v)+' ('+pl[0].n+')':'none selected'} per person ${per}.<br>${ch.length?'Changes from baseline: '+ch.join(' · '):'Baseline: 2 people, typical sedan vs. 2014 Jetta TDI, planes 80% full at cabin average.'}`;
+}
+function refresh(){calc();chips();if(!view)bot()}
+$('chips').addEventListener('click',e=>{const p=e.target.closest('[data-pre]');if(!p)return;const k=p.dataset.pre;if(k==='reset'){S=cl(DEF);act='couple'}else{S={...cl(DEF),...cl(PRE[k][1])};act=k}bot();refresh()});
+$('bot').addEventListener('click',e=>{const o=e.target.closest('[data-open]');if(o){view=o.dataset.open;bot();return}if(e.target.id==='back'){view=null;bot();return}if(e.target.id==='rst'){G[view][1].forEach(q=>S[q]=cl(DEF[q]));if(view==='air')fixed=false;bot();refresh()}});
+$('bot').addEventListener('input',e=>{const q=e.target.dataset.k;if(!q||F[q].t!=='rng')return;S[q]=+e.target.value;uf(q);calc();chips()});
+$('bot').addEventListener('change',e=>{const t=e.target,q=t.dataset.k;
+if(t.dataset.pl!==undefined)S.pl[+t.dataset.pl]=t.checked;else if(t.dataset.fa)S.fa=t.checked;else if(t.dataset.fixed)fixed=t.checked;
+else if(q){const f=F[q];if(f.t==='rng')return;if(f.t==='num'){S[q]=Math.max(1,parseFloat(t.value)||1);if(q==='gc'||q==='gh')S.gp='custom';if(q==='dc'||q==='dh')S.dp='custom'}else{S[q]=t.value;if(q==='gp'&&t.value!=='custom'){S.gc=GP[t.value][0];S.gh=GP[t.value][1]}if(q==='dp'&&t.value!=='custom'){S.dc=DP[t.value][0];S.dh=DP[t.value][1]}}}
+bot();refresh()});
+['met','unit','nc'].forEach(i=>$(i).addEventListener('input',calc));
+const tip=$('tip'),narrow=()=>matchMedia('(max-width:540px)').matches;
+function show(row){tip.innerHTML=rows[+row.dataset.r].tip;tip.style.display='block';tip.style.top=(row.offsetTop+row.offsetHeight+2)+'px'}
+$('bars').addEventListener('mouseover',e=>{const c=e.target.closest('.cm');if(c&&pinned===null)show(c.closest('.row'))});
+$('bars').addEventListener('mouseout',e=>{if(e.target.closest('.cm')&&pinned===null)tip.style.display='none'});
+$('bars').addEventListener('click',e=>{const c=e.target.closest('.cm'),row=c?c.closest('.row'):(narrow()?e.target.closest('.row'):null);if(!row)return;if(pinned===row.dataset.r){pinned=null;tip.style.display='none'}else{pinned=row.dataset.r;show(row)}});
+$('bars').addEventListener('focusin',e=>{const c=e.target.closest('.cm');if(c)show(c.closest('.row'))});
+(function(){const q=new URLSearchParams(location.search.slice(1)||location.hash.slice(1)),setSel=(id,v)=>{if(v&&[...$(id).options].some(o=>o.value===v))$(id).value=v};
+setSel('met',q.get('measure'));setSel('unit',q.get('show'));const m=parseFloat(q.get('multiplier'));if(m>=1&&m<=3)$('nc').value=m;
+const s=q.get('scenario');if(s&&PRE[s]){S={...cl(DEF),...cl(PRE[s][1])};act=s}})();
+bot();refresh();
+</script>
+</body>
+</html>
