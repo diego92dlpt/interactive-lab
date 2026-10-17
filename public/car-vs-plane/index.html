@@ -21,6 +21,8 @@
 @media (prefers-color-scheme:dark){:root{--text-primary:#f0efec;--text-secondary:#c3c2b7;--text-muted:#898781;--text-accent:#85b7eb;--text-warning:#fac775;--border:rgba(255,255,255,.12);--border-strong:rgba(255,255,255,.22);--surface-0:#121211;--surface-1:#1f1f1d;--surface-2:#1a1a19;--bg-accent:#0c2e52;--border-accent:#378add}}
 *{box-sizing:border-box}body{margin:0;background:var(--surface-0);color:var(--text-primary);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
 main{max-width:780px;margin:0 auto;padding:16px}h1{font-size:20px;font-weight:500;margin:.25rem 0 .25rem}.lede{font-size:14px;color:var(--text-secondary);margin:0 0 1rem}
+.hd{display:flex;gap:16px;align-items:stretch;margin-bottom:1rem}.hd>div{flex:1;min-width:0}.hd .lede{margin:0}
+#cpy{flex:0 0 10%;min-width:78px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:6px;font-size:12px;line-height:1.2;text-align:center;color:var(--text-accent)}
 button{font:inherit;font-size:13px;background:transparent;color:var(--text-primary);border:.5px solid var(--border-strong);border-radius:8px;padding:5px 12px;cursor:pointer}button:hover{background:var(--surface-1)}
 select,input[type=number]{font:inherit;font-size:13px;height:34px;padding:0 8px;border:.5px solid var(--border-strong);border-radius:8px;background:var(--surface-2);color:var(--text-primary);max-width:100%}
 input[type=range]{width:100%;accent-color:#2a78d6}input[type=checkbox]{accent-color:#2a78d6}
@@ -44,13 +46,14 @@ input[type=range]{width:100%;accent-color:#2a78d6}input[type=checkbox]{accent-co
 .pls{display:flex;flex-wrap:wrap;gap:6px}.pls label{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--ts);padding:3px 8px;border-radius:8px;border:.5px solid var(--bd)}
 details{border-bottom:.5px solid var(--bd);padding:.45rem 0;font-size:13px;color:var(--ts);line-height:1.6}summary{cursor:pointer;color:var(--tp);font-weight:500}
 .sa{border:.5px solid var(--bs);border-radius:12px;padding:.55rem .9rem;margin-bottom:.75rem;background:var(--s2)}.sa p{margin:.4rem 0}.sa ul{margin:.3rem 0;padding-left:1.2rem}.sa li{margin-bottom:.3rem}.sa b{font-weight:500;color:var(--tp)}
-@media (max-width:540px){main{padding:10px}.row{grid-template-columns:92px minmax(0,1fr) 46px;font-size:12px;height:24px;cursor:pointer}.cm{display:none}.bar{height:10px}.btns button{height:72px}}
+@media (max-width:540px){main{padding:10px}.hd{gap:10px}#cpy{align-self:flex-start;min-width:64px;height:64px;margin-top:.25rem}.row{grid-template-columns:92px minmax(0,1fr) 46px;font-size:12px;height:24px;cursor:pointer}.cm{display:none}.bar{height:10px}.btns button{height:72px}}
 </style>
 </head>
 <body>
 <main>
-<h1>Car vs. plane: CO₂ per person, New York to Frankfurt</h1>
-<p class="lede">If you could drive a straight road from JFK to Frankfurt, how would a car compare with flying? Pick a scenario, or open the settings to change any assumption.</p>
+<div class="hd"><div><h1>Car vs. plane: CO₂ per person, New York to Frankfurt</h1>
+<p class="lede">If you could drive a straight road from JFK to Frankfurt, how would a car compare with flying? Pick a scenario, or open the settings to change any assumption.</p></div>
+<button id="cpy" title="Copy a link that reopens this exact view"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5"/></svg><span id="cpyT">Copy link</span></button></div>
 <div class="w">
 <h2 class="sr-only">Scenario explorer comparing CO2, energy or fuel per person for gasoline and diesel cars versus airliners on a New York to Frankfurt trip.</h2>
 <details class="sa"><summary>The short answer (default settings)</summary><p>Per person, counting CO₂ only:</p><ul>
@@ -63,7 +66,7 @@ details{border-bottom:.5px solid var(--bd);padding:.45rem 0;font-size:13px;color
 <div class="zone stk">
 <div class="tb"><label style="display:flex;align-items:center;gap:6px">Measure <select id="met"><option value="co2">CO₂</option><option value="co2e">CO₂e incl. non-CO₂ effects</option><option value="mj">Energy (MJ)</option><option value="l">Raw fuel litres</option></select></label>
 <label style="display:flex;align-items:center;gap:6px">Show <select id="unit"><option value="mi">per 100 miles</option><option value="trip">whole trip</option></select></label>
-<label id="ncW" style="display:none;align-items:center;gap:6px">Aircraft multiplier <input type="range" id="nc" min="1" max="3" step="0.1" value="1.7" style="width:90px"><b id="ncO" style="font-weight:500;color:var(--tp)">1.7×</b></label><button id="cpy" class="lnk" style="margin-left:auto">Copy link to this view</button></div>
+<label id="ncW" style="display:none;align-items:center;gap:6px">Aircraft multiplier <input type="range" id="nc" min="1" max="3" step="0.1" value="1.7" style="width:90px"><b id="ncO" style="font-weight:500;color:var(--tp)">1.7×</b></label></div>
 <div id="warn" style="font-size:12px;color:var(--text-warning);margin:0 0 4px"></div>
 <div id="axis" style="font-size:13px;font-weight:500;margin-bottom:4px"></div>
 <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:11px;color:var(--ts);margin-bottom:4px">
@@ -103,7 +106,7 @@ const FAQ=`<details><summary>What exactly is being compared?</summary>Fuel burne
 <details><summary>What about short trips?</summary>The aircraft data come from long flights. On trips under about 1,000 miles, takeoff and climb use a much larger share of fuel and regional aircraft are common, so the planes would look better here than in reality.</details>
 <details><summary>What isn't modeled at all?</summary>Electric cars (their footprint depends on the power grid that charges them), trains, buses, ships, and sustainable aviation fuel. Each is a different analysis.</details>
 <details><summary>How much of air travel do these aircraft represent?</summary>Model-level shares mostly sit in paid databases. By class, in 2018 passenger narrowbodies produced 43% of commercial aviation CO₂, passenger widebodies 33%, regional aircraft 5%, and freight the remaining 19% (ICCT).</details>
-<details><summary>Can I link to a specific view?</summary>Yes. Set things up the way you want, then click "Copy link to this view" above the chart; the link reproduces every setting. You can also type the main ones by hand at the end of the address, e.g. <code>?measure=mj&amp;show=trip&amp;scenario=family</code>. Measure: co2, co2e, mj, l. Show: mi, trip. Scenario: couple, solo, family, biz, real. Multiplier: 1–3 (with measure=co2e).</details>`;
+<details><summary>Can I link to a specific view?</summary>Yes. Set things up the way you want, then click "Copy link" at the top right; the link reproduces every setting. You can also type the main ones by hand at the end of the address, e.g. <code>?measure=mj&amp;show=trip&amp;scenario=family</code>. Measure: co2, co2e, mj, l. Show: mi, trip. Scenario: couple, solo, family, biz, real. Multiplier: 1–3 (with measure=co2e).</details>`;
 function sums(){return{cars:`${gName()} · ${dName()} · ${S.occ} aboard`,air:`${S.pl.filter(Boolean).length} aircraft · ${S.lf}% full · ${CAB[S.cab].replace(/ \(.*/,'')}`,trip:`${(+S.dist).toLocaleString()} mi${S.ac?` · +${S.ac} mi airports`:''}${S.circ?` · +${S.circ}% road`:''}`,faq:'Scope, sources and caveats'}}
 function bot(){const b=$('bot');if(!view){const s=sums();b.innerHTML=`<div class="btns">${Object.entries(G).map(([g,[n,ks]])=>`<button data-open="${g}"><span class="bn">${n}</span><span class="bsum">${s[g]}</span>${ks.some(chg)?'<span class="dot" title="Changed from baseline" aria-label="changed from baseline"></span>':''}</button>`).join('')}</div>`;return}
 let h=`<div class="ph"><button id="back">← Back</button><span class="t">${G[view][0]}</span>${view!=='faq'?'<button class="lnk" id="rst">Reset section</button>':''}</div>`;
@@ -161,7 +164,7 @@ function link(){const b={...cl(DEF),...cl(PRE[act][1])},q=new URLSearchParams(),
 PK.forEach(k=>{if(!eq(S[k],b[k]))q.set(k,S[k])});if(!eq(S.pl,b.pl))q.set('pl',A.filter((a,i)=>S.pl[i]).map(a=>a[0]).join(','));if(S.fa!==b.fa)q.set('fa',S.fa?1:0);if(fixed)q.set('fixed',1);
 const t=q.toString();return location.href.split(/[?#]/)[0]+(t?'?'+t:'')}
 $('cpy').addEventListener('click',async()=>{const u=link(),b=$('cpy');try{history.replaceState(null,'',u)}catch(e){}
-try{await navigator.clipboard.writeText(u);b.textContent='Link copied ✓'}catch(e){b.textContent='Copy blocked: link is in the address bar'}setTimeout(()=>b.textContent='Copy link to this view',2500)});
+const t=$('cpyT');try{await navigator.clipboard.writeText(u);t.textContent='Copied ✓'}catch(e){t.textContent='See address bar'}setTimeout(()=>t.textContent='Copy link',2500)});
 bot();refresh();
 </script>
 </body>
